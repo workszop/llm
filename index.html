@@ -92,6 +92,7 @@ h1.display{font-family:var(--font-display); font-weight:700; font-size:var(--h1)
 .intro p{font-size:var(--body-lg); color:var(--ink-2); margin:0;}
 
 .grid{display:grid; grid-template-columns:1.1fr .9fr; gap:22px; align-items:start;}
+.left-col, .right-col{min-width:0;} /* pozwól kolumnom kurczyć się — długi tekst ma się zawijać, nie rozpychać layout */
 
 /* ---- Cards ----------------------------------------------------- */
 .card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r-xl); box-shadow:var(--shadow-md);}
@@ -171,7 +172,8 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
 
 /* ---- Output ---------------------------------------------------- */
 .right-col{position:sticky; top:86px;}
-.output{white-space:pre-wrap; word-wrap:break-word; font-family:var(--font-sans); font-size:15px; line-height:1.62; color:var(--ink); min-height:120px;}
+.output{white-space:pre-wrap; overflow-wrap:anywhere; word-break:break-word; font-family:var(--font-sans); font-size:15px; line-height:1.62; color:var(--ink); min-height:120px;}
+.candidate{min-width:0;}
 .output .placeholder{color:var(--ink-3); font-style:italic;}
 .candidate + .candidate{margin-top:18px; padding-top:18px; border-top:1px dashed var(--line-2);}
 .candidate-label{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); margin-bottom:6px;}
