@@ -330,6 +330,14 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
         </div>
       </div>
 
+      <div class="card">
+        <div class="card-head"><h2>Podgląd odpowiedzi</h2><span class="sub" id="resKind">surowy JSON</span></div>
+        <div class="card-body">
+          <div class="req-preview"><pre id="resBody"><span class="placeholder">Surowa odpowiedź API pojawi się tutaj po wysłaniu zapytania…</span></pre></div>
+          <p class="notice">Pełny, surowy JSON zwrócony przez API — zobacz <code style="font-family:var(--font-mono)">candidates</code>, <code style="font-family:var(--font-mono)">finishReason</code>, <code style="font-family:var(--font-mono)">usageMetadata</code> i resztę pól. W trybie strumieniowym to lista kolejnych fragmentów (chunków) SSE.</p>
+        </div>
+      </div>
+
     </div>
   </div>
 </main>
@@ -572,6 +580,17 @@ function refresh(){
 const out = document.getElementById("output");
 const usageEl = document.getElementById("usage");
 const latencyEl = document.getElementById("latency");
+const resBodyEl = document.getElementById("resBody");
+const resKindEl = document.getElementById("resKind");
+
+function renderRaw(obj, kind){
+  resKindEl.textContent = kind || "surowy JSON";
+  resBodyEl.innerHTML = syntaxHighlight(JSON.stringify(obj, null, 2));
+}
+function clearRaw(msg){
+  resKindEl.textContent = "surowy JSON";
+  resBodyEl.innerHTML = `<span class="placeholder">${msg}</span>`;
+}
 
 function showError(title, detail){
   out.innerHTML = "";
@@ -629,6 +648,7 @@ async function send(){
   btn.disabled = true;
   out.innerHTML = ""; usageEl.innerHTML=""; latencyEl.textContent="";
   out.appendChild(el("div",{class:"candidate"}, '<span class="placeholder">Generowanie…</span>'));
+  clearRaw("Oczekiwanie na odpowiedź…");
   label.innerHTML = '<span class="spinner"></span>';
 
   const t0 = performance.now();
@@ -645,8 +665,8 @@ async function send(){
 
     if(!res.ok){
       let detail;
-      try { const j = await res.json(); detail = (j.error ? `[${j.error.code} ${j.error.status}] ${j.error.message}` : JSON.stringify(j,null,2)); }
-      catch(e){ detail = await res.text(); }
+      try { const j = await res.json(); detail = (j.error ? `[${j.error.code} ${j.error.status}] ${j.error.message}` : JSON.stringify(j,null,2)); renderRaw(j, "błąd API"); }
+      catch(e){ detail = await res.text(); clearRaw("Serwer nie zwrócił JSON-a."); }
       showError(`Błąd API (HTTP ${res.status})`, detail);
       return;
     }
@@ -657,6 +677,7 @@ async function send(){
       const data = await res.json();
       renderCandidates(data.candidates);
       renderUsage(data.usageMetadata);
+      renderRaw(data);
     }
     latencyEl.textContent = `${Math.round(performance.now()-t0)} ms`;
   } catch(err){
@@ -670,6 +691,7 @@ async function handleStream(res){
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer="", answer="", thoughts="", usage=null;
+  const rawChunks=[];
   out.innerHTML = "";
   const t = el("div",{class:"thoughts"}); t.style.display="none";
   t.appendChild(el("div",{class:"t-label"}, "Tok rozumowania")); const tBody=el("div",{class:"t-body"}); t.appendChild(tBody);
@@ -688,6 +710,7 @@ async function handleStream(res){
       const payload = s.slice(5).trim();
       if(!payload || payload==="[DONE]") continue;
       let chunk; try { chunk = JSON.parse(payload); } catch(e){ continue; }
+      rawChunks.push(chunk); renderRaw(rawChunks, `surowy JSON · ${rawChunks.length} chunków`);
       if(chunk.usageMetadata) usage = chunk.usageMetadata;
       const parts = chunk.candidates?.[0]?.content?.parts || [];
       for(const p of parts){
