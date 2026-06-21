@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>edulab · Plac zabaw z parametrami Gemini</title>
+<meta name="description" content="Interaktywne demo edulab: poznaj parametry wywołań API Gemini — temperatura, topP, topK, myślenie i więcej — i zobacz, jak wpływają na odpowiedź modelu." />
+<link rel="icon" href="assets/edulab-mark-teal.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   edulab — Editorial Color design tokens
+   (z design_handoff_demo_lab/tokens/colors_and_type.css)
+   ============================================================ */
+:root{
+  --font-display:'Bricolage Grotesque','Hanken Grotesk',system-ui,sans-serif;
+  --font-sans:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+  --font-mono:'DM Mono',ui-monospace,'SF Mono',Menlo,monospace;
+
+  --paper:#FBF7F0; --paper-2:#F4EDDF; --paper-3:#ECE1CF; --surface:#FFFFFF;
+  --ink:#211E1A; --ink-2:#5B554D; --ink-3:#938A7C; --line:#E7DCCB; --line-2:#D6C8B2;
+
+  --marigold:#E8920C; --marigold-600:#CE800A; --marigold-soft:#FBE7C2; --marigold-ink:#8A4F00;
+  --teal:#0E8C7F; --teal-600:#0B7468; --teal-soft:#D2EBE6; --teal-ink:#0A5A52;
+  --coral:#EF5B3F; --coral-600:#D44A30; --coral-soft:#FBDDD4; --coral-ink:#9A2E1B;
+  --sky:#2E78C9; --sky-soft:#D9E7F6; --sky-ink:#1B4E88;
+  --play-grape:#7A5AC2;
+
+  --success:#2F8F5B; --success-soft:#D7EEDD; --success-ink:#1C6A3E;
+  --warning:#C9810A; --warning-soft:#FBEAC6; --warning-ink:#855207;
+  --danger:#D8412A; --danger-soft:#FAD9D2; --danger-ink:#97271A;
+
+  --focus-ring:0 0 0 3px rgba(232,146,12,.38);
+
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:24px;
+  --sp-8:32px; --sp-10:40px; --sp-12:48px;
+
+  --r-xs:6px; --r-sm:10px; --r-md:14px; --r-lg:20px; --r-xl:28px; --r-pill:999px;
+
+  --shadow-sm:0 1px 2px rgba(33,30,26,.06),0 1px 1px rgba(33,30,26,.04);
+  --shadow-md:0 4px 16px rgba(33,30,26,.08),0 1px 3px rgba(33,30,26,.05);
+  --shadow-lg:0 16px 40px rgba(33,30,26,.12),0 3px 8px rgba(33,30,26,.06);
+  --shadow-marigold:0 8px 22px rgba(232,146,12,.28);
+
+  --h1:44px; --h2:33px; --h3:25px; --h4:19px;
+  --body-lg:18px; --body:16px; --body-sm:14px; --caption:13px; --overline:12px;
+}
+
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--font-sans); font-size:var(--body); line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--teal-ink); text-decoration:none;}
+a:hover{text-decoration:underline;}
+
+/* ---- Header ---------------------------------------------------- */
+header.site{
+  position:sticky; top:0; z-index:50;
+  background:rgba(251,247,240,.85); backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-inner{
+  max-width:1240px; margin:0 auto; padding:15px 30px;
+  display:flex; align-items:center; gap:16px;
+}
+.brand{display:flex; align-items:center; gap:10px;}
+.brand img{width:32px; height:32px;}
+.brand .word{font-family:var(--font-display); font-weight:700; font-size:22px; color:var(--ink); letter-spacing:-.01em;}
+.brand .tag{
+  font-family:var(--font-mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--teal-ink); background:var(--teal-soft); padding:3px 8px; border-radius:var(--r-pill);
+}
+.header-spacer{flex:1;}
+.header-link{
+  font-family:var(--font-mono); font-size:12px; letter-spacing:.04em;
+  color:var(--ink-2); display:inline-flex; align-items:center; gap:6px;
+}
+
+/* ---- Layout ---------------------------------------------------- */
+main{max-width:1240px; margin:0 auto; padding:34px 30px 80px;}
+.intro{max-width:680px; margin-bottom:28px;}
+.eyebrow{
+  font-family:var(--font-mono); font-weight:500; font-size:var(--overline);
+  letter-spacing:.14em; text-transform:uppercase; color:var(--marigold-ink); margin:0 0 12px;
+}
+h1.display{font-family:var(--font-display); font-weight:700; font-size:var(--h1); line-height:1.06; letter-spacing:-.02em; margin:0 0 14px;}
+.intro p{font-size:var(--body-lg); color:var(--ink-2); margin:0;}
+
+.grid{display:grid; grid-template-columns:1.1fr .9fr; gap:22px; align-items:start;}
+
+/* ---- Cards ----------------------------------------------------- */
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r-xl); box-shadow:var(--shadow-md);}
+.card + .card{margin-top:18px;}
+.card-head{padding:20px 24px 0; display:flex; align-items:baseline; justify-content:space-between; gap:12px;}
+.card-head h2{font-family:var(--font-display); font-weight:600; font-size:var(--h4); margin:0; letter-spacing:-.01em;}
+.card-head .sub{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3);}
+.card-body{padding:18px 24px 24px;}
+
+/* ---- Form fields ----------------------------------------------- */
+label.field{display:block; margin-bottom:16px;}
+label.field:last-child{margin-bottom:0;}
+.flabel{display:block; font-weight:600; font-size:var(--body-sm); margin-bottom:6px; color:var(--ink);}
+.fhelp{display:block; font-size:var(--caption); color:var(--ink-3); margin-bottom:8px; line-height:1.45;}
+input[type=text], input[type=password], input[type=number], textarea, select{
+  width:100%; font-family:var(--font-sans); font-size:var(--body-sm); color:var(--ink);
+  background:var(--paper); border:1px solid var(--line-2); border-radius:var(--r-md);
+  padding:10px 12px; transition:border-color .15s, box-shadow .15s;
+}
+textarea{resize:vertical; line-height:1.5;}
+.mono-input{font-family:var(--font-mono);}
+input:focus, textarea:focus, select:focus{outline:none; border-color:var(--marigold); box-shadow:var(--focus-ring);}
+select{appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235B554D' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:34px;}
+
+/* ---- Parameter rows -------------------------------------------- */
+.param{padding:16px 0; border-top:1px solid var(--line);}
+.param:first-child{border-top:none; padding-top:4px;}
+.param-head{display:flex; align-items:center; gap:10px;}
+.param-head .switch{flex:0 0 auto;}
+.param-name{font-family:var(--font-mono); font-size:13px; font-weight:500; color:var(--ink); letter-spacing:.01em;}
+.param-pill{font-family:var(--font-mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); background:var(--paper-3); padding:2px 7px; border-radius:var(--r-pill);}
+.param-spacer{flex:1;}
+.param-value{font-family:var(--font-mono); font-size:14px; font-weight:500; color:var(--marigold-ink); min-width:42px; text-align:right;}
+.param-desc{font-size:var(--caption); color:var(--ink-2); margin:7px 0 0; line-height:1.5;}
+.param-control{margin-top:12px;}
+.param[data-on="false"]{opacity:.5;}
+.param[data-on="false"] .param-control{pointer-events:none;}
+.param[data-on="false"] .param-value{color:var(--ink-3);}
+
+/* groups */
+.group-title{font-family:var(--font-mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--teal-ink); margin:22px 0 2px; padding-top:8px;}
+.group-title:first-of-type{margin-top:4px;}
+
+/* ---- Toggle switch --------------------------------------------- */
+.switch{position:relative; display:inline-block; width:38px; height:22px; flex:none;}
+.switch input{opacity:0; width:0; height:0;}
+.switch .slider{position:absolute; inset:0; cursor:pointer; background:var(--line-2); border-radius:var(--r-pill); transition:background .18s;}
+.switch .slider::before{content:""; position:absolute; height:16px; width:16px; left:3px; top:3px; background:#fff; border-radius:50%; box-shadow:var(--shadow-sm); transition:transform .18s;}
+.switch input:checked + .slider{background:var(--teal);}
+.switch input:checked + .slider::before{transform:translateX(16px);}
+.switch input:focus-visible + .slider{box-shadow:var(--focus-ring);}
+
+/* ---- Range sliders --------------------------------------------- */
+input[type=range]{-webkit-appearance:none; appearance:none; width:100%; height:8px; border-radius:var(--r-pill); background:rgba(33,30,26,.12); outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:20px; height:20px; border-radius:50%; background:#fff; border:2px solid var(--ink); box-shadow:var(--shadow-sm); cursor:pointer; margin-top:0;}
+input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; background:#fff; border:2px solid var(--ink); box-shadow:var(--shadow-sm); cursor:pointer;}
+input[type=range].accent-temp::-webkit-slider-thumb{border-color:var(--coral);}
+input[type=range].accent-topp::-webkit-slider-thumb{border-color:var(--teal);}
+input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
+
+/* ---- Buttons --------------------------------------------------- */
+.btn{font-family:var(--font-sans); font-weight:700; font-size:var(--body-sm); border:none; border-radius:var(--r-pill); padding:12px 22px; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:transform .12s cubic-bezier(.32,.72,.32,1), background .15s, box-shadow .15s;}
+.btn:active{transform:scale(.96);}
+.btn-primary{background:var(--marigold); color:#fff; box-shadow:var(--shadow-marigold);}
+.btn-primary:hover{background:var(--marigold-600);}
+.btn-primary:disabled{background:var(--line-2); color:var(--ink-3); box-shadow:none; cursor:not-allowed; transform:none;}
+.btn-ghost{background:var(--paper-2); color:var(--ink); border:1px solid var(--line);}
+.btn-ghost:hover{background:var(--paper-3);}
+.btn-sm{font-size:var(--caption); padding:7px 14px;}
+
+.presets{display:flex; flex-wrap:wrap; gap:8px;}
+.preset{font-family:var(--font-mono); font-size:12px; letter-spacing:.02em; background:var(--paper-2); border:1px solid var(--line); color:var(--ink); border-radius:var(--r-pill); padding:7px 14px; cursor:pointer; transition:background .15s, border-color .15s;}
+.preset:hover{background:var(--teal-soft); border-color:var(--teal);}
+
+.send-row{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:4px;}
+.send-row .stream-toggle{display:flex; align-items:center; gap:9px; font-size:var(--body-sm); color:var(--ink-2);}
+
+/* ---- Output ---------------------------------------------------- */
+.right-col{position:sticky; top:86px;}
+.output{white-space:pre-wrap; word-wrap:break-word; font-family:var(--font-sans); font-size:15px; line-height:1.62; color:var(--ink); min-height:120px;}
+.output .placeholder{color:var(--ink-3); font-style:italic;}
+.candidate + .candidate{margin-top:18px; padding-top:18px; border-top:1px dashed var(--line-2);}
+.candidate-label{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); margin-bottom:6px;}
+
+.thoughts{background:var(--paper-2); border:1px dashed var(--line-2); border-radius:var(--r-lg); padding:14px 16px; margin-bottom:16px;}
+.thoughts .t-label{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--marigold-ink); margin-bottom:6px;}
+.thoughts .t-body{font-size:var(--caption); color:var(--ink-2); white-space:pre-wrap; line-height:1.55;}
+
+.usage{display:flex; flex-wrap:wrap; gap:8px; margin-top:16px;}
+.chip{font-family:var(--font-mono); font-size:11px; letter-spacing:.02em; background:var(--sky-soft); color:var(--sky-ink); border-radius:var(--r-pill); padding:5px 11px;}
+
+.error-box{background:var(--danger-soft); border:1px solid var(--danger); border-radius:var(--r-lg); padding:16px 18px; color:var(--danger-ink);}
+.error-box .e-title{font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:8px;}
+.error-box .e-body{font-family:var(--font-mono); font-size:12px; line-height:1.5; white-space:pre-wrap; word-break:break-word;}
+
+.req-preview{background:var(--ink); border-radius:var(--r-lg); padding:18px 20px; overflow:auto; max-height:420px;}
+.req-preview pre{margin:0; font-family:var(--font-mono); font-size:12.5px; line-height:1.55; color:var(--paper); white-space:pre;}
+.req-endpoint{font-family:var(--font-mono); font-size:11px; color:#86D69A; margin-bottom:10px; word-break:break-all;}
+.req-key{color:#F6997E;} .req-str{color:#86D69A;} .req-num{color:#8FB9EC;} .req-bool{color:#E0B0FF;}
+
+.notice{font-size:var(--caption); color:var(--ink-3); margin-top:10px; line-height:1.5;}
+
+/* spinner */
+.spinner{width:15px; height:15px; border:2.5px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ---- Responsive ------------------------------------------------ */
+@media (max-width:920px){
+  .grid{grid-template-columns:1fr;}
+  .right-col{position:static;}
+  .header-inner, main{padding-left:20px; padding-right:20px;}
+  h1.display{font-size:34px;}
+}
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="header-inner">
+    <div class="brand">
+      <img src="assets/edulab-mark-teal.png" alt="edulab" />
+      <span class="word">edulab</span>
+      <span class="tag">gemini lab</span>
+    </div>
+    <div class="header-spacer"></div>
+    <a class="header-link" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">
+      Zdobądź klucz API ↗
+    </a>
+  </div>
+</header>
+
+<main>
+  <div class="intro">
+    <p class="eyebrow">Interaktywne demo · Gemini API</p>
+    <h1 class="display">Plac zabaw z parametrami Gemini</h1>
+    <p>Pokręć każdą gałką wywołania API i zobacz, jak zmienia się odpowiedź modelu. Włączaj
+       i wyłączaj pojedyncze parametry, podglądaj dokładny ładunek zapytania na żywo i ucz się,
+       co naprawdę robi temperatura, topP, myślenie i reszta.</p>
+  </div>
+
+  <div class="grid">
+    <!-- ================= LEWA KOLUMNA: STEROWANIE ================= -->
+    <div class="left-col">
+
+      <!-- Klucz + model -->
+      <div class="card">
+        <div class="card-head"><h2>Połączenie</h2><span class="sub">krok 1</span></div>
+        <div class="card-body">
+          <label class="field">
+            <span class="flabel">Klucz API Gemini</span>
+            <span class="fhelp">Klucz zostaje wyłącznie w Twojej przeglądarce (localStorage) i jest wysyłany bezpośrednio do Google. Nie trafia na żaden inny serwer.</span>
+            <input type="password" id="apiKey" class="mono-input" placeholder="AIza..." autocomplete="off" spellcheck="false" />
+          </label>
+          <label class="field">
+            <span class="flabel">Model</span>
+            <span class="fhelp">Modele 3.x używają „poziomu myślenia”, modele 2.5 — „budżetu myślenia”. Panel myślenia dopasuje się sam.</span>
+            <select id="model">
+              <option value="gemini-3.5-pro">gemini-3.5-pro</option>
+              <option value="gemini-3.5-flash" selected>gemini-3.5-flash</option>
+              <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+              <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+              <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <!-- Prompt -->
+      <div class="card">
+        <div class="card-head"><h2>Prompt</h2><span class="sub">krok 2</span></div>
+        <div class="card-body">
+          <label class="field">
+            <span class="flabel">Instrukcja systemowa</span>
+            <span class="fhelp">Stały kontekst i „osobowość” modelu (systemInstruction). Zostaw puste, by pominąć.</span>
+            <textarea id="systemInstruction" rows="2" placeholder="Jesteś zwięzłym asystentem, który odpowiada po polsku."></textarea>
+          </label>
+          <label class="field">
+            <span class="flabel">Wiadomość użytkownika</span>
+            <span class="fhelp">Treść, którą wysyłasz do modelu (contents).</span>
+            <textarea id="prompt" rows="4" placeholder="Napisz limeryk o programowaniu w Pythonie.">Wyjaśnij w trzech zdaniach, czym jest temperatura w modelach językowych.</textarea>
+          </label>
+        </div>
+      </div>
+
+      <!-- Parametry -->
+      <div class="card">
+        <div class="card-head"><h2>Parametry generowania</h2><span class="sub">krok 3</span></div>
+        <div class="card-body">
+
+          <div class="presets" style="margin-bottom:6px;">
+            <button class="preset" data-preset="deterministic">⊹ Deterministyczny</button>
+            <button class="preset" data-preset="creative">✦ Kreatywny</button>
+            <button class="preset" data-preset="json">{ } Ekstrakcja JSON</button>
+            <button class="preset" data-preset="reset">↺ Domyślne</button>
+          </div>
+
+          <div id="params"></div>
+        </div>
+      </div>
+
+      <!-- Wyślij -->
+      <div class="card">
+        <div class="card-body">
+          <div class="send-row">
+            <button class="btn btn-primary" id="sendBtn">
+              <span id="sendLabel">Wyślij zapytanie</span>
+            </button>
+            <label class="stream-toggle">
+              <span class="switch"><input type="checkbox" id="streamToggle" /><span class="slider"></span></span>
+              Strumieniowo (SSE)
+            </label>
+          </div>
+          <p class="notice">Wskazówka: włączaj/wyłączaj parametry przełącznikiem po lewej. Tylko <em>włączone</em> pola trafiają do zapytania — podgląd po prawej pokazuje dokładnie, co zostanie wysłane.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= PRAWA KOLUMNA: WYNIK ================= -->
+    <div class="right-col">
+
+      <div class="card">
+        <div class="card-head"><h2>Odpowiedź</h2><span class="sub" id="latency"></span></div>
+        <div class="card-body">
+          <div id="output" class="output"><span class="placeholder">Odpowiedź modelu pojawi się tutaj…</span></div>
+          <div id="usage" class="usage"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Podgląd zapytania</h2><span class="sub">na żywo</span></div>
+        <div class="card-body">
+          <div class="req-endpoint" id="reqEndpoint"></div>
+          <div class="req-preview"><pre id="reqBody"></pre></div>
+          <p class="notice">To dokładny ładunek JSON wysyłany metodą POST. Nagłówek <code style="font-family:var(--font-mono)">x-goog-api-key</code> niesie Twój klucz.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<script>
+"use strict";
+
+/* ============================================================
+   Definicje parametrów — pojedyncze źródło prawdy.
+   Każdy parametr ma: klucz w generationConfig, etykietę,
+   opis dydaktyczny, typ kontrolki, zakres i wartość domyślną.
+   ============================================================ */
+const GROUPS = [
+  { title:"Próbkowanie", params:[
+    { key:"temperature", label:"temperature", desc:"Steruje losowością. Niska = przewidywalnie i powtarzalnie, wysoka = kreatywnie i różnorodnie. Zakres 0–2.",
+      type:"range", min:0, max:2, step:0.05, def:1.0, accent:"accent-temp", on:true },
+    { key:"topP", label:"topP", desc:"Próbkowanie jądrowe (nucleus). Bierze najbardziej prawdopodobne tokeny, których prawdopodobieństwa sumują się do P. Niższe = bezpieczniej.",
+      type:"range", min:0, max:1, step:0.01, def:0.95, accent:"accent-topp", on:false },
+    { key:"topK", label:"topK", desc:"Ogranicza wybór do K najbardziej prawdopodobnych tokenów w każdym kroku.",
+      type:"int", min:1, max:100, step:1, def:40, on:false },
+    { key:"seed", label:"seed", desc:"Ziarno losowości. Ten sam seed + te same parametry → powtarzalny wynik.",
+      type:"int", min:0, max:2147483647, step:1, def:42, on:false },
+  ]},
+  { title:"Długość i zatrzymanie", params:[
+    { key:"maxOutputTokens", label:"maxOutputTokens", desc:"Górny limit liczby tokenów w odpowiedzi. Zbyt niski przytnie tekst.",
+      type:"int", min:1, max:8192, step:1, def:1024, on:false },
+    { key:"stopSequences", label:"stopSequences", desc:"Sekwencje, po napotkaniu których model przerywa generowanie. Oddziel przecinkami.",
+      type:"csv", def:"", on:false },
+    { key:"candidateCount", label:"candidateCount", desc:"Ile niezależnych odpowiedzi wygenerować naraz. Każda kosztuje tokeny.",
+      type:"int", min:1, max:8, step:1, def:1, on:false },
+  ]},
+  { title:"Kary za powtórzenia", params:[
+    { key:"presencePenalty", label:"presencePenalty", desc:"Karze tokeny, które już wystąpiły (niezależnie ile razy) — zachęca do nowych tematów. Zakres −2 do 2.",
+      type:"range", min:-2, max:2, step:0.1, def:0, accent:"accent-sky", on:false },
+    { key:"frequencyPenalty", label:"frequencyPenalty", desc:"Karze tokeny proporcjonalnie do częstości — ogranicza dosłowne powtórzenia. Zakres −2 do 2.",
+      type:"range", min:-2, max:2, step:0.1, def:0, accent:"accent-sky", on:false },
+  ]},
+  { title:"Myślenie (reasoning)", params:[
+    { key:"thinkingLevel", label:"thinkingLevel", desc:"Głębokość rozumowania dla modeli 3.x. Wyższy poziom = lepsze trudne zadania, ale wolniej i drożej.",
+      type:"select", options:["low","medium","high"], def:"medium", on:false, family:"3" },
+    { key:"thinkingBudget", label:"thinkingBudget", desc:"Liczba tokenów myślenia dla modeli 2.5. 0 = wyłącz myślenie, −1 = dynamicznie (model sam decyduje).",
+      type:"int", min:-1, max:24576, step:1, def:1024, on:false, family:"2" },
+    { key:"includeThoughts", label:"includeThoughts", desc:"Dołącz do odpowiedzi podsumowanie toku rozumowania modelu (tokeny myślenia są liczone tak czy inaczej).",
+      type:"bool", def:false, on:false },
+  ]},
+  { title:"Format odpowiedzi", params:[
+    { key:"responseMimeType", label:"responseMimeType", desc:"Wymuś format wyjścia. application/json zmusza model do zwrócenia poprawnego JSON-a.",
+      type:"select", options:["text/plain","application/json"], def:"text/plain", on:false },
+    { key:"responseSchema", label:"responseSchema", desc:"Opcjonalny schemat JSON opisujący strukturę odpowiedzi (działa z application/json).",
+      type:"json", def:'{\n  "type": "object",\n  "properties": {\n    "odpowiedz": { "type": "string" }\n  }\n}', on:false },
+  ]},
+];
+
+const SAFETY_CATEGORIES = [
+  { key:"HARM_CATEGORY_HARASSMENT",        label:"Nękanie" },
+  { key:"HARM_CATEGORY_HATE_SPEECH",       label:"Mowa nienawiści" },
+  { key:"HARM_CATEGORY_SEXUALLY_EXPLICIT", label:"Treści seksualne" },
+  { key:"HARM_CATEGORY_DANGEROUS_CONTENT", label:"Treści niebezpieczne" },
+];
+const SAFETY_THRESHOLDS = [
+  ["BLOCK_NONE","Nie blokuj"],
+  ["BLOCK_ONLY_HIGH","Tylko wysokie"],
+  ["BLOCK_MEDIUM_AND_ABOVE","Średnie i wyżej"],
+  ["BLOCK_LOW_AND_ABOVE","Niskie i wyżej"],
+  ["OFF","Wyłączone (OFF)"],
+];
+
+/* ---- Stan: każdy parametr ma {on, value} ---------------------- */
+const state = {};
+GROUPS.forEach(g => g.params.forEach(p => { state[p.key] = { on:!!p.on, value:p.def }; }));
+const safetyState = {}; // key -> threshold ('' = nieustawione)
+SAFETY_CATEGORIES.forEach(c => safetyState[c.key] = "");
+
+/* ============================================================
+   Renderowanie kontrolek parametrów
+   ============================================================ */
+const paramsEl = document.getElementById("params");
+
+function el(tag, attrs={}, html){ const e=document.createElement(tag); for(const k in attrs) e.setAttribute(k, attrs[k]); if(html!=null) e.innerHTML=html; return e; }
+
+function buildParamRow(p){
+  const row = el("div", { class:"param", "data-key":p.key });
+  row.dataset.on = state[p.key].on;
+
+  const head = el("div", { class:"param-head" });
+  // przełącznik on/off
+  const sw = el("label", { class:"switch" });
+  const cb = el("input", { type:"checkbox" }); cb.checked = state[p.key].on;
+  cb.addEventListener("change", () => { state[p.key].on = cb.checked; row.dataset.on = cb.checked; refresh(); });
+  sw.appendChild(cb); sw.appendChild(el("span",{class:"slider"}));
+  head.appendChild(sw);
+
+  head.appendChild(el("span",{class:"param-name"}, p.label));
+  if(p.family) head.appendChild(el("span",{class:"param-pill"}, p.family==="3"?"3.x":"2.5"));
+  head.appendChild(el("span",{class:"param-spacer"}));
+  const valEl = el("span",{class:"param-value"});
+  head.appendChild(valEl);
+  row.appendChild(head);
+
+  row.appendChild(el("p",{class:"param-desc"}, p.desc));
+
+  const control = el("div",{class:"param-control"});
+  buildControl(p, control, valEl);
+  row.appendChild(control);
+  return row;
+}
+
+function buildControl(p, control, valEl){
+  const set = v => { state[p.key].value = v; updateVal(p, valEl); refresh(); };
+  if(p.type==="range" || p.type==="int"){
+    if(p.type==="range"){
+      const r = el("input",{type:"range", min:p.min, max:p.max, step:p.step, class:"accent "+(p.accent||"")});
+      r.value = state[p.key].value;
+      r.addEventListener("input", () => set(parseFloat(r.value)));
+      control.appendChild(r);
+    } else {
+      const n = el("input",{type:"number", min:p.min, max:p.max, step:p.step, class:"mono-input"});
+      n.value = state[p.key].value;
+      n.addEventListener("input", () => set(n.value===""?p.def:parseInt(n.value,10)));
+      control.appendChild(n);
+    }
+  } else if(p.type==="select"){
+    const s = el("select");
+    p.options.forEach(o => { const opt=el("option",{value:o}, o); if(o===state[p.key].value) opt.selected=true; s.appendChild(opt); });
+    s.addEventListener("change", () => set(s.value));
+    control.appendChild(s);
+  } else if(p.type==="bool"){
+    const wrap = el("label",{class:"stream-toggle"}); wrap.style.fontSize="13px";
+    const sw = el("label",{class:"switch"}); const cb=el("input",{type:"checkbox"}); cb.checked=!!state[p.key].value;
+    cb.addEventListener("change",()=>set(cb.checked)); sw.appendChild(cb); sw.appendChild(el("span",{class:"slider"}));
+    wrap.appendChild(sw); wrap.appendChild(document.createTextNode(" włączone"));
+    control.appendChild(wrap);
+  } else if(p.type==="csv" || p.type==="text"){
+    const i = el("input",{type:"text", class:"mono-input", placeholder:"np. END, ###"}); i.value=state[p.key].value;
+    i.addEventListener("input",()=>set(i.value)); control.appendChild(i);
+  } else if(p.type==="json"){
+    const t = el("textarea",{rows:"5", class:"mono-input"}); t.value=state[p.key].value;
+    t.addEventListener("input",()=>set(t.value)); control.appendChild(t);
+  }
+  updateVal(p, valEl);
+}
+
+function updateVal(p, valEl){
+  const v = state[p.key].value;
+  if(p.type==="range") valEl.textContent = Number(v).toFixed(p.step<1?2:0);
+  else if(p.type==="int") valEl.textContent = v;
+  else if(p.type==="bool") valEl.textContent = v?"tak":"nie";
+  else valEl.textContent = "";
+}
+
+function renderParams(){
+  paramsEl.innerHTML = "";
+  GROUPS.forEach(g => {
+    paramsEl.appendChild(el("div",{class:"group-title"}, g.title));
+    g.params.forEach(p => {
+      if(p.family && p.family!==currentFamily()) return; // pokaż tylko właściwą kontrolkę myślenia
+      paramsEl.appendChild(buildParamRow(p));
+    });
+  });
+  // Bezpieczeństwo
+  paramsEl.appendChild(el("div",{class:"group-title"}, "Bezpieczeństwo (safetySettings)"));
+  const sf = el("div",{class:"param"});
+  sf.appendChild(el("p",{class:"param-desc"}, "Próg blokowania dla każdej kategorii szkód. „—” = nie wysyłaj (model użyje domyślnego progu)."));
+  SAFETY_CATEGORIES.forEach(c => {
+    const lab = el("label",{class:"field"}); lab.style.margin="12px 0 0";
+    lab.appendChild(el("span",{class:"flabel"}, c.label));
+    const s = el("select");
+    s.appendChild(el("option",{value:""}, "— domyślny —"));
+    SAFETY_THRESHOLDS.forEach(([val,txt]) => { const o=el("option",{value:val}, txt); if(val===safetyState[c.key]) o.selected=true; s.appendChild(o); });
+    s.addEventListener("change",()=>{ safetyState[c.key]=s.value; refresh(); });
+    lab.appendChild(s); sf.appendChild(lab);
+  });
+  paramsEl.appendChild(sf);
+}
+
+function currentFamily(){ return document.getElementById("model").value.startsWith("gemini-3") ? "3" : "2"; }
+
+/* ============================================================
+   buildRequest() — czysta funkcja: stan → ciało zapytania JSON
+   ============================================================ */
+function buildRequest(){
+  const body = {};
+  const sys = document.getElementById("systemInstruction").value.trim();
+  if(sys) body.systemInstruction = { parts:[{ text: sys }] };
+  body.contents = [{ role:"user", parts:[{ text: document.getElementById("prompt").value }] }];
+
+  const gc = {};
+  const fam = currentFamily();
+  GROUPS.forEach(g => g.params.forEach(p => {
+    if(!state[p.key].on) return;
+    if(p.family && p.family!==fam) return;
+    const v = state[p.key].value;
+    if(p.key==="thinkingLevel"){ gc.thinkingConfig = Object.assign({}, gc.thinkingConfig, { thinkingLevel: v.toUpperCase() }); return; }
+    if(p.key==="thinkingBudget"){ gc.thinkingConfig = Object.assign({}, gc.thinkingConfig, { thinkingBudget: v }); return; }
+    if(p.key==="includeThoughts"){ gc.thinkingConfig = Object.assign({}, gc.thinkingConfig, { includeThoughts: v }); return; }
+    if(p.key==="stopSequences"){ const arr = v.split(",").map(s=>s.trim()).filter(Boolean); if(arr.length) gc.stopSequences = arr; return; }
+    if(p.key==="responseSchema"){
+      try { gc.responseSchema = JSON.parse(v); } catch(e){ gc.__schemaError = true; }
+      return;
+    }
+    gc[p.key] = v;
+  }));
+  if(Object.keys(gc).length) body.generationConfig = gc;
+
+  const safety = [];
+  SAFETY_CATEGORIES.forEach(c => { if(safetyState[c.key]) safety.push({ category:c.key, threshold:safetyState[c.key] }); });
+  if(safety.length) body.safetySettings = safety;
+
+  return body;
+}
+
+/* ---- Podgląd zapytania (live) z podświetleniem składni -------- */
+function syntaxHighlight(json){
+  return json
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
+      let cls="req-num";
+      if(/^"/.test(m)) cls = /:$/.test(m) ? "req-key" : "req-str";
+      else if(/true|false/.test(m)) cls="req-bool";
+      else if(/null/.test(m)) cls="req-bool";
+      return `<span class="${cls}">${m}</span>`;
+    });
+}
+
+function refresh(){
+  const model = document.getElementById("model").value;
+  const stream = document.getElementById("streamToggle").checked;
+  const method = stream ? "streamGenerateContent" : "generateContent";
+  const qs = stream ? "?alt=sse" : "";
+  document.getElementById("reqEndpoint").textContent =
+    `POST https://generativelanguage.googleapis.com/v1beta/models/${model}:${method}${qs}`;
+  const body = buildRequest();
+  delete body.generationConfig?.__schemaError;
+  document.getElementById("reqBody").innerHTML = syntaxHighlight(JSON.stringify(body, null, 2));
+}
+
+/* ============================================================
+   Wysyłka zapytania
+   ============================================================ */
+const out = document.getElementById("output");
+const usageEl = document.getElementById("usage");
+const latencyEl = document.getElementById("latency");
+
+function showError(title, detail){
+  out.innerHTML = "";
+  const box = el("div",{class:"error-box"});
+  box.appendChild(el("div",{class:"e-title"}, "⚠ "+title));
+  box.appendChild(el("div",{class:"e-body"}, detail));
+  out.appendChild(box);
+  usageEl.innerHTML = ""; latencyEl.textContent="";
+}
+
+function renderUsage(u){
+  usageEl.innerHTML = "";
+  if(!u) return;
+  const add = (label, n) => { if(n!=null) usageEl.appendChild(el("span",{class:"chip"}, `${label}: ${n}`)); };
+  add("prompt", u.promptTokenCount);
+  add("myślenie", u.thoughtsTokenCount);
+  add("odpowiedź", u.candidatesTokenCount);
+  add("razem", u.totalTokenCount);
+}
+
+function renderCandidates(candidates){
+  out.innerHTML = "";
+  if(!candidates || !candidates.length){ out.innerHTML = '<span class="placeholder">Brak treści w odpowiedzi (sprawdź finishReason / bezpieczeństwo).</span>'; return; }
+  candidates.forEach((c, i) => {
+    const block = el("div",{class:"candidate"});
+    if(candidates.length>1) block.appendChild(el("div",{class:"candidate-label"}, `Kandydat ${i+1}${c.finishReason?" · "+c.finishReason:""}`));
+    let thoughts="", answer="";
+    (c.content?.parts||[]).forEach(part => { if(part.thought) thoughts += part.text||""; else answer += part.text||""; });
+    if(thoughts){
+      const t = el("div",{class:"thoughts"});
+      t.appendChild(el("div",{class:"t-label"}, "Tok rozumowania"));
+      t.appendChild(el("div",{class:"t-body"}, thoughts));
+      block.appendChild(t);
+    }
+    block.appendChild(el("div",{}, (answer||"(pusto)")));
+    out.appendChild(block);
+  });
+}
+
+async function send(){
+  const key = document.getElementById("apiKey").value.trim();
+  if(!key){ showError("Brak klucza API", "Wklej swój klucz Gemini w sekcji „Połączenie”. Możesz go wygenerować na aistudio.google.com/apikey."); return; }
+
+  // walidacja schematu JSON, jeśli włączony
+  if(state.responseSchema.on){
+    try { JSON.parse(state.responseSchema.value); }
+    catch(e){ showError("Niepoprawny responseSchema", "Pole schematu JSON nie jest poprawnym JSON-em:\n"+e.message); return; }
+  }
+
+  const model = document.getElementById("model").value;
+  const stream = document.getElementById("streamToggle").checked;
+  const body = buildRequest();
+  const btn = document.getElementById("sendBtn");
+  const label = document.getElementById("sendLabel");
+  btn.disabled = true;
+  out.innerHTML = ""; usageEl.innerHTML=""; latencyEl.textContent="";
+  out.appendChild(el("div",{class:"candidate"}, '<span class="placeholder">Generowanie…</span>'));
+  label.innerHTML = '<span class="spinner"></span>';
+
+  const t0 = performance.now();
+  const method = stream ? "streamGenerateContent" : "generateContent";
+  const qs = stream ? "?alt=sse" : "";
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:${method}${qs}`;
+
+  try {
+    const res = await fetch(url, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json", "x-goog-api-key":key },
+      body: JSON.stringify(body),
+    });
+
+    if(!res.ok){
+      let detail;
+      try { const j = await res.json(); detail = (j.error ? `[${j.error.code} ${j.error.status}] ${j.error.message}` : JSON.stringify(j,null,2)); }
+      catch(e){ detail = await res.text(); }
+      showError(`Błąd API (HTTP ${res.status})`, detail);
+      return;
+    }
+
+    if(stream){
+      await handleStream(res);
+    } else {
+      const data = await res.json();
+      renderCandidates(data.candidates);
+      renderUsage(data.usageMetadata);
+    }
+    latencyEl.textContent = `${Math.round(performance.now()-t0)} ms`;
+  } catch(err){
+    showError("Błąd sieci / CORS", `Nie udało się połączyć z API Gemini.\nNajczęstsze przyczyny: nieprawidłowy klucz, brak internetu lub blokada sieci.\n\nSzczegóły: ${err.message}`);
+  } finally {
+    btn.disabled = false; label.textContent = "Wyślij zapytanie";
+  }
+}
+
+async function handleStream(res){
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer="", answer="", thoughts="", usage=null;
+  out.innerHTML = "";
+  const t = el("div",{class:"thoughts"}); t.style.display="none";
+  t.appendChild(el("div",{class:"t-label"}, "Tok rozumowania")); const tBody=el("div",{class:"t-body"}); t.appendChild(tBody);
+  const ans = el("div");
+  out.appendChild(t); out.appendChild(ans);
+
+  while(true){
+    const { done, value } = await reader.read();
+    if(done) break;
+    buffer += decoder.decode(value, { stream:true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop();
+    for(const line of lines){
+      const s = line.trim();
+      if(!s.startsWith("data:")) continue;
+      const payload = s.slice(5).trim();
+      if(!payload || payload==="[DONE]") continue;
+      let chunk; try { chunk = JSON.parse(payload); } catch(e){ continue; }
+      if(chunk.usageMetadata) usage = chunk.usageMetadata;
+      const parts = chunk.candidates?.[0]?.content?.parts || [];
+      for(const p of parts){
+        if(p.thought){ thoughts += p.text||""; t.style.display="block"; tBody.textContent = thoughts; }
+        else { answer += p.text||""; ans.textContent = answer; }
+      }
+    }
+  }
+  if(!answer && !thoughts) ans.innerHTML = '<span class="placeholder">Brak treści w odpowiedzi.</span>';
+  renderUsage(usage);
+}
+
+/* ============================================================
+   Presety
+   ============================================================ */
+function applyPreset(name){
+  // wyłącz wszystko, potem ustaw to, co potrzebne
+  const setOn = (k,on,val) => { state[k].on=on; if(val!==undefined) state[k].value=val; };
+  if(name==="reset"){ GROUPS.forEach(g=>g.params.forEach(p=>{ state[p.key].on=!!p.on; state[p.key].value=p.def; })); SAFETY_CATEGORIES.forEach(c=>safetyState[c.key]=""); }
+  if(name==="deterministic"){
+    Object.keys(state).forEach(k=>state[k].on=false);
+    setOn("temperature", true, 0); setOn("seed", true, 42); setOn("topP", true, 1);
+  }
+  if(name==="creative"){
+    Object.keys(state).forEach(k=>state[k].on=false);
+    setOn("temperature", true, 1.6); setOn("topP", true, 0.95); setOn("topK", true, 64);
+    setOn("frequencyPenalty", true, 0.4);
+  }
+  if(name==="json"){
+    Object.keys(state).forEach(k=>state[k].on=false);
+    setOn("temperature", true, 0);
+    setOn("responseMimeType", true, "application/json");
+    setOn("responseSchema", true);
+  }
+  renderParams(); refresh();
+}
+
+/* ============================================================
+   Inicjalizacja
+   ============================================================ */
+function init(){
+  // przywróć klucz z localStorage
+  const savedKey = localStorage.getItem("gemini_api_key");
+  if(savedKey) document.getElementById("apiKey").value = savedKey;
+  document.getElementById("apiKey").addEventListener("input", e => localStorage.setItem("gemini_api_key", e.target.value.trim()));
+
+  const savedModel = localStorage.getItem("gemini_model");
+  if(savedModel) document.getElementById("model").value = savedModel;
+
+  document.getElementById("model").addEventListener("change", e => { localStorage.setItem("gemini_model", e.target.value); renderParams(); refresh(); });
+  document.getElementById("streamToggle").addEventListener("change", refresh);
+  document.getElementById("systemInstruction").addEventListener("input", refresh);
+  document.getElementById("prompt").addEventListener("input", refresh);
+  document.getElementById("sendBtn").addEventListener("click", send);
+  document.querySelectorAll(".preset").forEach(b => b.addEventListener("click", () => applyPreset(b.dataset.preset)));
+
+  renderParams();
+  refresh();
+}
+init();
+</script>
+</body>
+</html>
