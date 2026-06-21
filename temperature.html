@@ -161,13 +161,14 @@ details.raw summary{font-family:var(--font-mono); font-size:12px; color:var(--in
         </label>
         <label class="field">
           <span class="flabel">Model</span>
-          <span class="fhelp">Wymagana obsługa logprobs. Jeśli model odmówi, pojawi się błąd API.</span>
+          <span class="fhelp">Obsługa logprobs w Gemini Developer API bywa zmienna. Pewne: 2.0-flash, 2.5-flash-lite, 1.5-flash. <b>2.5-flash i 3.x zwykle zwracają błąd „Logprobs is not enabled”.</b></span>
           <select id="model">
-            <option value="gemini-2.5-flash" selected>gemini-2.5-flash</option>
-            <option value="gemini-2.5-pro">gemini-2.5-pro</option>
-            <option value="gemini-2.0-flash">gemini-2.0-flash</option>
-            <option value="gemini-3.5-flash">gemini-3.5-flash</option>
-            <option value="gemini-3.5-pro">gemini-3.5-pro</option>
+            <option value="gemini-2.0-flash" selected>gemini-2.0-flash — ✓ logprobs</option>
+            <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite — ✓ logprobs</option>
+            <option value="gemini-1.5-flash">gemini-1.5-flash — ✓ logprobs</option>
+            <option value="gemini-2.5-pro">gemini-2.5-pro — zwykle Vertex</option>
+            <option value="gemini-2.5-flash">gemini-2.5-flash — ✗ brak logprobs</option>
+            <option value="gemini-3.5-flash">gemini-3.5-flash — ✗ / zmienne</option>
           </select>
         </label>
         <label class="field full">
@@ -355,7 +356,8 @@ async function generate(){
     $("rawJson").textContent = data ? JSON.stringify(data,null,2) : "(brak treści)";
     if(!res.ok){
       const msg = data && data.error ? `[${data.error.code} ${data.error.status}] ${data.error.message}` : `HTTP ${res.status}`;
-      out.innerHTML = `<div class="error-box"><div class="e-title">⚠ Błąd API</div><div class="e-body">${escapeHtml(msg)}</div></div>`;
+      const hint = /logprob/i.test(msg) ? `<div class="e-body" style="margin-top:8px;color:var(--ink-2)">Ten model nie udostępnia logprobs. Wybierz model oznaczony „✓ logprobs” (np. gemini-2.0-flash, gemini-2.5-flash-lite, gemini-1.5-flash).</div>` : "";
+      out.innerHTML = `<div class="error-box"><div class="e-title">⚠ Błąd API</div><div class="e-body">${escapeHtml(msg)}</div>${hint}</div>`;
       return;
     }
     const cand = data.candidates && data.candidates[0];
@@ -381,9 +383,9 @@ function init(){
   const savedKey = localStorage.getItem("gemini_api_key");
   if(savedKey) $("apiKey").value = savedKey;
   $("apiKey").addEventListener("input", e => localStorage.setItem("gemini_api_key", e.target.value.trim()));
-  const savedModel = localStorage.getItem("gemini_model");
+  const savedModel = localStorage.getItem("gemini_logprobs_model");
   if(savedModel && [...$("model").options].some(o=>o.value===savedModel)) $("model").value = savedModel;
-  $("model").addEventListener("change", e => localStorage.setItem("gemini_model", e.target.value));
+  $("model").addEventListener("change", e => localStorage.setItem("gemini_logprobs_model", e.target.value));
   const sync = () => { const v = parseFloat($("temp").value).toFixed(2); $("tval").textContent=v; $("tlabel").textContent=v; };
   $("temp").addEventListener("input", sync); sync();
   $("genBtn").addEventListener("click", generate);
