@@ -241,5 +241,305 @@ input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; 
 
 <aside id="presenterPanel" hidden></aside>
 
+<script>
+// ============================================================
+// edulab · demo agenta — warstwa danych (bez DOM!)
+// ------------------------------------------------------------
+// Ten skrypt NIE dotyka strony (żadnego document.getElementById itd.).
+// To jedynie: (1) narzędzia, które agent może "wywołać", (2) opis
+// scenariusza nr 1 jako gotowa lista zdarzeń (StepEvent), (3) mały
+// generator, który te zdarzenia oddaje po kolei. Renderowanie na
+// ekranie (Zadanie 3) i prawdziwe wywołania Gemini (Zadanie 7)
+// dobudują się na tym kontrakcie, nie zmieniając go.
+// ============================================================
+
+// ---- Tryb demo vs tryb "na żywo" ---------------------------------
+// W trybie demo (MOCK_MODE_DATE=true) narzędzie "data_i_czas" zawsze
+// zwraca tę samą, stałą datę (2026-07-04, sobota). Dzięki temu liczby
+// w scenariuszu 1 (np. "za 100 dni będzie poniedziałek") są zawsze
+// prawdziwe i powtarzalne — demo nie "psuje się" w kolejnych dniach.
+const MOCK_MODE_DATE = true;
+
+// ---- Narzędzia (tools) --------------------------------------------
+// Narzędzia są ZWYKŁYMI funkcJAMI w naszej aplikacji. Model ich nie widzi
+// i nie uruchamia — dostaje tylko ich OPISY, a my wykonujemy je za niego.
+const TOOL_FNS = {
+  kalkulator: ({wyrazenie}) => {
+    if(!/^[0-9+\-*/(). %]+$/.test(wyrazenie||"")) return {blad:"Niepoprawne wyrażenie: "+wyrazenie};
+    try { return {wynik: Function('"use strict";return ('+wyrazenie+')')()}; }
+    catch(e){ return {blad:"Błąd obliczeń: "+e.message}; }
+  },
+  data_i_czas: () => MOCK_MODE_DATE          // w trybie demo: stała data (powtarzalność!)
+    ? {data:"2026-07-04", dzien_tygodnia:"sobota", numer_dnia:6}
+    : (d=>({data:d.toISOString().slice(0,10), dzien_tygodnia:d.toLocaleDateString('pl-PL',{weekday:'long'}), numer_dnia:(d.getDay()||7)}))(new Date()),
+  szukaj: ({zapytanie}) => MOCK_INDEX.find(r=>zapytanie.toLowerCase().includes(r.klucz))?.wynik
+    ?? {blad:"Brak wyników dla: "+zapytanie},
+  notatnik: ({akcja, klucz, wartosc}) => akcja==="zapisz"
+    ? (NOTES[klucz]=wartosc, {zapisano:klucz})
+    : {odczyt: NOTES[klucz] ?? null},
+};
+
+// Pamięć notatnika — zwykły obiekt w JS, "żyje" tylko na czas demo.
+const NOTES = {};
+
+// Bardzo mała, ręcznie spreparowana "baza wiedzy", którą przeszukuje
+// narzędzie "szukaj". W prawdziwej aplikacji byłoby to np. wyszukiwanie
+// w internecie albo w bazie danych firmy.
+const MOCK_INDEX = [
+  {klucz:"bilet", wynik:{zrodlo:"teatr-apollo.pl", cena_biletu_pln:85}},
+  {klucz:"ludność", wynik:{zrodlo:"gus.gov.pl", ludnosc_polski:37600000}},
+];
+
+// ---- Opisy narzędzi na potrzeby interfejsu (Zadanie 3) ------------
+// Model dostaje osobny, techniczny opis (w "wire" JSON-ach niżej).
+// TOOLS_UI to wersja dla CZŁOWIEKA — ikonka i jedno zdanie po polsku,
+// żeby na ekranie było widać, co dane narzędzie właściwie robi.
+const TOOLS_UI = {
+  kalkulator:   {icon:'🧮', opis:'Wykonuje działania matematyczne (dodawanie, mnożenie, itd.).'},
+  data_i_czas:  {icon:'📅', opis:'Sprawdza dzisiejszą datę i dzień tygodnia.'},
+  szukaj:       {icon:'🔍', opis:'Szuka informacji w małej bazie wiedzy.'},
+  notatnik:     {icon:'📝', opis:'Zapisuje i odczytuje notatki agenta między krokami.'},
+};
+
+// runTool — jedno wejście dla wszystkich wywołań narzędzi. Task 7
+// (tryb "na żywo") będzie wywoływał dokładnie tę funkcję, gdy model
+// Gemini poprosi o functionCall — więc musi być odporna na błędy:
+// nieznana nazwa narzędzia albo wyjątek w środku nie mogą wywalić apki.
+function runTool(name, args){
+  const fn = TOOL_FNS[name];
+  if(!fn) return {blad:"Nieznane narzędzie: "+name};
+  try { return fn(args||{}); }
+  catch(e){ return {blad:"Błąd narzędzia „"+name+"”: "+e.message}; }
+}
+
+// ============================================================
+// Scenariusz 1: "Za 100 dni"
+// ------------------------------------------------------------
+// Pytanie ilustruje typowy problem chatbotów bez narzędzi: nie znają
+// bieżącej daty i muszą ją zgadywać. Agent z narzędziami sprawdza
+// datę naprawdę, a potem liczy dalej krok po kroku.
+//
+// Matematyka scenariusza (sprawdzona, żeby liczby się zgadzały):
+//   2026-07-04 to sobota (numer dnia tygodnia: 6, licząc pon=1..nie=7)
+//   100 dni = 14 pełnych tygodni (98 dni) + 2 dni
+//   sobota + 2 dni = poniedziałek  →  numer dnia: 1
+//   1 × 7 = 7
+// ============================================================
+
+const dni100 = {
+  id: 'dni100',
+  nazwa: 'Za 100 dni',
+  cel: 'Jaki dzień tygodnia będzie za 100 dni i ile wynosi numer tego dnia pomnożony przez 7?',
+
+  // "oneshot" to odpowiedź, jaką dałby zwykły chatbot BEZ narzędzi —
+  // od razu, jednym zdaniem, bez sprawdzania czegokolwiek. Używamy jej
+  // w widoku "Porównaj ze zwykłym chatbotem" (przycisk #compareBtn),
+  // żeby pokazać różnicę: pewność siebie bez podstaw.
+  oneshot: {
+    body: "Za 100 dni będzie środa…",
+    why: "Chatbot bez narzędzi nie zna dzisiejszej daty — zgaduje. Brzmi pewnie, ale nie ma jak tego sprawdzić.",
+  },
+
+  steps: [
+    // 1) CEL — to, o co pyta użytkownik. Agent "zapisuje" je sobie,
+    // zanim zacznie działać.
+    {
+      kind: 'goal',
+      title: 'Cel',
+      body: 'Jaki dzień tygodnia będzie za 100 dni i ile wynosi numer tego dnia pomnożony przez 7?',
+      why: 'To jest cel, jaki agent dostał od użytkownika. Zanim zacznie działać, zapisuje sobie dokładnie, co ma ustalić.',
+      wire: {
+        label: 'Zapytanie wysłane do Gemini (z listą dostępnych narzędzi)',
+        json: {
+          endpoint: 'generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent',
+          request: {
+            contents: [
+              { role: 'user', parts: [ { text: 'Jaki dzień tygodnia będzie za 100 dni i ile wynosi numer tego dnia pomnożony przez 7?' } ] }
+            ],
+            tools: [ { functionDeclarations: [
+              { name: 'data_i_czas', description: 'Zwraca dzisiejszą datę i dzień tygodnia.' },
+              { name: 'kalkulator', description: 'Wykonuje działanie matematyczne.', parameters: { type: 'OBJECT', properties: { wyrazenie: { type: 'STRING' } } } },
+              { name: 'szukaj', description: 'Szuka informacji w bazie wiedzy.', parameters: { type: 'OBJECT', properties: { zapytanie: { type: 'STRING' } } } },
+              { name: 'notatnik', description: 'Zapisuje i odczytuje notatki.', parameters: { type: 'OBJECT', properties: { akcja: { type: 'STRING' }, klucz: { type: 'STRING' }, wartosc: { type: 'STRING' } } } },
+            ] } ],
+          },
+        },
+      },
+      ctx: { role: 'user', label: 'Pytanie użytkownika', chars: 122 },
+    },
+
+    // 2) PLAN — agent najpierw układa plan, zamiast strzelać odpowiedzią.
+    {
+      kind: 'plan',
+      title: 'Plan działania',
+      body: '1. Sprawdzę dzisiejszą datę…\n2. Policzę dzień tygodnia za 100 dni…\n3. Pomnożę numer dnia przez 7',
+      why: 'Zamiast zgadywać, agent najpierw układa plan działania — tak jak dobry pracownik, który rozpisuje kroki, zanim zacznie pracę.',
+      wire: {
+        label: 'Odpowiedź Gemini: plan w postaci tekstu (jeszcze bez wywołania narzędzia)',
+        json: {
+          candidates: [ { content: { role: 'model', parts: [
+            { text: '1. Sprawdzę dzisiejszą datę…\n2. Policzę dzień tygodnia za 100 dni…\n3. Pomnożę numer dnia przez 7' }
+          ] } } ],
+        },
+      },
+      ctx: { role: 'model', label: 'Plan agenta', chars: 136 },
+    },
+
+    // 3) TOOL_CALL #1 — agent nie zna dzisiejszej daty "z pamięci",
+    // więc prosi o wywołanie narzędzia data_i_czas.
+    {
+      kind: 'tool_call',
+      loop: 1,
+      tool: 'data_i_czas',
+      args: {},
+      title: 'Wywołanie narzędzia: data i czas',
+      body: 'Agent prosi o sprawdzenie dzisiejszej daty za pomocą narzędzia „data_i_czas” (bez dodatkowych parametrów).',
+      why: 'Agent nie zna dzisiejszej daty z pamięci — zamiast zgadywać, prosi o sprawdzenie jej w prawdziwym źródle.',
+      wire: {
+        label: 'Odpowiedź Gemini: prośba o wywołanie funkcji (functionCall)',
+        json: {
+          candidates: [ { content: { role: 'model', parts: [
+            { functionCall: { name: 'data_i_czas', args: {} } }
+          ] } } ],
+        },
+      },
+      ctx: { role: 'model', label: 'functionCall: data_i_czas', chars: 76 },
+    },
+
+    // 4) OBSERVATION #1 — wynik działania narzędzia (fakt, nie zgadywanka).
+    {
+      kind: 'observation',
+      loop: 1,
+      tool: 'data_i_czas',
+      title: 'Wynik: data i czas',
+      body: JSON.stringify({ data: '2026-07-04', dzien_tygodnia: 'sobota', numer_dnia: 6 }),
+      isError: false,
+      why: 'Narzędzie zwróciło konkretną, sprawdzalną datę — to fakt, a nie coś, co model sobie wymyślił.',
+      wire: {
+        label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)',
+        json: {
+          request: { contents: [
+            { role: 'function', parts: [ { functionResponse: {
+              name: 'data_i_czas',
+              response: { data: '2026-07-04', dzien_tygodnia: 'sobota', numer_dnia: 6 },
+            } } ] },
+          ] },
+        },
+      },
+      ctx: { role: 'tool', label: 'functionResponse: data_i_czas', chars: 147 },
+    },
+
+    // 5) REFLECTION #1 — agent samodzielnie łączy fakt (data) z prostą matematyką.
+    {
+      kind: 'reflection',
+      loop: 1,
+      title: 'Namysł',
+      body: 'Dziś sobota. 100 = 14 tygodni + 2 dni, więc za 100 dni będzie poniedziałek, numer dnia 1.',
+      why: 'Agent samodzielnie liczy dalej — łączy sprawdzony fakt (dzisiejsza data) z prostą matematyką kalendarza.',
+      wire: {
+        label: 'Odpowiedź Gemini: wniosek w postaci tekstu',
+        json: {
+          candidates: [ { content: { role: 'model', parts: [
+            { text: 'Dziś sobota. 100 = 14 tygodni + 2 dni, więc za 100 dni będzie poniedziałek, numer dnia 1.' }
+          ] } } ],
+        },
+      },
+      ctx: { role: 'model', label: 'Wniosek: dzień tygodnia', chars: 127 },
+    },
+
+    // 6) TOOL_CALL #2 — mnożenie lepiej policzyć kalkulatorem niż "w głowie".
+    {
+      kind: 'tool_call',
+      loop: 2,
+      tool: 'kalkulator',
+      args: { wyrazenie: '1 * 7' },
+      title: 'Wywołanie narzędzia: kalkulator',
+      body: 'Agent prosi o obliczenie wyrażenia „1 * 7” za pomocą narzędzia „kalkulator”.',
+      why: 'Teraz agent potrzebuje wykonać mnożenie — zamiast liczyć „w głowie” (co bywa zawodne u modeli językowych), używa kalkulatora.',
+      wire: {
+        label: 'Odpowiedź Gemini: prośba o wywołanie funkcji (functionCall)',
+        json: {
+          candidates: [ { content: { role: 'model', parts: [
+            { functionCall: { name: 'kalkulator', args: { wyrazenie: '1 * 7' } } }
+          ] } } ],
+        },
+      },
+      ctx: { role: 'model', label: 'functionCall: kalkulator', chars: 94 },
+    },
+
+    // 7) OBSERVATION #2 — wynik mnożenia, policzony naprawdę.
+    {
+      kind: 'observation',
+      loop: 2,
+      tool: 'kalkulator',
+      title: 'Wynik: kalkulator',
+      body: JSON.stringify({ wynik: 7 }),
+      isError: false,
+      why: '1 razy 7 to dokładnie 7 — to wynik obliczenia, a nie liczba zgadnięta przez model.',
+      wire: {
+        label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)',
+        json: {
+          request: { contents: [
+            { role: 'function', parts: [ { functionResponse: {
+              name: 'kalkulator',
+              response: { wynik: 7 },
+            } } ] },
+          ] },
+        },
+      },
+      ctx: { role: 'tool', label: 'functionResponse: kalkulator', chars: 95 },
+    },
+
+    // 8) REFLECTION #2 — agent sprawdza, czy ma już wszystko, czego potrzebuje.
+    {
+      kind: 'reflection',
+      loop: 2,
+      title: 'Namysł',
+      body: 'Mam już wszystko: dzień tygodnia za 100 dni to poniedziałek, a numer dnia razy 7 daje 7. Mogę teraz odpowiedzieć.',
+      why: 'Agent sprawdza, czy zebrał już wszystkie elementy odpowiedzi, zanim ją sformułuje — to ostatni krok przed odpowiedzią.',
+      wire: {
+        label: 'Odpowiedź Gemini: podsumowanie przed odpowiedzią końcową',
+        json: {
+          candidates: [ { content: { role: 'model', parts: [
+            { text: 'Mam już wszystko: dzień tygodnia za 100 dni to poniedziałek, a numer dnia razy 7 daje 7. Mogę teraz odpowiedzieć.' }
+          ] } } ],
+        },
+      },
+      ctx: { role: 'model', label: 'Wniosek: podsumowanie', chars: 151 },
+    },
+
+    // 9) ANSWER — odpowiedź końcowa, zbudowana z dwóch sprawdzonych faktów.
+    {
+      kind: 'answer',
+      title: 'Odpowiedź',
+      body: 'Za 100 dni będzie **poniedziałek**; 1 × 7 = **7**.',
+      why: 'To jest ostateczna odpowiedź — zbudowana z dwóch sprawdzonych faktów (daty i obliczenia), a nie z jednego zgadywanego zdania.',
+      wire: {
+        label: 'Odpowiedź Gemini: tekst finalny pokazywany użytkownikowi',
+        json: {
+          candidates: [ { content: { role: 'model', parts: [
+            { text: 'Za 100 dni będzie **poniedziałek**; 1 × 7 = **7**.' }
+          ] } } ],
+        },
+      },
+      ctx: { role: 'model', label: 'Odpowiedź końcowa', chars: 88 },
+    },
+  ],
+};
+
+// SCENARIOS — lista scenariuszy dostępnych w selektorze (#presetSel).
+// Na razie tylko scenariusz 1; kolejne (placeholdery w HTML) dołożą
+// następne zadania.
+const SCENARIOS = [ dni100 ];
+
+// ---- mockRun — "odtwarzacz" scenariusza ---------------------------
+// Async generator: po kolei oddaje gotowe zdarzenia (StepEvent) ze
+// scenariusza. Nic nie liczy w locie — cała "inteligencja" siedzi już
+// w danych powyżej. Dzięki temu Zadanie 3 (renderer) może traktować
+// mockRun identycznie jak przyszły "prawdziwy" strumień z Gemini.
+async function* mockRun(scenario){ for(const ev of scenario.steps) yield ev; }
+
+</script>
+
 </body>
 </html>
