@@ -205,7 +205,6 @@ input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; 
 #presenterPanel li{line-height:1.5;}
 #presenterPanel .moment{display:block; font-family:var(--font-mono); font-size:11px; letter-spacing:.04em;
   text-transform:uppercase; color:var(--marigold); margin:0 0 3px;}
-#presenterPanel .term{border-bottom-color:rgba(251,247,240,.5); color:inherit;}
 #presenterPanel .caveat{margin:14px 0 0; padding-top:10px; border-top:1px dashed rgba(251,247,240,.25); color:var(--paper-2); font-size:var(--caption);}
 
 /* ---- Responsive ------------------------------------------------ */
@@ -236,7 +235,7 @@ input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; 
   <div class="intro">
     <p class="eyebrow">Interaktywne demo · Agent AI</p>
     <h1 class="display">Jak myśli agent AI</h1>
-    <p>Krok po kroku zobacz, co dzieje się „w głowie” <span class="term" title="program, który sam decyduje o kolejnych krokach do celu">agenta</span>: jak planuje, kiedy sięga po <span class="term" title="funkcja aplikacji, o którą model może poprosić">narzędzie</span> i jak buduje ostateczną odpowiedź — bez żargonu, w prostych słowach.</p>
+    <p>Krok po kroku zobacz, co dzieje się „w głowie” <span class="term" title="program, który sam decyduje o kolejnych krokach do celu">agenta</span>: jak planuje, kiedy sięga po <span class="term" title="funkcja aplikacji, o którą model może poprosić">narzędzie</span> i jak buduje ostateczną odpowiedź — bez żargonu, w prostych słowach. Zobaczysz też, czym różni się od zwykłego chatbota, który zamiast sprawdzać potrafi zmyślać — czyli serwować <span class="term" title="pewnie brzmiąca zmyślona odpowiedź">halucynacje</span>.</p>
   </div>
 
   <div class="toolbar">
@@ -278,7 +277,7 @@ input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; 
         <h2>Pamięć rozmowy</h2>
       </div>
       <div class="card-body">
-        <p class="card-note">To jest <span class="term" title="wszystko, co model dostaje na wejściu w danej turze">kontekst</span> — rośnie z każdą turą i podnosi liczbę zużytych <span class="term" title="kawałek tekstu ~4 znaki; jednostka rozliczeń">tokenów</span>.</p>
+        <p class="card-note">To jest <span class="term" title="wszystko, co model dostaje na wejściu w danej turze">kontekst</span> — rośnie z każdym <span class="term" title="jedno przejście pętli: prośba → wykonanie → wynik">okrążeniem</span> pętli i podnosi liczbę zużytych <span class="term" title="kawałek tekstu ~4 znaki; jednostka rozliczeń">tokenów</span>.</p>
         <div id="ctxStack" class="ctx-stack"></div>
         <div id="costMeter"></div>
       </div>
@@ -298,9 +297,9 @@ input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; 
   <ol>
     <li><span class="moment">Po karcie 📋 Plan</span>„Zapytaj salę: jakiego narzędzia użyje najpierw?”</li>
     <li><span class="moment">Przy pierwszym 🔧 wywołaniu narzędzia</span>„Podkreśl: model NIE wykonuje kodu — prosi. Pokaż JSON.”</li>
-    <li><span class="moment">Przy błysku pamięci (ctx flash)</span>„Zapytaj: co się stanie z kosztem przy 50 <span class="term" title="jedno przejście pętli: prośba → wykonanie → wynik">okrążeniach</span>?”</li>
+    <li><span class="moment">Przy błysku pamięci (ctx flash)</span>„Zapytaj: co się stanie z kosztem przy 50 okrążeniach?”</li>
     <li><span class="moment">Przy czerwonej karcie w scenariuszu „Awaria”</span>„Zatrzymaj się: skąd agent wie, że się nie udało? Bo błąd to też obserwacja.”</li>
-    <li><span class="moment">Przy porównaniu chatbot vs agent</span>„Puenta: chatbot zgaduje — to <span class="term" title="pewnie brzmiąca zmyślona odpowiedź">halucynacja</span> — agent sprawdza; różnica to pętla i narzędzia, nie „mądrzejszy model”.”</li>
+    <li><span class="moment">Przy porównaniu chatbot vs agent</span>„Puenta: chatbot zgaduje, agent sprawdza — różnica to pętla i narzędzia, nie ‘mądrzejszy model'.”</li>
   </ol>
   <p class="caveat">Uwaga o czasie: w trybie na żywo model czasem pomija wyraźną kartę 📋 Plan i idzie prosto do narzędzi — tak działa prawdziwe API. Do prezentacji na scenie używaj trybu demo (scripted) — jest powtarzalny; tryb na żywo pokaż osobno, jako „tu widzicie prawdziwe zachowanie, nieuczesane”.</p>
 </aside>
@@ -1753,6 +1752,10 @@ autoBtn.addEventListener('click', () => {
 const presenterPanelEl = document.getElementById('presenterPanel');
 document.addEventListener('keydown', (e) => {
   if(e.key !== 'n' && e.key !== 'N') return;
+  // Kombinacje z modyfikatorami (Ctrl+N = nowe okno, Cmd+N na macOS,
+  // Alt+N — skróty przeglądarki/systemu) NIE są prośbą o notatki —
+  // ignorujemy je, żeby panel nie mrugał w trakcie demo.
+  if(e.ctrlKey || e.metaKey || e.altKey) return;
   const active = document.activeElement;
   const tag = active && active.tagName;
   if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (active && active.isContentEditable)) return;
