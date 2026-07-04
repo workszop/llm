@@ -214,7 +214,7 @@ input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; 
       <input type="range" id="speed" min="0.5" max="3" step="0.1" value="1.5" />
     </label>
 
-    <span id="loopCounter" class="chip">Krok 0</span>
+    <span id="loopCounter" class="chip"></span>
 
     <button id="compareBtn" class="btn btn-ghost">Porównaj ze zwykłym chatbotem</button>
   </div>
@@ -434,7 +434,7 @@ const dni100 = {
     {
       kind: 'reflection',
       loop: 1,
-      title: 'Namysł',
+      title: 'Refleksja',
       body: 'Dziś sobota. 100 = 14 tygodni + 2 dni, więc za 100 dni będzie poniedziałek, numer dnia 1.',
       why: 'Agent samodzielnie liczy dalej — łączy sprawdzony fakt (dzisiejsza data) z prostą matematyką kalendarza.',
       wire: {
@@ -495,7 +495,7 @@ const dni100 = {
     {
       kind: 'reflection',
       loop: 2,
-      title: 'Namysł',
+      title: 'Refleksja',
       body: 'Mam już wszystko: dzień tygodnia za 100 dni to poniedziałek, a numer dnia razy 7 daje 7. Mogę teraz odpowiedzieć.',
       why: 'Agent sprawdza, czy zebrał już wszystkie elementy odpowiedzi, zanim ją sformułuje — to ostatni krok przed odpowiedzią.',
       wire: {
@@ -573,7 +573,7 @@ const KIND_META = {
   plan:        { icon:'📋', label:'Plan' },
   tool_call:   { icon:'🔧', label:'Wywołanie narzędzia' },
   observation: { icon:'👁', label:'Obserwacja' },
-  reflection:  { icon:'💭', label:'Namysł' },
+  reflection:  { icon:'💭', label:'Refleksja' },
   answer:      { icon:'✅', label:'Odpowiedź' },
 };
 
