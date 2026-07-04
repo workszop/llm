@@ -118,6 +118,14 @@ select{appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='h
 .switch input:focus-visible + .slider{box-shadow:var(--focus-ring);}
 .switch-row{display:flex; align-items:center; gap:9px; font-size:var(--body-sm); color:var(--ink-2);}
 
+/* ---- API key input (tryb na żywo) --------------------------------- */
+#apiKeyInput{
+  font-family:var(--font-mono); font-size:var(--body-sm); color:var(--ink);
+  background:var(--paper); border:1px solid var(--line-2); border-radius:var(--r-md);
+  padding:9px 12px; width:220px; transition:border-color .15s, box-shadow .15s;
+}
+#apiKeyInput:focus{outline:none; border-color:var(--marigold); box-shadow:var(--focus-ring);}
+
 /* ---- Range sliders ------------------------------------------------ */
 input[type=range]{-webkit-appearance:none; appearance:none; width:140px; height:8px; border-radius:var(--r-pill); background:rgba(33,30,26,.12); outline:none;}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:20px; height:20px; border-radius:50%; background:#fff; border:2px solid var(--ink); box-shadow:var(--shadow-sm); cursor:pointer; margin-top:0;}
@@ -228,6 +236,8 @@ input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; 
       Tryb na żywo (wymaga klucza API)
     </label>
 
+    <input type="password" id="apiKeyInput" placeholder="Wklej klucz API Gemini…" hidden autocomplete="off" />
+
     <button id="stepBtn" class="btn btn-primary">Krok ▸</button>
     <button id="autoBtn" class="btn btn-ghost">Auto</button>
 
@@ -281,7 +291,7 @@ input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; 
 // zwraca tę samą, stałą datę (2026-07-04, sobota). Dzięki temu liczby
 // w scenariuszu 1 (np. "za 100 dni będzie poniedziałek") są zawsze
 // prawdziwe i powtarzalne — demo nie "psuje się" w kolejnych dniach.
-const MOCK_MODE_DATE = true;
+let MOCK_MODE_DATE = true;
 
 // ---- Narzędzia (tools) --------------------------------------------
 // Narzędzia są ZWYKŁYMI funkcJAMI w naszej aplikacji. Model ich nie widzi
@@ -333,6 +343,159 @@ function runTool(name, args){
   if(!fn) return {blad:"Nieznane narzędzie: "+name};
   try { return fn(args||{}); }
   catch(e){ return {blad:"Błąd narzędzia „"+name+"”: "+e.message}; }
+}
+
+// ============================================================
+// Zadanie 7: tryb "na żywo" — prawdziwe wywołania Gemini
+// ------------------------------------------------------------
+// FUNCTION_DECLARATIONS — deklaracje narzędzi w kształcie, jakiego
+// oczekuje Gemini (uppercase typy, "required"), 1:1 z nazwami argumentów
+// w TOOL_FNS. To NIE to samo co ręcznie spreparowany wire JSON w
+// scenariuszach mock — te dane trafiają naprawdę do API.
+// ============================================================
+const FUNCTION_DECLARATIONS = [
+  { name: 'kalkulator', description: 'Wykonuje działanie matematyczne (np. dodawanie, mnożenie).',
+    parameters: { type: 'OBJECT', properties: {
+      wyrazenie: { type: 'STRING', description: 'Wyrażenie do obliczenia, np. 2 + 2.' },
+    }, required: ['wyrazenie'] } },
+  { name: 'szukaj', description: 'Szuka informacji w małej bazie wiedzy.',
+    parameters: { type: 'OBJECT', properties: {
+      zapytanie: { type: 'STRING', description: 'Fraza do wyszukania w bazie wiedzy.' },
+    }, required: ['zapytanie'] } },
+  { name: 'notatnik', description: 'Zapisuje i odczytuje notatki agenta między krokami.',
+    parameters: { type: 'OBJECT', properties: {
+      akcja: { type: 'STRING', description: 'Co zrobić: "zapisz" albo "odczytaj".' },
+      klucz: { type: 'STRING', description: 'Klucz notatki.' },
+      wartosc: { type: 'STRING', description: 'Wartość do zapisania (tylko dla akcji "zapisz").' },
+    }, required: ['akcja'] } },
+  { name: 'data_i_czas', description: 'Zwraca dzisiejszą datę i dzień tygodnia.' },
+];
+
+// SYSTEM — instrukcja systemowa: najpierw plan (sam tekst), potem
+// wywołania narzędzi z jednozdaniową refleksją przed każdym, na końcu
+// odpowiedź samym tekstem. To ten sam kontrakt, który mockRun udaje
+// ręcznie spreparowanymi zdarzeniami.
+const SYSTEM = "Jesteś agentem. Najpierw przedstaw krótki plan w punktach (sam tekst). " +
+  "Potem realizuj go krok po kroku, wywołując narzędzia. Przed każdym wywołaniem napisz " +
+  "jedno zdanie refleksji. Gdy znasz ostateczną odpowiedź, odpowiedz samym tekstem.";
+
+const GEMINI_MODEL = 'gemini-3.5-flash';
+const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+
+// callGemini(req) — jedno wywołanie generateContent. Rzuca Error z
+// czytelnym polskim komunikatem na błąd HTTP (ten sam wzorzec odczytu
+// JSON błędu co w index.html) — liveRun łapie ten wyjątek i NIGDY go
+// nie przepuszcza dalej (patrz komentarz przy liveRun).
+async function callGemini(req){
+  const key = localStorage.getItem('gemini_api_key') || '';
+  const res = await fetch(GEMINI_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+    body: JSON.stringify(req),
+  });
+  if(!res.ok){
+    let detail;
+    try {
+      const j = await res.json();
+      detail = j.error ? `[${j.error.code} ${j.error.status}] ${j.error.message}` : JSON.stringify(j);
+    } catch(e){ detail = await res.text(); }
+    throw new Error(`Błąd API (HTTP ${res.status}): ${detail}`);
+  }
+  return res.json();
+}
+
+// liveRun(goal) — "prawdziwy" odpowiednik mockRun: async generator o
+// DOKŁADNIE tym samym kontrakcie StepEvent, ale zamiast odtwarzać
+// ręcznie spreparowane kroki, faktycznie rozmawia z Gemini i wykonuje
+// narzędzia lokalnie przez runTool. step() (Zadanie 3) nie ma try/catch
+// wokół gen.next() — więc ta funkcja NIE MOŻE rzucić. Każdy fetch/parse
+// jest owinięty w try/catch; błąd sieci, HTTP albo niepoprawny kształt
+// odpowiedzi kończy przebieg pojedynczą kartą odpowiedzi z isError:true,
+// zamiast wywalić generator.
+async function* liveRun(goal){
+  // Brak klucza API sprawdzamy PRZED jakimkolwiek yieldem — jeśli go nie ma,
+  // pierwsza (i jedyna) karta przebiegu to karta błędu, w stylu index.html
+  // ("Brak klucza API"), a nie karta celu udająca, że coś się zaczęło.
+  if(!localStorage.getItem('gemini_api_key')){
+    yield { kind: 'answer', isError: true,
+      body: '⛔ Brak klucza API. Wklej swój klucz Gemini w polu obok przełącznika trybu na żywo. Możesz go wygenerować na aistudio.google.com/apikey.',
+      why: 'Tryb na żywo wysyła prawdziwe zapytania do API Gemini — bez klucza nie da się ich uwierzytelnić.' };
+    return;
+  }
+
+  const contents = [ { role: 'user', parts: [ { text: goal } ] } ];
+  yield {
+    kind: 'goal', title: 'Cel', body: goal,
+    why: 'To jest cel, jaki agent dostał od użytkownika. Zanim zacznie działać, zapisuje sobie dokładnie, co ma ustalić.',
+    wire: {
+      label: 'Zapytanie wysłane do Gemini (z listą dostępnych narzędzi)',
+      json: { endpoint: `generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
+        request: { contents: contents.slice(), tools: [ { functionDeclarations: FUNCTION_DECLARATIONS } ] } },
+    },
+    ctx: { role: 'user', label: 'cel użytkownika', chars: JSON.stringify(contents[0]).length },
+  };
+
+  for(let i = 1; i <= MAX_ITER + 1; i++){                      // +1: pierwsza tura to plan
+    const req = { systemInstruction: { parts: [ { text: SYSTEM } ] }, contents: contents.slice(),
+      tools: [ { functionDeclarations: FUNCTION_DECLARATIONS } ] };
+
+    let res, content;
+    try {
+      res = await callGemini(req);
+      content = res.candidates[0].content;
+    } catch(err){
+      yield { kind: 'answer', isError: true, body: '⛔ Błąd API: ' + err.message,
+        why: 'Nie udało się uzyskać poprawnej odpowiedzi od Gemini (sieć, HTTP albo nieoczekiwany kształt odpowiedzi).' };
+      return;
+    }
+    contents.push(content);
+    const text = (content.parts || []).filter(p => p.text).map(p => p.text).join('');
+    const fc = (content.parts || []).find(p => p.functionCall)?.functionCall;
+
+    if(!fc){                                                    // brak prośby o narzędzie = koniec (plan lub odpowiedź)
+      if(i === 1){
+        yield { kind: 'plan', title: 'Plan działania', body: text,
+          why: 'Zamiast zgadywać, agent najpierw układa plan działania — tak jak dobry pracownik, który rozpisuje kroki, zanim zacznie pracę.',
+          wire: { label: 'Odpowiedź Gemini: plan w postaci tekstu (jeszcze bez wywołania narzędzia)', json: res },
+          ctx: { role: 'model', label: 'Plan agenta', chars: JSON.stringify(content).length } };
+        const followUp = { role: 'user', parts: [ { text: 'Realizuj plan.' } ] };
+        contents.push(followUp);
+        continue;
+      }
+      yield { kind: 'answer', body: text, loop: i - 1,
+        wire: { label: 'Odpowiedź Gemini: końcowa odpowiedź tekstowa', json: res },
+        ctx: { role: 'model', label: 'Odpowiedź agenta', chars: JSON.stringify(content).length } };
+      return;
+    }
+
+    // Uwaga: w prawdziwych odpowiedziach Gemini refleksja (tekst) i
+    // functionCall zwykle przychodzą w TEJ SAMEJ turze (jeden `content`,
+    // już wepchnięty do `contents` powyżej) — więc ctx (rozmiar tury)
+    // liczymy TYLKO RAZ, przy tool_call. Doliczenie go też przy reflection
+    // podwójnie zawyżałoby stos "Pamięć rozmowy" i licznik kosztu o ten
+    // sam fragment tekstu.
+    if(text){
+      yield { kind: 'reflection', body: text, loop: i - 1 };
+    }
+    yield { kind: 'tool_call', tool: fc.name, args: fc.args, loop: i - 1,
+      title: 'Wywołanie narzędzia: ' + fc.name,
+      body: 'Agent prosi o wywołanie narzędzia „' + fc.name + '”.',
+      wire: { label: 'Odpowiedź Gemini: prośba o wywołanie funkcji (functionCall)', json: res },
+      ctx: { role: 'model', label: 'functionCall: ' + fc.name, chars: JSON.stringify(content).length } };
+
+    const result = runTool(fc.name, fc.args);
+    // Wg dokumentacji Gemini (generateContent, REST) functionResponse
+    // wraca do rozmowy jako część z role:"user" — patrz raport Zadania 7.
+    const funcResponseTurn = { role: 'user', parts: [ { functionResponse: { name: fc.name, response: result } } ] };
+    yield { kind: 'observation', tool: fc.name, title: 'Wynik: ' + fc.name,
+      body: JSON.stringify(result, null, 1), isError: !!result.blad, loop: i - 1,
+      wire: { label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)', json: { contents: [ funcResponseTurn ] } },
+      ctx: { role: 'tool', label: 'functionResponse: ' + fc.name, chars: JSON.stringify(funcResponseTurn).length } };
+    contents.push(funcResponseTurn);
+  }
+
+  yield { kind: 'answer', isError: true, body: '⛔ Limit 5 okrążeń osiągnięty — bezpiecznik zadziałał.',
+    why: 'Bez limitu zapętlony agent kręciłby się (i płacił) w nieskończoność.' };
 }
 
 // ============================================================
@@ -1379,8 +1542,13 @@ function startRun(){
   currentScenario = scenario || null;
   if(!scenario){ gen = null; return; }
 
+  // Zadanie 7: w trybie na żywo data_i_czas ma zwracać PRAWDZIWĄ dzisiejszą
+  // datę (nie stałą z demo) — inaczej odpowiedzi Gemini o dniach tygodnia
+  // przestałyby się zgadzać z tym, co narzędzie faktycznie zwraca.
+  MOCK_MODE_DATE = !modeToggle.checked;
+
   gen = modeToggle.checked
-    ? liveRun(scenario.cel)   // Zadanie 7 — jeszcze nieobecne (przełącznik zablokowany)
+    ? liveRun(scenario.cel)
     : mockRun(scenario);
 
   step();                               // od razu pokaż kartę celu (🎯)
@@ -1462,13 +1630,22 @@ presetSel.innerHTML = '';
 presetSel.appendChild(elT('option', { value:'' }, '— wybierz zadanie —'));
 SCENARIOS.forEach(s => presetSel.appendChild(elT('option', { value:s.id }, s.nazwa)));
 
-// Tryb "na żywo" to Zadanie 7 — na razie zablokowany, z polskim
-// tooltipem tłumaczącym dlaczego.
-modeToggle.disabled = true;
-modeToggle.title = 'Tryb na żywo: wkrótce (wymaga klucza API) — na razie dostępny tylko tryb demo.';
+// Zadanie 7: tryb "na żywo" jest teraz włączony. Pole klucza API pokazuje
+// się tylko gdy tryb jest włączony i w localStorage nie ma jeszcze klucza
+// (ten sam localStorage key co w index.html — "gemini_api_key"), więc
+// prezenter widzi je dokładnie raz, przy pierwszym włączeniu.
+const apiKeyInput = document.getElementById('apiKeyInput');
+apiKeyInput.value = localStorage.getItem('gemini_api_key') || '';
+function syncApiKeyInput(){
+  apiKeyInput.hidden = !modeToggle.checked || !!localStorage.getItem('gemini_api_key');
+}
+apiKeyInput.addEventListener('input', () => {
+  localStorage.setItem('gemini_api_key', apiKeyInput.value.trim());
+});
+syncApiKeyInput();
 
 presetSel.addEventListener('change', startRun);
-modeToggle.addEventListener('change', startRun);
+modeToggle.addEventListener('change', () => { syncApiKeyInput(); startRun(); });
 
 // Zadanie 6: #compareBtn startuje zablokowany (dopóki żaden przebieg
 // się nie skończył) — startRun() odtwarza ten sam stan przy każdym
