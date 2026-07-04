@@ -155,6 +155,8 @@ input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; 
 .ctx-block[data-role="tool"]{background:var(--sky-soft);}
 .ctx-stack.flash .ctx-block{animation:ctxflash .6s;}
 @keyframes ctxflash{50%{border-color:var(--marigold); box-shadow:0 0 0 2px var(--marigold-soft);}}
+.ctx-flash-caption{font-size:var(--caption); color:var(--marigold); margin-top:6px; min-height:1em;}
+#costMeter{font-size:var(--caption); color:var(--ink-2); margin-top:10px;}
 .wire{margin-top:10px;} .wire pre{background:var(--ink); color:var(--paper); border-radius:var(--r-sm);
   padding:10px 12px; font-family:var(--font-mono); font-size:11.5px; overflow:auto; max-height:220px;}
 .term{border-bottom:1px dotted var(--ink-3); cursor:help;}
@@ -585,6 +587,67 @@ const modeToggle = document.getElementById('modeToggle');
 const speedEl    = document.getElementById('speed');
 const loopCounterEl = document.getElementById('loopCounter');
 const ctxStackEl = document.getElementById('ctxStack');
+const costMeterEl = document.getElementById('costMeter');
+
+// ============================================================
+// Zadanie 4: stos kontekstu rozmowy (#ctxStack) + licznik kosztu
+// (#costMeter). Model językowy nie "pamięta" rozmowy między turami —
+// przy KAŻDYM zapytaniu trzeba mu ponownie wysłać cały dotychczasowy
+// kontekst (pytanie, plany, wywołania narzędzi, ich wyniki). To właśnie
+// jest źródło rosnących kosztów długich pętli agenta: stos rośnie, a
+// z nim liczba tokenów wysyłanych od nowa przy każdym okrążeniu.
+// ============================================================
+
+let ctxChars = 0; // suma znaków wszystkich bloków kontekstu w bieżącym przebiegu
+
+// Polskie etykiety ról kontekstu — statyczne, nasze teksty.
+const ROLE_LABEL = { user: 'użytkownik', model: 'model', tool: 'narzędzie' };
+
+// pushCtx(ctx) — dokłada jeden blok do stosu kontekstu ("Pamięć rozmowy")
+// i aktualizuje sumę znaków oraz licznik kosztu. ctx = { role, label, chars }
+// pochodzi z ev.ctx (dane scenariusza) — label to NASZ opis kroku, ale
+// wstawiamy go przez textContent na wszelki wypadek (Zadanie 7 podłączy
+// tu docelowo prawdziwe odpowiedzi modelu).
+function pushCtx(ctx){
+  const roleLabel = ROLE_LABEL[ctx.role] || ctx.role;
+  const block = elT('div', { class:'ctx-block', 'data-role':ctx.role },
+    roleLabel + ' → ' + ctx.label + ' · ' + ctx.chars + ' zn.');
+  ctxStackEl.appendChild(block);
+  ctxChars += ctx.chars;
+  updateCost();
+}
+
+// updateCost() — przerysowuje #costMeter na podstawie liczby bloków w
+// stosie (= liczby "wiadomości") i sumy znaków (przybliżenie: 1 token
+// ≈ 4 znaki — to standardowy szacunek, nie prawdziwy tokenizer).
+function updateCost(){
+  const n = ctxStackEl.childElementCount;
+  const tokens = Math.round(ctxChars / 4);
+  costMeterEl.textContent =
+    'Kontekst: ' + n + ' wiadomości · ~' + tokens + ' tokenów — i rośnie z każdym okrążeniem';
+}
+
+// flashCtx() — na każdej "prawdziwej" turze modelu (wywołanie narzędzia
+// albo odpowiedź końcowa) CAŁY dotychczasowy stos trzeba wysłać od nowa.
+// Podświetlamy go na chwilę (.flash — animacja zdefiniowana w CSS) i
+// pokazujemy podpis obok stosu. Podpis to jeden, wielokrotnie używany
+// element (nie dokładamy nowego węzła przy każdym błysku).
+let flashCaptionEl = null;
+let flashTimer = null;
+function flashCtx(){
+  if(!flashCaptionEl){
+    flashCaptionEl = elT('div', { class:'ctx-flash-caption' }, '');
+    ctxStackEl.after(flashCaptionEl);
+  }
+  flashCaptionEl.textContent = '⤴ cała ta pamięć właśnie poleciała do modelu — ponownie';
+  ctxStackEl.classList.add('flash');
+  if(flashTimer) clearTimeout(flashTimer);
+  flashTimer = setTimeout(function(){
+    ctxStackEl.classList.remove('flash');
+    if(flashCaptionEl) flashCaptionEl.textContent = '';
+    flashTimer = null;
+  }, 600);
+}
 
 // ---- renderStep(ev) — buduje jedną kartę kroku i wstawia ją do #timeline.
 // Zwraca nic; efekt uboczny to jedna nowa karta na scenie.
@@ -635,6 +698,14 @@ function renderStep(ev){
 
   timelineEl.appendChild(card);
 
+  // Zadanie 4: jeśli zdarzenie niesie fragment kontekstu (ev.ctx), dokładamy
+  // go do stosu „Pamięć rozmowy" i aktualizujemy licznik kosztu. Przy
+  // wywołaniu narzędzia i przy odpowiedzi końcowej — czyli przy każdej
+  // "prawdziwej" turze modelu — cały dotychczasowy stos leci do modelu
+  // od nowa, więc dodatkowo błyskamy całym stosem (flashCtx).
+  if(ev.ctx) pushCtx(ev.ctx);
+  if(ev.kind === 'tool_call' || ev.kind === 'answer') flashCtx();
+
   // Wjazd karty "od dołu": zanim dodamy klasę .shown, wymuszamy
   // przeliczenie stylów (odczyt offsetWidth = synchroniczny reflow).
   // Dzięki temu przeglądarka "zapamięta" stan początkowy (opacity:0,
@@ -673,7 +744,15 @@ function stopAuto(){
 function startRun(){
   stopAuto();
   timelineEl.innerHTML = '';
+
+  // Zadanie 4: nowy przebieg = pusta pamięć rozmowy i zerowy koszt.
   ctxStackEl.innerHTML = '';
+  ctxStackEl.classList.remove('flash');
+  if(flashTimer){ clearTimeout(flashTimer); flashTimer = null; }
+  if(flashCaptionEl) flashCaptionEl.textContent = ''; // element jest poza #ctxStack, więc go nie usuwamy — czyścimy tekst
+  ctxChars = 0;
+  costMeterEl.textContent = '';
+
   loopCounterEl.textContent = '';       // licznik pusty na starcie przebiegu
   finished = false;
   stepBtn.textContent = 'Krok ▸';
