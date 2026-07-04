@@ -527,7 +527,9 @@ async function* liveRun(goal){
         contents.push(followUp);
         continue;
       }
-      yield { kind: 'answer', body: text, loop: iter,
+      // loop przycięty do MAX_ITER: tekstowa odpowiedź tuż PO 5. okrążeniu
+      // narzędzi jest mile widziana, ale licznik nie może pokazać „6 / 5”.
+      yield { kind: 'answer', body: text, loop: Math.min(iter, MAX_ITER),
         wire: { label: 'Odpowiedź Gemini: końcowa odpowiedź tekstowa', json: res },
         ctx: { role: 'model', label: 'Odpowiedź agenta', chars: JSON.stringify(content).length } };
       return;
