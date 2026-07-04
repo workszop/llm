@@ -171,6 +171,16 @@ input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; 
 #snippets .snippet p{font-size:var(--caption); color:var(--ink-2); margin:6px 0 0;}
 .term{border-bottom:1px dotted var(--ink-3); cursor:help;}
 
+/* ---- Porównanie: zwykły chatbot vs agent (#comparePanel) ------------ */
+.compare-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+.compare-card{border-radius:var(--r-lg); padding:16px 18px; border:1px solid var(--line);}
+.compare-card.oneshot{background:var(--coral-soft); border-color:var(--coral);}
+.compare-card.agent{background:var(--teal-soft); border-color:var(--teal);}
+.compare-card h3{font-family:var(--font-display); font-size:var(--h4); margin:0 0 8px;}
+.compare-card p{margin:0 0 8px; white-space:pre-wrap;}
+.compare-card .compare-meta{font-family:var(--font-mono); font-size:var(--caption); color:var(--ink-2); margin:0;}
+@media (max-width:920px){ .compare-grid{grid-template-columns:1fr;} }
+
 /* ---- Responsive ------------------------------------------------ */
 @media (max-width:920px){
   .stage{grid-template-columns:1fr;}
@@ -543,10 +553,507 @@ const dni100 = {
   ],
 };
 
+// ============================================================
+// Scenariusz 2: "Bilety do teatru"
+// ------------------------------------------------------------
+// Pytanie łączy trzy narzędzia w jednej pętli: wyszukiwanie (cena
+// biletu), notatnik (zapamiętanie ceny "na później") i kalkulator
+// (mnożenie razy liczba studentów). Pokazuje, że agent potrafi
+// układać wyniki jednego narzędzia w dane wejściowe kolejnego.
+//
+// Matematyka scenariusza (sprawdzona, żeby liczby się zgadzały):
+//   cena biletu (z MOCK_INDEX, klucz "bilet") = 85 zł
+//   28 studentów × 85 zł = 2380 zł
+// ============================================================
+
+const bilety = {
+  id: 'bilety',
+  nazwa: 'Bilety do teatru',
+  cel: 'Ile zapłaci grupa 28 studentów za bilety do teatru? Zapisz cenę w notatniku na później.',
+
+  oneshot: {
+    body: "Bilet do teatru kosztuje zwykle około 60 zł, więc 28 studentów zapłaci łącznie około 1680 zł.",
+    why: "Chatbot bez narzędzi nie zna prawdziwej ceny biletu w tym konkretnym teatrze — zgaduje typową cenę i mnoży dalej. Brzmi konkretnie (liczby!), ale żadna z nich nie została sprawdzona.",
+  },
+
+  steps: [
+    {
+      kind: 'goal',
+      title: 'Cel',
+      body: 'Ile zapłaci grupa 28 studentów za bilety do teatru? Zapisz cenę w notatniku na później.',
+      why: 'To jest cel, jaki agent dostał od użytkownika. Zanim zacznie działać, zapisuje sobie dokładnie, co ma ustalić.',
+      wire: {
+        label: 'Zapytanie wysłane do Gemini (z listą dostępnych narzędzi)',
+        json: {
+          endpoint: 'generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent',
+          request: {
+            contents: [
+              { role: 'user', parts: [ { text: 'Ile zapłaci grupa 28 studentów za bilety do teatru? Zapisz cenę w notatniku na później.' } ] }
+            ],
+            tools: [ { functionDeclarations: [
+              { name: 'data_i_czas', description: 'Zwraca dzisiejszą datę i dzień tygodnia.' },
+              { name: 'kalkulator', description: 'Wykonuje działanie matematyczne (np. dodawanie, mnożenie).', parameters: { type: 'OBJECT', properties: { wyrazenie: { type: 'STRING', description: 'Wyrażenie do obliczenia, np. 2 + 2.' } }, required: ['wyrazenie'] } },
+              { name: 'szukaj', description: 'Szuka informacji w bazie wiedzy.', parameters: { type: 'OBJECT', properties: { zapytanie: { type: 'STRING' } } } },
+              { name: 'notatnik', description: 'Zapisuje i odczytuje notatki.', parameters: { type: 'OBJECT', properties: { akcja: { type: 'STRING' }, klucz: { type: 'STRING' }, wartosc: { type: 'STRING' } } } },
+            ] } ],
+          },
+        },
+      },
+      ctx: { role: 'user', label: 'Pytanie użytkownika', chars: 124 },
+    },
+
+    {
+      kind: 'plan',
+      title: 'Plan działania',
+      body: '1. Poszukam ceny biletu do teatru…\n2. Zapiszę cenę w notatniku…\n3. Pomnożę cenę przez liczbę studentów',
+      why: 'Zamiast zgadywać cenę, agent najpierw układa plan: najpierw sprawdzić fakt, potem go zapamiętać, dopiero na końcu policzyć.',
+      wire: {
+        label: 'Odpowiedź Gemini: plan w postaci tekstu (jeszcze bez wywołania narzędzia)',
+        json: {
+          candidates: [ { content: { role: 'model', parts: [
+            { text: '1. Poszukam ceny biletu do teatru…\n2. Zapiszę cenę w notatniku…\n3. Pomnożę cenę przez liczbę studentów' }
+          ] } } ],
+        },
+      },
+      ctx: { role: 'model', label: 'Plan agenta', chars: 142 },
+    },
+
+    {
+      kind: 'tool_call',
+      loop: 1,
+      tool: 'szukaj',
+      args: { zapytanie: 'cena biletu teatr' },
+      title: 'Wywołanie narzędzia: szukaj',
+      body: 'Agent prosi o sprawdzenie ceny biletu do teatru za pomocą narzędzia „szukaj”.',
+      why: 'Agent nie zna prawdziwej ceny biletu z pamięci — zamiast zgadywać typową cenę, szuka jej w źródle.',
+      wire: {
+        label: 'Odpowiedź Gemini: prośba o wywołanie funkcji (functionCall)',
+        json: {
+          candidates: [ { content: { role: 'model', parts: [
+            { functionCall: { name: 'szukaj', args: { zapytanie: 'cena biletu teatr' } } }
+          ] } } ],
+        },
+      },
+      ctx: { role: 'model', label: 'functionCall: szukaj', chars: 102 },
+    },
+
+    {
+      kind: 'observation',
+      loop: 1,
+      tool: 'szukaj',
+      title: 'Wynik: szukaj',
+      body: JSON.stringify({ zrodlo: 'teatr-apollo.pl', cena_biletu_pln: 85 }),
+      isError: false,
+      why: 'Narzędzie zwróciło konkretne źródło i konkretną cenę — to fakt, a nie liczba wymyślona przez model.',
+      wire: {
+        label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)',
+        json: {
+          request: { contents: [
+            { role: 'function', parts: [ { functionResponse: {
+              name: 'szukaj',
+              response: { zrodlo: 'teatr-apollo.pl', cena_biletu_pln: 85 },
+            } } ] },
+          ] },
+        },
+      },
+      ctx: { role: 'tool', label: 'functionResponse: szukaj', chars: 129 },
+    },
+
+    {
+      kind: 'reflection',
+      loop: 1,
+      title: 'Refleksja',
+      body: 'Znalazłem cenę: 85 zł za bilet. Zapiszę ją w notatniku, żeby nie liczyć jej ponownie później.',
+      why: 'Agent pamięta cel użytkownika ("zapisz cenę na później") i wybiera kolejny krok, który go realizuje.',
+      wire: {
+        label: 'Odpowiedź Gemini: wniosek w postaci tekstu',
+        json: {
+          candidates: [ { content: { role: 'model', parts: [
+            { text: 'Znalazłem cenę: 85 zł za bilet. Zapiszę ją w notatniku, żeby nie liczyć jej ponownie później.' }
+          ] } } ],
+        },
+      },
+      ctx: { role: 'model', label: 'Wniosek: znaleziona cena', chars: 131 },
+    },
+
+    {
+      kind: 'tool_call',
+      loop: 2,
+      tool: 'notatnik',
+      args: { akcja: 'zapisz', klucz: 'cena_biletu', wartosc: '85' },
+      title: 'Wywołanie narzędzia: notatnik',
+      body: 'Agent prosi o zapisanie ceny biletu (85) pod kluczem „cena_biletu” za pomocą narzędzia „notatnik”.',
+      why: 'Użytkownik poprosił wprost o zapamiętanie ceny "na później" — agent traktuje to jako osobne zadanie do wykonania, nie tylko liczenie.',
+      wire: {
+        label: 'Odpowiedź Gemini: prośba o wywołanie funkcji (functionCall)',
+        json: {
+          candidates: [ { content: { role: 'model', parts: [
+            { functionCall: { name: 'notatnik', args: { akcja: 'zapisz', klucz: 'cena_biletu', wartosc: '85' } } }
+          ] } } ],
+        },
+      },
+      ctx: { role: 'model', label: 'functionCall: notatnik', chars: 126 },
+    },
+
+    {
+      kind: 'observation',
+      loop: 2,
+      tool: 'notatnik',
+      title: 'Wynik: notatnik',
+      body: JSON.stringify({ zapisano: 'cena_biletu' }),
+      isError: false,
+      why: 'Notatnik potwierdza zapis — cena będzie dostępna w kolejnych krokach (i kolejnych pytaniach), bez ponownego szukania.',
+      wire: {
+        label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)',
+        json: {
+          request: { contents: [
+            { role: 'function', parts: [ { functionResponse: {
+              name: 'notatnik',
+              response: { zapisano: 'cena_biletu' },
+            } } ] },
+          ] },
+        },
+      },
+      ctx: { role: 'tool', label: 'functionResponse: notatnik', chars: 108 },
+    },
+
+    {
+      kind: 'reflection',
+      loop: 2,
+      title: 'Refleksja',
+      body: 'Cena zapisana. Teraz policzę koszt dla całej grupy: 28 studentów razy 85 zł.',
+      why: 'Agent sprawdza, co jeszcze zostało do zrobienia — zapis gotowy, więc czas na mnożenie.',
+      wire: {
+        label: 'Odpowiedź Gemini: wniosek w postaci tekstu',
+        json: {
+          candidates: [ { content: { role: 'model', parts: [
+            { text: 'Cena zapisana. Teraz policzę koszt dla całej grupy: 28 studentów razy 85 zł.' }
+          ] } } ],
+        },
+      },
+      ctx: { role: 'model', label: 'Wniosek: zapis gotowy', chars: 114 },
+    },
+
+    {
+      kind: 'tool_call',
+      loop: 3,
+      tool: 'kalkulator',
+      args: { wyrazenie: '28 * 85' },
+      title: 'Wywołanie narzędzia: kalkulator',
+      body: 'Agent prosi o obliczenie wyrażenia „28 * 85” za pomocą narzędzia „kalkulator”.',
+      why: 'Mnożenie 28 razy 85 lepiej policzyć narzędziem niż "w głowie" — kalkulator nie pomyli się przy większych liczbach.',
+      wire: {
+        label: 'Odpowiedź Gemini: prośba o wywołanie funkcji (functionCall)',
+        json: {
+          candidates: [ { content: { role: 'model', parts: [
+            { functionCall: { name: 'kalkulator', args: { wyrazenie: '28 * 85' } } }
+          ] } } ],
+        },
+      },
+      ctx: { role: 'model', label: 'functionCall: kalkulator', chars: 96 },
+    },
+
+    {
+      kind: 'observation',
+      loop: 3,
+      tool: 'kalkulator',
+      title: 'Wynik: kalkulator',
+      body: JSON.stringify({ wynik: 2380 }),
+      isError: false,
+      why: '28 razy 85 to dokładnie 2380 — to wynik obliczenia, a nie liczba zgadnięta przez model.',
+      wire: {
+        label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)',
+        json: {
+          request: { contents: [
+            { role: 'function', parts: [ { functionResponse: {
+              name: 'kalkulator',
+              response: { wynik: 2380 },
+            } } ] },
+          ] },
+        },
+      },
+      ctx: { role: 'tool', label: 'functionResponse: kalkulator', chars: 98 },
+    },
+
+    {
+      kind: 'answer',
+      title: 'Odpowiedź',
+      body: 'Grupa 28 studentów zapłaci **2380 zł** za bilety. Cena jednostkowa (85 zł) została zapisana w notatniku na później.',
+      why: 'To jest ostateczna odpowiedź — zbudowana ze sprawdzonej ceny i sprawdzonego obliczenia, a przy okazji zrealizowana druga część prośby (zapis w notatniku).',
+      wire: {
+        label: 'Odpowiedź Gemini: tekst finalny pokazywany użytkownikowi',
+        json: {
+          candidates: [ { content: { role: 'model', parts: [
+            { text: 'Grupa 28 studentów zapłaci **2380 zł** za bilety. Cena jednostkowa (85 zł) została zapisana w notatniku na później.' }
+          ] } } ],
+        },
+      },
+      ctx: { role: 'model', label: 'Odpowiedź końcowa', chars: 153 },
+    },
+  ],
+};
+
+// ============================================================
+// Scenariusz 3: "Awaria" (celowa, uczące niepowodzenie)
+// ------------------------------------------------------------
+// Ten scenariusz POKAZUJE BŁĄD narzędzia i to, jak agent się z niego
+// otrząsa. Drugie wywołanie kalkulatora jest CELOWO źle sformułowane
+// (kalkulator przyjmuje tylko liczby/działania, nie polskie zdania) —
+// narzędzie odpowiada błędem ({blad: …}), karta obserwacji renderuje
+// się na czerwono (data-error="true"), a agent w kolejnym kroku po
+// prostu próbuje inaczej. Cała ta scena istnieje po to, żeby pokazać:
+// błąd nie wywala agenta — wraca do pętli jak każda inna obserwacja.
+//
+// Matematyka scenariusza (sprawdzona, żeby liczby się zgadzały):
+//   dziś (mock) = 2026-07-04 (sobota)
+//   premiera = 2026-06-21
+//   czerwiec ma 30 dni → od 21 do 30 czerwca = 9 dni
+//   + 4 dni lipca (1..4) = 13 dni
+//   9 + 4 = 13
+// ============================================================
+
+const awaria = {
+  id: 'awaria',
+  nazwa: 'Awaria (uczący błąd)',
+  cel: 'Ile dni minęło od premiery tej strony (21 czerwca 2026)?',
+
+  oneshot: {
+    body: "Od 21 czerwca 2026 minęło już około dwóch tygodni, czyli mniej więcej 14 dni.",
+    why: "Chatbot bez narzędzi nie zna dzisiejszej daty — zgaduje odstęp „na oko”. Liczba brzmi wiarygodnie, ale nie została policzona.",
+  },
+
+  steps: [
+    {
+      kind: 'goal',
+      title: 'Cel',
+      body: 'Ile dni minęło od premiery tej strony (21 czerwca 2026)?',
+      why: 'To jest cel, jaki agent dostał od użytkownika. Zanim zacznie działać, zapisuje sobie dokładnie, co ma ustalić.',
+      wire: {
+        label: 'Zapytanie wysłane do Gemini (z listą dostępnych narzędzi)',
+        json: {
+          endpoint: 'generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent',
+          request: {
+            contents: [
+              { role: 'user', parts: [ { text: 'Ile dni minęło od premiery tej strony (21 czerwca 2026)?' } ] }
+            ],
+            tools: [ { functionDeclarations: [
+              { name: 'data_i_czas', description: 'Zwraca dzisiejszą datę i dzień tygodnia.' },
+              { name: 'kalkulator', description: 'Wykonuje działanie matematyczne (np. dodawanie, mnożenie).', parameters: { type: 'OBJECT', properties: { wyrazenie: { type: 'STRING', description: 'Wyrażenie do obliczenia, np. 2 + 2.' } }, required: ['wyrazenie'] } },
+              { name: 'szukaj', description: 'Szuka informacji w bazie wiedzy.', parameters: { type: 'OBJECT', properties: { zapytanie: { type: 'STRING' } } } },
+              { name: 'notatnik', description: 'Zapisuje i odczytuje notatki.', parameters: { type: 'OBJECT', properties: { akcja: { type: 'STRING' }, klucz: { type: 'STRING' }, wartosc: { type: 'STRING' } } } },
+            ] } ],
+          },
+        },
+      },
+      ctx: { role: 'user', label: 'Pytanie użytkownika', chars: 93 },
+    },
+
+    {
+      kind: 'plan',
+      title: 'Plan działania',
+      body: '1. Sprawdzę dzisiejszą datę…\n2. Policzę różnicę dni od 21 czerwca 2026…\n3. Podam wynik',
+      why: 'Zamiast zgadywać odstęp czasu, agent najpierw układa plan: najpierw fakt (dzisiejsza data), potem obliczenie.',
+      wire: {
+        label: 'Odpowiedź Gemini: plan w postaci tekstu (jeszcze bez wywołania narzędzia)',
+        json: {
+          candidates: [ { content: { role: 'model', parts: [
+            { text: '1. Sprawdzę dzisiejszą datę…\n2. Policzę różnicę dni od 21 czerwca 2026…\n3. Podam wynik' }
+          ] } } ],
+        },
+      },
+      ctx: { role: 'model', label: 'Plan agenta', chars: 126 },
+    },
+
+    {
+      kind: 'tool_call',
+      loop: 1,
+      tool: 'data_i_czas',
+      args: {},
+      title: 'Wywołanie narzędzia: data i czas',
+      body: 'Agent prosi o sprawdzenie dzisiejszej daty za pomocą narzędzia „data_i_czas” (bez dodatkowych parametrów).',
+      why: 'Agent nie zna dzisiejszej daty z pamięci — zamiast zgadywać, prosi o sprawdzenie jej w prawdziwym źródle.',
+      wire: {
+        label: 'Odpowiedź Gemini: prośba o wywołanie funkcji (functionCall)',
+        json: {
+          candidates: [ { content: { role: 'model', parts: [
+            { functionCall: { name: 'data_i_czas', args: {} } }
+          ] } } ],
+        },
+      },
+      ctx: { role: 'model', label: 'functionCall: data_i_czas', chars: 76 },
+    },
+
+    {
+      kind: 'observation',
+      loop: 1,
+      tool: 'data_i_czas',
+      title: 'Wynik: data i czas',
+      body: JSON.stringify({ data: '2026-07-04', dzien_tygodnia: 'sobota', numer_dnia: 6 }),
+      isError: false,
+      why: 'Narzędzie zwróciło konkretną, sprawdzalną datę — to fakt, a nie coś, co model sobie wymyślił.',
+      wire: {
+        label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)',
+        json: {
+          request: { contents: [
+            { role: 'function', parts: [ { functionResponse: {
+              name: 'data_i_czas',
+              response: { data: '2026-07-04', dzien_tygodnia: 'sobota', numer_dnia: 6 },
+            } } ] },
+          ] },
+        },
+      },
+      ctx: { role: 'tool', label: 'functionResponse: data_i_czas', chars: 147 },
+    },
+
+    {
+      kind: 'reflection',
+      loop: 1,
+      title: 'Refleksja',
+      body: 'Dziś 4 lipca 2026. Spróbuję policzyć różnicę dni od 21 czerwca za pomocą kalkulatora.',
+      why: 'Agent ma już datę bieżącą — teraz próbuje policzyć różnicę dni, wpisując ją do kalkulatora tak, jak sformułowałby ją człowiek.',
+      wire: {
+        label: 'Odpowiedź Gemini: wniosek w postaci tekstu',
+        json: {
+          candidates: [ { content: { role: 'model', parts: [
+            { text: 'Dziś 4 lipca 2026. Spróbuję policzyć różnicę dni od 21 czerwca za pomocą kalkulatora.' }
+          ] } } ],
+        },
+      },
+      ctx: { role: 'model', label: 'Wniosek: dzisiejsza data', chars: 123 },
+    },
+
+    // TOOL_CALL #2 — CELOWO ŹLE SFORMUŁOWANY. Kalkulator akceptuje tylko
+    // cyfry, operatory i nawiasy (patrz TOOL_FNS.kalkulator w Zadaniu 2:
+    // regex /^[0-9+\-*/(). %]+$/) — polskie zdanie w wyrażeniu ten test
+    // nie przejdzie, więc narzędzie zwróci błąd, nie wynik.
+    {
+      kind: 'tool_call',
+      loop: 2,
+      tool: 'kalkulator',
+      args: { wyrazenie: 'od 21 czerwca do dziś' },
+      title: 'Wywołanie narzędzia: kalkulator',
+      body: 'Agent prosi o obliczenie wyrażenia „od 21 czerwca do dziś” za pomocą narzędzia „kalkulator”.',
+      why: 'Agent próbuje wpisać do kalkulatora zdanie, a nie działanie matematyczne — to błąd sformułowania, który narzędzie zaraz odrzuci.',
+      wire: {
+        label: 'Odpowiedź Gemini: prośba o wywołanie funkcji (functionCall)',
+        json: {
+          candidates: [ { content: { role: 'model', parts: [
+            { functionCall: { name: 'kalkulator', args: { wyrazenie: 'od 21 czerwca do dziś' } } }
+          ] } } ],
+        },
+      },
+      ctx: { role: 'model', label: 'functionCall: kalkulator', chars: 110 },
+    },
+
+    // OBSERVATION #2 — czerwona karta błędu (isError:true → renderer
+    // ustawia data-error="true", CSS .step-card[data-kind="observation"]
+    // [data-error="true"] maluje ją na czerwono). Treść błędu to
+    // DOKŁADNIE to, co zwraca prawdziwy TOOL_FNS.kalkulator dla tego
+        // wejścia — zweryfikowane osobnym uruchomieniem funkcji.
+    {
+      kind: 'observation',
+      loop: 2,
+      tool: 'kalkulator',
+      title: 'Wynik: kalkulator',
+      body: JSON.stringify({ blad: 'Niepoprawne wyrażenie: od 21 czerwca do dziś' }),
+      isError: true,
+      why: 'Błąd nie zatrzymuje agenta — wraca do niego jak każda inna obserwacja, a agent próbuje inaczej. Dokładnie po to jest pętla.',
+      wire: {
+        label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)',
+        json: {
+          request: { contents: [
+            { role: 'function', parts: [ { functionResponse: {
+              name: 'kalkulator',
+              response: { blad: 'Niepoprawne wyrażenie: od 21 czerwca do dziś' },
+            } } ] },
+          ] },
+        },
+      },
+      ctx: { role: 'tool', label: 'functionResponse: kalkulator (błąd)', chars: 139 },
+    },
+
+    // REFLECTION #2 — dokładna kopia z brief: agent nazywa błąd i
+    // wybiera naprawę (liczby zamiast słów), zamiast się poddać.
+    {
+      kind: 'reflection',
+      loop: 2,
+      title: 'Refleksja',
+      body: 'Narzędzie odrzuciło moje wyrażenie — kalkulator przyjmuje tylko liczby i działania. Poprawiam: policzę dni jako liczbę.',
+      why: 'Błąd nie zatrzymuje agenta — wraca do niego jak każda inna obserwacja, a agent próbuje inaczej. Dokładnie po to jest pętla.',
+      wire: {
+        label: 'Odpowiedź Gemini: wniosek w postaci tekstu (po błędzie narzędzia)',
+        json: {
+          candidates: [ { content: { role: 'model', parts: [
+            { text: 'Narzędzie odrzuciło moje wyrażenie — kalkulator przyjmuje tylko liczby i działania. Poprawiam: policzę dni jako liczbę.' }
+          ] } } ],
+        },
+      },
+      ctx: { role: 'model', label: 'Wniosek: poprawka po błędzie', chars: 157 },
+    },
+
+    // TOOL_CALL #3 — poprawione wyrażenie: 9 dni pozostałych w czerwcu
+    // (22..30) + 4 dni lipca (1..4) = 13.
+    {
+      kind: 'tool_call',
+      loop: 3,
+      tool: 'kalkulator',
+      args: { wyrazenie: '9 + 4' },
+      title: 'Wywołanie narzędzia: kalkulator',
+      body: 'Agent prosi o obliczenie wyrażenia „9 + 4” za pomocą narzędzia „kalkulator”: 9 pozostałych dni czerwca plus 4 dni lipca.',
+      why: 'Tym razem wyrażenie zawiera tylko liczby i działanie — dokładnie to, co kalkulator potrafi obsłużyć.',
+      wire: {
+        label: 'Odpowiedź Gemini: prośba o wywołanie funkcji (functionCall)',
+        json: {
+          candidates: [ { content: { role: 'model', parts: [
+            { functionCall: { name: 'kalkulator', args: { wyrazenie: '9 + 4' } } }
+          ] } } ],
+        },
+      },
+      ctx: { role: 'model', label: 'functionCall: kalkulator', chars: 94 },
+    },
+
+    {
+      kind: 'observation',
+      loop: 3,
+      tool: 'kalkulator',
+      title: 'Wynik: kalkulator',
+      body: JSON.stringify({ wynik: 13 }),
+      isError: false,
+      why: '9 plus 4 to dokładnie 13 — tym razem to wynik obliczenia, policzony poprawnie sformułowanym wyrażeniem.',
+      wire: {
+        label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)',
+        json: {
+          request: { contents: [
+            { role: 'function', parts: [ { functionResponse: {
+              name: 'kalkulator',
+              response: { wynik: 13 },
+            } } ] },
+          ] },
+        },
+      },
+      ctx: { role: 'tool', label: 'functionResponse: kalkulator', chars: 96 },
+    },
+
+    {
+      kind: 'answer',
+      title: 'Odpowiedź',
+      body: 'Od premiery strony (21 czerwca 2026) minęło **13 dni**.',
+      why: 'To jest ostateczna odpowiedź — zbudowana z faktu (dzisiejsza data) i poprawionego obliczenia, mimo że po drodze jedno wywołanie narzędzia zakończyło się błędem.',
+      wire: {
+        label: 'Odpowiedź Gemini: tekst finalny pokazywany użytkownikowi',
+        json: {
+          candidates: [ { content: { role: 'model', parts: [
+            { text: 'Od premiery strony (21 czerwca 2026) minęło **13 dni**.' }
+          ] } } ],
+        },
+      },
+      ctx: { role: 'model', label: 'Odpowiedź końcowa', chars: 93 },
+    },
+  ],
+};
+
 // SCENARIOS — lista scenariuszy dostępnych w selektorze (#presetSel).
-// Na razie tylko scenariusz 1; kolejne (placeholdery w HTML) dołożą
-// następne zadania.
-const SCENARIOS = [ dni100 ];
+const SCENARIOS = [ dni100, bilety, awaria ];
 
 // ---- SNIPPETS — trzy dozwolone fragmenty kodu dla sekcji "Jak zbudowany
 // jest agent?". To NIE jest pełny kod agenta (tego demo świadomie nie
@@ -653,6 +1160,8 @@ const loopCounterEl = document.getElementById('loopCounter');
 const ctxStackEl = document.getElementById('ctxStack');
 const costMeterEl = document.getElementById('costMeter');
 const snippetsEl = document.getElementById('snippets');
+const compareBtn = document.getElementById('compareBtn');
+const comparePanelEl = document.getElementById('comparePanel');
 
 // ============================================================
 // Zadanie 4: stos kontekstu rozmowy (#ctxStack) + licznik kosztu
@@ -820,6 +1329,13 @@ let gen = null;          // aktualny generator zdarzeń (mockRun/liveRun)
 let autoTimer = null;    // id setInterval, gdy tryb Auto jest włączony
 let finished = false;    // czy bieżący przebieg dobiegł końca (→ „Od nowa ↺”)
 
+// Zadanie 6: dane potrzebne przez #compareBtn / showCompare() — który
+// scenariusz aktualnie leci i ile "okrążeń" pętli faktycznie wykonał.
+// Aktualizowane tylko przez startRun()/step(), czytane tylko przy kliknięciu
+// #compareBtn (a przycisk jest zablokowany, dopóki przebieg się nie skończy).
+let currentScenario = null;
+let maxLoopSeen = 0;
+
 function stopAuto(){
   if(autoTimer){ clearInterval(autoTimer); autoTimer = null; }
   autoBtn.textContent = '▶ Auto';
@@ -850,7 +1366,17 @@ function startRun(){
   stepBtn.textContent = 'Krok ▸';
   stepBtn.disabled = false;
 
+  // Zadanie 6: nowy przebieg = ukryty panel porównania i zablokowany
+  // przycisk #compareBtn (porównanie ma sens dopiero po dokończonym
+  // przebiegu — wcześniej nie znamy ani liczby okrążeń, ani kosztu).
+  comparePanelEl.hidden = true;
+  comparePanelEl.innerHTML = '';
+  compareBtn.disabled = true;
+  compareBtn.title = 'najpierw dokończ przebieg';
+  maxLoopSeen = 0;
+
   const scenario = SCENARIOS.find(s => s.id === presetSel.value);
+  currentScenario = scenario || null;
   if(!scenario){ gen = null; return; }
 
   gen = modeToggle.checked
@@ -873,6 +1399,11 @@ async function step(){
     finished = true;
     stepBtn.textContent = 'Od nowa ↺';
     stopAuto();
+    // Zadanie 6: dopiero teraz porównanie ma sens — odblokuj #compareBtn.
+    if(currentScenario){
+      compareBtn.disabled = false;
+      compareBtn.title = '';
+    }
     return;
   }
   renderStep(value);
@@ -881,7 +1412,46 @@ async function step(){
   // odpowiedź) nie kasują poprzedniej wartości w trakcie przebiegu.
   if(value.loop != null){
     loopCounterEl.textContent = `okrążenie ${value.loop} / ${MAX_ITER}`;
+    maxLoopSeen = Math.max(maxLoopSeen, value.loop);
   }
+}
+
+// ============================================================
+// Zadanie 6: showCompare() — panel „Porównaj ze zwykłym chatbotem”.
+// Pokazuje obok siebie: (lewo) odpowiedź, jaką dałby chatbot bez
+// narzędzi w JEDNYM strzale (scenario.oneshot), i (prawo) odpowiedź
+// agenta z tego właśnie, dokończonego przebiegu — razem z liczbą
+// okrążeń pętli i przybliżonym kosztem w tokenach. Wywoływane tylko
+// gdy #compareBtn jest aktywny, czyli po dokończonym przebiegu.
+// ============================================================
+function showCompare(){
+  if(!currentScenario) return;
+
+  comparePanelEl.innerHTML = '';
+  const grid = el('div', { class:'compare-grid' });
+
+  // Lewa karta: zwykły chatbot, jeden strzał — bez narzędzi, bez pętli.
+  const oneshotCard = el('div', { class:'compare-card oneshot' });
+  oneshotCard.appendChild(elT('h3', {}, '🤖 Zwykły chatbot — jeden strzał'));
+  // oneshot.body pochodzi z danych scenariusza (nasz tekst), ale i tak
+  // wstawiamy go przez textContent — ta sama zasada co wszędzie indziej.
+  oneshotCard.appendChild(elT('p', {}, currentScenario.oneshot.body));
+  oneshotCard.appendChild(elT('p', { class:'compare-meta' }, currentScenario.oneshot.why));
+  grid.appendChild(oneshotCard);
+
+  // Prawa karta: agent z pętlą narzędzi — ostatnie zdarzenie 'answer'
+  // z właśnie zakończonego przebiegu, plus liczba okrążeń i koszt.
+  const agentCard = el('div', { class:'compare-card agent' });
+  agentCard.appendChild(elT('h3', {}, '🛠 Agent — pętla z narzędziami'));
+  const answerStep = currentScenario.steps.find(s => s.kind === 'answer');
+  agentCard.appendChild(elT('p', {}, answerStep ? answerStep.body : ''));
+  const tokens = Math.round(ctxChars / 4);
+  agentCard.appendChild(elT('p', { class:'compare-meta' }, `${maxLoopSeen} okrążeń · ~${tokens} tokenów`));
+  grid.appendChild(agentCard);
+
+  comparePanelEl.appendChild(grid);
+  comparePanelEl.hidden = false;
+  comparePanelEl.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
 
 // ---- Podpięcie kontrolek toolbara ----------------------------------
@@ -899,6 +1469,13 @@ modeToggle.title = 'Tryb na żywo: wkrótce (wymaga klucza API) — na razie dos
 
 presetSel.addEventListener('change', startRun);
 modeToggle.addEventListener('change', startRun);
+
+// Zadanie 6: #compareBtn startuje zablokowany (dopóki żaden przebieg
+// się nie skończył) — startRun() odtwarza ten sam stan przy każdym
+// nowym przebiegu, więc to tylko stan początkowy strony.
+compareBtn.disabled = true;
+compareBtn.title = 'najpierw dokończ przebieg';
+compareBtn.addEventListener('click', showCompare);
 
 // Wypełnij #snippets trzema kartami z SNIPPETS (kod trzymamy w danych,
 // nie na sztywno w HTML — ten sam wzorzec co przy #presetSel). Treść
