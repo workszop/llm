@@ -620,6 +620,8 @@ function pushCtx(ctx){
 // updateCost() — przerysowuje #costMeter na podstawie liczby bloków w
 // stosie (= liczby "wiadomości") i sumy znaków (przybliżenie: 1 token
 // ≈ 4 znaki — to standardowy szacunek, nie prawdziwy tokenizer).
+// INWARIANT: liczba wiadomości = childElementCount stosu, więc do
+// #ctxStack wolno dokładać WYŁĄCZNIE elementy .ctx-block — nic innego.
 function updateCost(){
   const n = ctxStackEl.childElementCount;
   const tokens = Math.round(ctxChars / 4);
@@ -640,6 +642,14 @@ function flashCtx(){
     ctxStackEl.after(flashCaptionEl);
   }
   flashCaptionEl.textContent = '⤴ cała ta pamięć właśnie poleciała do modelu — ponownie';
+  // Gdy poprzedni błysk jeszcze trwa (Auto na szybkich obrotach: dwie tury
+  // modelu < 600 ms od siebie), samo classList.add('flash') byłoby no-opem
+  // i animacja CSS by się NIE zrestartowała — druga tura nie dałaby żadnego
+  // pulsu. Dlatego zdejmujemy klasę, wymuszamy przeliczenie stylów (odczyt
+  // offsetWidth — ta sama technika co przy wjeździe kart w renderStep) i
+  // dopiero wtedy dodajemy ją z powrotem: przeglądarka widzi animację "od zera".
+  ctxStackEl.classList.remove('flash');
+  void ctxStackEl.offsetWidth;
   ctxStackEl.classList.add('flash');
   if(flashTimer) clearTimeout(flashTimer);
   flashTimer = setTimeout(function(){
