@@ -624,7 +624,7 @@ const dni100 = {
             tools: [ { functionDeclarations: [
               { name: 'data_i_czas', description: 'Zwraca dzisiejszą datę i dzień tygodnia.' },
               // Deklaracja kalkulatora 1:1 ze snippetem (a) w sekcji #snippets —
-              // widz porównujący "Co poszło po kablu?" ze snippetem widzi
+              // widz porównujący "API call" ze snippetem widzi
               // dokładnie ten sam kształt (OBJECT/STRING + required).
               { name: 'kalkulator', description: 'Wykonuje działanie matematyczne (np. dodawanie, mnożenie).', parameters: { type: 'OBJECT', properties: { wyrazenie: { type: 'STRING', description: 'Wyrażenie do obliczenia, np. 2 + 2.' } }, required: ['wyrazenie'] } },
               { name: 'szukaj', description: 'Szuka informacji w bazie wiedzy.', parameters: { type: 'OBJECT', properties: { zapytanie: { type: 'STRING' } } } },
@@ -1546,14 +1546,14 @@ function renderStep(ev){
     card.appendChild(elT('div', { class:'k-why' }, ev.why));
   }
 
-  // Zadanie 5: "Co poszło po kablu?" — domyślnie zwinięty <details> z
+  // Zadanie 5: "API call" — domyślnie zwinięty <details> z
   // dokładnym fragmentem żądania/odpowiedzi Gemini (ev.wire.json),
   // podświetlonym tak samo jak podgląd zapytania w index.html. To dla
   // ciekawskich widzów, którzy chcą zobaczyć "surowy" JSON, a nie tylko
   // nasze polskie streszczenie kroku.
   if(ev.wire){
     const details = el('details', { class:'wire' });
-    details.appendChild(elT('summary', {}, 'Co poszło po kablu?'));
+    details.appendChild(elT('summary', {}, 'API call'));
     // ev.wire.label to nasz krótki podpis, co dokładnie widać w tym JSON-ie
     // (np. "Zapytanie wysłane do Gemini…") — pokazujemy go jako podpis nad
     // <pre>, wewnątrz <details> (widoczny dopiero po rozwinięciu). Nasz
