@@ -144,6 +144,7 @@ input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; 
 .step-card .k-icon{font-size:20px; margin-right:8px;}
 .step-card .k-title{font-family:var(--font-display); font-weight:600; font-size:var(--h4);}
 .step-card .k-body{margin:8px 0 0; white-space:pre-wrap;}
+.step-card .k-args{font-family:var(--font-mono); font-size:var(--caption); color:var(--ink-2); margin:6px 0 0;}
 .step-card .k-why{font-size:var(--caption); color:var(--ink-2); border-top:1px dashed var(--line-2);
   margin-top:10px; padding-top:8px;}
 .step-card[data-kind="answer"]{border-color:var(--success); background:var(--success-soft);}
@@ -538,6 +539,190 @@ const SCENARIOS = [ dni100 ];
 // w danych powyżej. Dzięki temu Zadanie 3 (renderer) może traktować
 // mockRun identycznie jak przyszły "prawdziwy" strumień z Gemini.
 async function* mockRun(scenario){ for(const ev of scenario.steps) yield ev; }
+
+// ============================================================
+// Zadanie 3: renderer kart + stepper Krok/Auto
+// ------------------------------------------------------------
+// Ten fragment DOTYKA strony (DOM). Zamienia "surowe" zdarzenia
+// (StepEvent) ze scenariusza na karty w #timeline i obsługuje
+// przyciski „Krok ▸” / „Auto”. Nie zajmuje się jeszcze stosem
+// kontekstu ani licznikiem kosztów (#ctxStack / #costMeter — to
+// Zadanie 4) ani podglądem "surowego" JSON-a (.wire — Zadanie 5).
+// ============================================================
+
+// Mały helper w stylu elT() z index.html: buduje element, ustawia
+// atrybuty, a treść (jeśli podana) wstawia przez textContent — NIGDY
+// przez innerHTML. Dzięki temu tekst pochodzący od modelu/narzędzia
+// (ev.body, argumenty wywołań itd.) nie może "wstrzyknąć" znaczników
+// HTML do strony.
+function el(tag, attrs={}){
+  const e = document.createElement(tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+function elT(tag, attrs={}, text){
+  const e = el(tag, attrs);
+  if(text!=null) e.textContent = text;
+  return e;
+}
+
+// KIND_META — ikonka i polska etykieta dla każdego rodzaju zdarzenia.
+// Statyczne, kontrolowane przez nas napisy — nie pochodzą od modelu.
+const KIND_META = {
+  goal:        { icon:'🎯', label:'Cel' },
+  plan:        { icon:'📋', label:'Plan' },
+  tool_call:   { icon:'🔧', label:'Wywołanie narzędzia' },
+  observation: { icon:'👁', label:'Obserwacja' },
+  reflection:  { icon:'💭', label:'Namysł' },
+  answer:      { icon:'✅', label:'Odpowiedź' },
+};
+
+const timelineEl = document.getElementById('timeline');
+const stepBtn    = document.getElementById('stepBtn');
+const autoBtn    = document.getElementById('autoBtn');
+const presetSel  = document.getElementById('presetSel');
+const modeToggle = document.getElementById('modeToggle');
+const speedEl    = document.getElementById('speed');
+const loopCounterEl = document.getElementById('loopCounter');
+const ctxStackEl = document.getElementById('ctxStack');
+
+// ---- renderStep(ev) — buduje jedną kartę kroku i wstawia ją do #timeline.
+// Zwraca nic; efekt uboczny to jedna nowa karta na scenie.
+function renderStep(ev){
+  const meta = KIND_META[ev.kind] || { icon:'❔', label:ev.kind };
+
+  const card = el('div', { class:'step-card', 'data-kind':ev.kind });
+  if(ev.isError) card.setAttribute('data-error', 'true');
+
+  // Nagłówek: ikonka (statyczna, nasza) + tytuł. Tytuł preferujemy z
+  // ev.title (opis kroku po polsku, przygotowany przez nas), a jeśli
+  // go brak — spadamy na etykietę z KIND_META. To dalej NASZ tekst,
+  // nie tekst modelu, więc textContent wystarcza (i tak go używamy).
+  const head = el('div', { class:'k-head' });
+  const iconSpan = elT('span', { class:'k-icon' }, meta.icon);
+  const titleSpan = elT('span', { class:'k-title' }, ev.title || meta.label);
+  head.appendChild(iconSpan);
+  head.appendChild(titleSpan);
+  card.appendChild(head);
+
+  // Treść kroku (ev.body) — to tekst wygenerowany przez model albo
+  // pochodzący z wyniku narzędzia. Zawsze textContent, nigdy innerHTML.
+  card.appendChild(elT('p', { class:'k-body' }, ev.body || ''));
+
+  // Dla wywołań narzędzia pokazujemy dodatkowo linię z "wywołaniem"
+  // w stylu kodu: nazwa_narzedzia(klucz: "wartość", ...). Nazwa
+  // narzędzia i wartości argumentów pochodzą z danych scenariusza /
+  // (w przyszłości) z modelu — więc budujemy ją z osobnych węzłów
+  // tekstowych (textContent), a nie przez sklejanie stringów do innerHTML.
+  if(ev.kind === 'tool_call' && ev.tool){
+    const argsLine = el('p', { class:'k-args' });
+    argsLine.appendChild(document.createTextNode(ev.tool + '('));
+    const entries = Object.entries(ev.args || {});
+    entries.forEach(([key, val], i)=>{
+      argsLine.appendChild(document.createTextNode(key + ': '));
+      argsLine.appendChild(document.createTextNode(JSON.stringify(val)));
+      if(i < entries.length - 1) argsLine.appendChild(document.createTextNode(', '));
+    });
+    argsLine.appendChild(document.createTextNode(')'));
+    card.appendChild(argsLine);
+  }
+
+  // Podpis "dlaczego" — krótkie wyjaśnienie kroku dla widza (prowadzący
+  // demo czyta go na głos). Też tekst z danych scenariusza → textContent.
+  if(ev.why){
+    card.appendChild(elT('div', { class:'k-why' }, ev.why));
+  }
+
+  timelineEl.appendChild(card);
+
+  // Wjazd karty "od dołu" — dodajemy klasę .shown w kolejnej klatce,
+  // żeby przeglądarka zdążyła policzyć stan początkowy (opacity:0) i
+  // faktycznie zagrała przejście CSS zamiast "przeskoczyć" od razu.
+  requestAnimationFrame(()=> card.classList.add('shown'));
+  card.scrollIntoView({ behavior:'smooth', block:'end' });
+}
+
+// ---- Stan steppera -------------------------------------------------
+let gen = null;          // aktualny generator zdarzeń (mockRun/liveRun)
+let autoTimer = null;    // id setInterval, gdy tryb Auto jest włączony
+
+function stopAuto(){
+  if(autoTimer){ clearInterval(autoTimer); autoTimer = null; }
+  autoBtn.textContent = '▶ Auto';
+}
+
+// startRun() — czyści scenę i tworzy nowy generator dla aktualnie
+// wybranego scenariusza + trybu. Tryb "na żywo" (liveRun) to Zadanie 7 —
+// na razie przełącznik #modeToggle jest zablokowany, więc ta gałąź
+// nigdy się nie wykona, ale jest już gotowa: podłączenie liveRun(goal)
+// będzie jednolinijkową zmianą.
+function startRun(){
+  stopAuto();
+  timelineEl.innerHTML = '';
+  ctxStackEl.innerHTML = '';
+  loopCounterEl.textContent = 'Krok 0';
+  stepBtn.disabled = false;
+
+  const scenario = SCENARIOS.find(s => s.id === presetSel.value);
+  if(!scenario){ gen = null; return; }
+
+  gen = modeToggle.checked
+    ? liveRun(scenario.cel)   // Zadanie 7 — jeszcze nieobecne (przełącznik zablokowany)
+    : mockRun(scenario);
+}
+
+// step() — pobiera jedno zdarzenie z generatora i renderuje je (albo
+// kończy przebieg, gdy generator jest wyczerpany).
+async function step(){
+  if(!gen) return;
+  const { value, done } = await gen.next();
+  if(done){
+    stepBtn.disabled = true;
+    stopAuto();
+    return;
+  }
+  renderStep(value);
+  if(value.loop != null){
+    // Ile jest "okrążeń" łącznie w scenariuszu — do napisu "okrążenie X / Y".
+    const scenario = SCENARIOS.find(s => s.id === presetSel.value);
+    const totalLoops = scenario ? Math.max(...scenario.steps.map(s=>s.loop||0)) : value.loop;
+    loopCounterEl.textContent = `okrążenie ${value.loop} / ${totalLoops}`;
+  } else {
+    loopCounterEl.textContent = 'Krok ' + timelineEl.children.length;
+  }
+}
+
+// ---- Podpięcie kontrolek toolbara ----------------------------------
+
+// Wypełnij #presetSel scenariuszami z SCENARIOS (nie na sztywno w HTML!).
+// Usuwamy placeholdery i budujemy opcje z danych.
+presetSel.innerHTML = '';
+presetSel.appendChild(elT('option', { value:'' }, 'Wybierz scenariusz…'));
+SCENARIOS.forEach(s => presetSel.appendChild(elT('option', { value:s.id }, s.nazwa)));
+
+// Tryb "na żywo" to Zadanie 7 — na razie zablokowany, z polskim
+// tooltipem tłumaczącym dlaczego.
+modeToggle.disabled = true;
+modeToggle.title = 'Tryb na żywo: wkrótce (wymaga klucza API) — na razie dostępny tylko tryb demo.';
+
+presetSel.addEventListener('change', startRun);
+modeToggle.addEventListener('change', startRun);
+
+stepBtn.addEventListener('click', () => {
+  if(!gen) startRun();
+  step();
+});
+
+autoBtn.addEventListener('click', () => {
+  if(autoTimer){
+    stopAuto();
+    return;
+  }
+  if(!gen) startRun();
+  autoBtn.textContent = '⏸ Auto';
+  const speedMs = Number(speedEl.value) * 1000;
+  autoTimer = setInterval(step, speedMs);
+});
 
 </script>
 
