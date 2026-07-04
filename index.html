@@ -100,6 +100,7 @@ h1.display{font-family:var(--font-display); font-weight:700; font-size:var(--h1)
 .card-head{padding:20px 24px 0; display:flex; align-items:baseline; justify-content:space-between; gap:12px;}
 .card-head h2{font-family:var(--font-display); font-weight:600; font-size:var(--h4); margin:0; letter-spacing:-.01em;}
 .card-head .sub{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3);}
+.card-head-right{display:flex; align-items:center; gap:10px; flex:none;}
 .card-body{padding:18px 24px 24px;}
 
 /* ---- Form fields ----------------------------------------------- */
@@ -162,6 +163,9 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
 .btn-ghost{background:var(--paper-2); color:var(--ink); border:1px solid var(--line);}
 .btn-ghost:hover{background:var(--paper-3);}
 .btn-sm{font-size:var(--caption); padding:7px 14px;}
+
+.key-row{display:flex; gap:8px; align-items:center;}
+.key-row input{flex:1; min-width:0;}
 
 .presets{display:flex; flex-wrap:wrap; gap:8px;}
 .preset{font-family:var(--font-mono); font-size:12px; letter-spacing:.02em; background:var(--paper-2); border:1px solid var(--line); color:var(--ink); border-radius:var(--r-pill); padding:7px 14px; cursor:pointer; transition:background .15s, border-color .15s;}
@@ -245,14 +249,19 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
           <label class="field">
             <span class="flabel">Klucz API Gemini</span>
             <span class="fhelp">Klucz zostaje wyłącznie w Twojej przeglądarce (localStorage) i jest wysyłany bezpośrednio do Google. Nie trafia na żaden inny serwer.</span>
-            <input type="password" id="apiKey" class="mono-input" placeholder="AIza..." autocomplete="off" spellcheck="false" />
+            <span class="key-row">
+              <input type="password" id="apiKey" class="mono-input" placeholder="AIza..." autocomplete="off" spellcheck="false" />
+              <button type="button" class="btn btn-ghost btn-sm" id="keyToggle" aria-label="Pokaż lub ukryj klucz">Pokaż</button>
+            </span>
           </label>
           <label class="field">
             <span class="flabel">Model</span>
             <span class="fhelp">Modele 3.x używają „poziomu myślenia”, modele 2.5 — „budżetu myślenia”. Panel myślenia dopasuje się sam.</span>
             <select id="model">
-              <option value="gemini-3.5-pro">gemini-3.5-pro</option>
               <option value="gemini-3.5-flash" selected>gemini-3.5-flash</option>
+              <option value="gemini-3.1-pro-preview">gemini-3.1-pro-preview</option>
+              <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite</option>
+              <option value="gemini-3-flash-preview">gemini-3-flash-preview</option>
               <option value="gemini-2.5-pro">gemini-2.5-pro</option>
               <option value="gemini-2.5-flash">gemini-2.5-flash</option>
               <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
@@ -306,7 +315,7 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
               Strumieniowo (SSE)
             </label>
           </div>
-          <p class="notice">Wskazówka: włączaj/wyłączaj parametry przełącznikiem po lewej. Tylko <em>włączone</em> pola trafiają do zapytania — podgląd po prawej pokazuje dokładnie, co zostanie wysłane.</p>
+          <p class="notice">Wskazówka: włączaj/wyłączaj parametry przełącznikiem po lewej. Tylko <em>włączone</em> pola trafiają do zapytania — podgląd po prawej pokazuje dokładnie, co zostanie wysłane. Skrót: <strong>Ctrl+Enter</strong> (⌘+Enter) wysyła zapytanie.</p>
         </div>
       </div>
 
@@ -324,7 +333,7 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
       </div>
 
       <div class="card">
-        <div class="card-head"><h2>Podgląd zapytania</h2><span class="sub">na żywo</span></div>
+        <div class="card-head"><h2>Podgląd zapytania</h2><span class="card-head-right"><span class="sub">na żywo</span><button type="button" class="btn btn-ghost btn-sm copy-btn" data-copy="reqBody">Kopiuj</button></span></div>
         <div class="card-body">
           <div class="req-endpoint" id="reqEndpoint"></div>
           <div class="req-preview"><pre id="reqBody"></pre></div>
@@ -333,7 +342,7 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
       </div>
 
       <div class="card">
-        <div class="card-head"><h2>Podgląd odpowiedzi</h2><span class="sub" id="resKind">surowy JSON</span></div>
+        <div class="card-head"><h2>Podgląd odpowiedzi</h2><span class="card-head-right"><span class="sub" id="resKind">surowy JSON</span><button type="button" class="btn btn-ghost btn-sm copy-btn" data-copy="resBody">Kopiuj</button></span></div>
         <div class="card-body">
           <div class="req-preview"><pre id="resBody"><span class="placeholder">Surowa odpowiedź API pojawi się tutaj po wysłaniu zapytania…</span></pre></div>
           <p class="notice">Pełny, surowy JSON zwrócony przez API — zobacz <code style="font-family:var(--font-mono)">candidates</code>, <code style="font-family:var(--font-mono)">finishReason</code>, <code style="font-family:var(--font-mono)">usageMetadata</code> i resztę pól. W trybie strumieniowym to lista kolejnych fragmentów (chunków) SSE.</p>
@@ -364,8 +373,8 @@ const GROUPS = [
       type:"int", min:0, max:2147483647, step:1, def:42, on:false },
   ]},
   { title:"Długość i zatrzymanie", params:[
-    { key:"maxOutputTokens", label:"maxOutputTokens", desc:"Górny limit liczby tokenów w odpowiedzi. Zbyt niski przytnie tekst.",
-      type:"int", min:1, max:8192, step:1, def:1024, on:false },
+    { key:"maxOutputTokens", label:"maxOutputTokens", desc:"Górny limit liczby tokenów w odpowiedzi (modele 3.x i 2.5 wspierają do 65 536). Zbyt niski przytnie tekst.",
+      type:"int", min:1, max:65536, step:1, def:1024, on:false },
     { key:"stopSequences", label:"stopSequences", desc:"Sekwencje, po napotkaniu których model przerywa generowanie. Oddziel przecinkami.",
       type:"csv", def:"", on:false },
     { key:"candidateCount", label:"candidateCount", desc:"Ile niezależnych odpowiedzi wygenerować naraz. Każda kosztuje tokeny.",
@@ -378,8 +387,8 @@ const GROUPS = [
       type:"range", min:-2, max:2, step:0.1, def:0, accent:"accent-sky", on:false },
   ]},
   { title:"Myślenie (reasoning)", params:[
-    { key:"thinkingLevel", label:"thinkingLevel", desc:"Głębokość rozumowania dla modeli 3.x. Wyższy poziom = lepsze trudne zadania, ale wolniej i drożej.",
-      type:"select", options:["low","medium","high"], def:"medium", on:false, family:"3" },
+    { key:"thinkingLevel", label:"thinkingLevel", desc:"Głębokość rozumowania dla modeli 3.x. Wyższy poziom = lepsze trudne zadania, ale wolniej i drożej. „minimal” wspierają tylko nowsze modele Flash (3.5 Flash, 3.1 Flash-Lite, 3 Flash).",
+      type:"select", options:["minimal","low","medium","high"], def:"medium", on:false, family:"3" },
     { key:"thinkingBudget", label:"thinkingBudget", desc:"Liczba tokenów myślenia dla modeli 2.5. 0 = wyłącz myślenie, −1 = dynamicznie (model sam decyduje).",
       type:"int", min:-1, max:24576, step:1, def:1024, on:false, family:"2" },
     { key:"includeThoughts", label:"includeThoughts", desc:"Dołącz do odpowiedzi podsumowanie toku rozumowania modelu (tokeny myślenia są liczone tak czy inaczej).",
@@ -419,6 +428,8 @@ SAFETY_CATEGORIES.forEach(c => safetyState[c.key] = "");
 const paramsEl = document.getElementById("params");
 
 function el(tag, attrs={}, html){ const e=document.createElement(tag); for(const k in attrs) e.setAttribute(k, attrs[k]); if(html!=null) e.innerHTML=html; return e; }
+/* jak el(), ale treść przez textContent — do tekstu z API/modelu, który nie może być interpretowany jako HTML */
+function elT(tag, attrs={}, text){ const e=el(tag, attrs); if(text!=null) e.textContent=text; return e; }
 
 function buildParamRow(p){
   const row = el("div", { class:"param", "data-key":p.key });
@@ -597,8 +608,8 @@ function clearRaw(msg){
 function showError(title, detail){
   out.innerHTML = "";
   const box = el("div",{class:"error-box"});
-  box.appendChild(el("div",{class:"e-title"}, "⚠ "+title));
-  box.appendChild(el("div",{class:"e-body"}, detail));
+  box.appendChild(elT("div",{class:"e-title"}, "⚠ "+title));
+  box.appendChild(elT("div",{class:"e-body"}, detail));
   out.appendChild(box);
   usageEl.innerHTML = ""; latencyEl.textContent="";
 }
@@ -613,21 +624,27 @@ function renderUsage(u){
   add("razem", u.totalTokenCount);
 }
 
-function renderCandidates(candidates){
+function renderCandidates(candidates, promptFeedback){
   out.innerHTML = "";
-  if(!candidates || !candidates.length){ out.innerHTML = '<span class="placeholder">Brak treści w odpowiedzi (sprawdź finishReason / bezpieczeństwo).</span>'; return; }
+  if(!candidates || !candidates.length){
+    const reason = promptFeedback?.blockReason;
+    out.appendChild(elT("span",{class:"placeholder"},
+      reason ? `Odpowiedź zablokowana (blockReason: ${reason}).`
+             : "Brak treści w odpowiedzi (sprawdź finishReason / bezpieczeństwo)."));
+    return;
+  }
   candidates.forEach((c, i) => {
     const block = el("div",{class:"candidate"});
-    if(candidates.length>1) block.appendChild(el("div",{class:"candidate-label"}, `Kandydat ${i+1}${c.finishReason?" · "+c.finishReason:""}`));
+    if(candidates.length>1) block.appendChild(elT("div",{class:"candidate-label"}, `Kandydat ${i+1}${c.finishReason?" · "+c.finishReason:""}`));
     let thoughts="", answer="";
     (c.content?.parts||[]).forEach(part => { if(part.thought) thoughts += part.text||""; else answer += part.text||""; });
     if(thoughts){
       const t = el("div",{class:"thoughts"});
       t.appendChild(el("div",{class:"t-label"}, "Tok rozumowania"));
-      t.appendChild(el("div",{class:"t-body"}, thoughts));
+      t.appendChild(elT("div",{class:"t-body"}, thoughts));
       block.appendChild(t);
     }
-    block.appendChild(el("div",{}, (answer||"(pusto)")));
+    block.appendChild(elT("div",{}, (answer||"(pusto)")));
     out.appendChild(block);
   });
 }
@@ -677,7 +694,7 @@ async function send(){
       await handleStream(res);
     } else {
       const data = await res.json();
-      renderCandidates(data.candidates);
+      renderCandidates(data.candidates, data.promptFeedback);
       renderUsage(data.usageMetadata);
       renderRaw(data);
     }
@@ -692,13 +709,33 @@ async function send(){
 async function handleStream(res){
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
-  let buffer="", answer="", thoughts="", usage=null;
+  let buffer="", usage=null, blockReason=null, streamError=null;
   const rawChunks=[];
+  const cands=[]; // stan per kandydat (candidateCount > 1): elementy DOM + zebrany tekst
   out.innerHTML = "";
-  const t = el("div",{class:"thoughts"}); t.style.display="none";
-  t.appendChild(el("div",{class:"t-label"}, "Tok rozumowania")); const tBody=el("div",{class:"t-body"}); t.appendChild(tBody);
-  const ans = el("div");
-  out.appendChild(t); out.appendChild(ans);
+
+  const getCand = idx => {
+    if(!cands[idx]){
+      const block = el("div",{class:"candidate"});
+      const label = el("div",{class:"candidate-label"}); label.style.display="none";
+      const tBox = el("div",{class:"thoughts"}); tBox.style.display="none";
+      tBox.appendChild(el("div",{class:"t-label"}, "Tok rozumowania"));
+      const tBody = el("div",{class:"t-body"}); tBox.appendChild(tBody);
+      const ansEl = el("div");
+      block.appendChild(label); block.appendChild(tBox); block.appendChild(ansEl);
+      out.appendChild(block);
+      cands[idx] = { label, tBox, tBody, ansEl, thoughts:"", answer:"", finishReason:null };
+    }
+    return cands[idx];
+  };
+  const updateLabels = () => {
+    if(cands.filter(Boolean).length < 2) return;
+    cands.forEach((c, i) => {
+      if(!c) return;
+      c.label.style.display = "block";
+      c.label.textContent = `Kandydat ${i+1}${c.finishReason ? " · "+c.finishReason : ""}`;
+    });
+  };
 
   while(true){
     const { done, value } = await reader.read();
@@ -713,15 +750,38 @@ async function handleStream(res){
       if(!payload || payload==="[DONE]") continue;
       let chunk; try { chunk = JSON.parse(payload); } catch(e){ continue; }
       rawChunks.push(chunk); renderRaw(rawChunks, `surowy JSON · ${rawChunks.length} chunków`);
+      if(chunk.error){ streamError = chunk.error; continue; }
       if(chunk.usageMetadata) usage = chunk.usageMetadata;
-      const parts = chunk.candidates?.[0]?.content?.parts || [];
-      for(const p of parts){
-        if(p.thought){ thoughts += p.text||""; t.style.display="block"; tBody.textContent = thoughts; }
-        else { answer += p.text||""; ans.textContent = answer; }
-      }
+      if(chunk.promptFeedback?.blockReason) blockReason = chunk.promptFeedback.blockReason;
+      (chunk.candidates || []).forEach(cand => {
+        const c = getCand(cand.index || 0);
+        if(cand.finishReason) c.finishReason = cand.finishReason;
+        (cand.content?.parts || []).forEach(p => {
+          if(p.thought){ c.thoughts += p.text||""; c.tBox.style.display="block"; c.tBody.textContent = c.thoughts; }
+          else { c.answer += p.text||""; c.ansEl.textContent = c.answer; }
+        });
+      });
+      updateLabels();
     }
   }
-  if(!answer && !thoughts) ans.innerHTML = '<span class="placeholder">Brak treści w odpowiedzi.</span>';
+
+  const hasContent = cands.some(c => c && (c.answer || c.thoughts));
+  if(streamError){
+    const detail = `[${streamError.code||"?"} ${streamError.status||""}] ${streamError.message||JSON.stringify(streamError)}`;
+    if(hasContent){ // zachowaj częściową odpowiedź, dołóż błąd pod spodem
+      const box = el("div",{class:"error-box"}); box.style.marginTop = "16px";
+      box.appendChild(elT("div",{class:"e-title"}, "⚠ Błąd API w trakcie strumienia"));
+      box.appendChild(elT("div",{class:"e-body"}, detail));
+      out.appendChild(box);
+    } else {
+      showError("Błąd API w trakcie strumienia", detail);
+      return;
+    }
+  }
+  if(!hasContent && !streamError){
+    out.appendChild(elT("span",{class:"placeholder"},
+      blockReason ? `Odpowiedź zablokowana (blockReason: ${blockReason}).` : "Brak treści w odpowiedzi."));
+  }
   renderUsage(usage);
 }
 
@@ -760,7 +820,8 @@ function init(){
   document.getElementById("apiKey").addEventListener("input", e => localStorage.setItem("gemini_api_key", e.target.value.trim()));
 
   const savedModel = localStorage.getItem("gemini_model");
-  if(savedModel) document.getElementById("model").value = savedModel;
+  const modelSel = document.getElementById("model");
+  if(savedModel && [...modelSel.options].some(o => o.value === savedModel)) modelSel.value = savedModel;
 
   document.getElementById("model").addEventListener("change", e => { localStorage.setItem("gemini_model", e.target.value); renderParams(); refresh(); });
   document.getElementById("streamToggle").addEventListener("change", refresh);
@@ -768,6 +829,32 @@ function init(){
   document.getElementById("prompt").addEventListener("input", refresh);
   document.getElementById("sendBtn").addEventListener("click", send);
   document.querySelectorAll(".preset").forEach(b => b.addEventListener("click", () => applyPreset(b.dataset.preset)));
+
+  // Ctrl+Enter / ⌘+Enter wysyła zapytanie
+  document.addEventListener("keydown", e => {
+    if((e.ctrlKey || e.metaKey) && e.key === "Enter" && !document.getElementById("sendBtn").disabled){
+      e.preventDefault(); send();
+    }
+  });
+
+  // pokaż/ukryj klucz API
+  const keyInput = document.getElementById("apiKey");
+  const keyToggle = document.getElementById("keyToggle");
+  keyToggle.addEventListener("click", () => {
+    const show = keyInput.type === "password";
+    keyInput.type = show ? "text" : "password";
+    keyToggle.textContent = show ? "Ukryj" : "Pokaż";
+  });
+
+  // kopiowanie podglądów JSON do schowka
+  document.querySelectorAll(".copy-btn").forEach(b => {
+    b.addEventListener("click", async () => {
+      const src = document.getElementById(b.dataset.copy);
+      try { await navigator.clipboard.writeText(src.textContent); b.textContent = "Skopiowano ✓"; }
+      catch(e){ b.textContent = "Błąd"; }
+      setTimeout(() => { b.textContent = "Kopiuj"; }, 1600);
+    });
+  });
 
   renderParams();
   refresh();
