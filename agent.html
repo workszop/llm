@@ -97,6 +97,7 @@ h1.display{font-family:var(--font-display); font-weight:700; font-size:var(--h1)
 .card-head{padding:20px 24px 0; display:flex; align-items:baseline; justify-content:space-between; gap:12px;}
 .card-head h2{font-family:var(--font-display); font-weight:600; font-size:var(--h4); margin:0; letter-spacing:-.01em;}
 .card-head .sub{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3);}
+.card-note{font-size:var(--caption); color:var(--ink-2); margin:0 0 12px;}
 .card-body{padding:18px 24px 24px;}
 
 /* ---- Form fields -------------------------------------------------- */
@@ -189,6 +190,24 @@ input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; 
 .compare-card .compare-meta{font-family:var(--font-mono); font-size:var(--caption); color:var(--ink-2); margin:0;}
 @media (max-width:920px){ .compare-grid{grid-template-columns:1fr;} }
 
+/* ---- Panel prowadzącego (#presenterPanel) — notatki dla osoby
+   pokazującej demo, nie dla widowni. Ukryty domyślnie (atrybut hidden),
+   przełączany klawiszem "n" (patrz JS na dole pliku). Stała pozycja w
+   rogu ekranu, żeby nie zasłaniać sceny (#timeline / #ctxStack). ------ */
+#presenterPanel{
+  position:fixed; right:20px; bottom:20px; z-index:80; width:340px; max-height:70vh;
+  overflow:auto; background:var(--ink); color:var(--paper); border-radius:var(--r-lg);
+  box-shadow:var(--shadow-lg); padding:18px 20px; font-size:var(--body-sm);
+}
+#presenterPanel h2{font-family:var(--font-display); font-size:var(--h4); margin:0 0 4px; color:#fff;}
+#presenterPanel .presenter-hint{font-family:var(--font-mono); font-size:11px; color:var(--ink-3); margin:0 0 14px;}
+#presenterPanel ol{margin:0; padding-left:20px; display:flex; flex-direction:column; gap:12px;}
+#presenterPanel li{line-height:1.5;}
+#presenterPanel .moment{display:block; font-family:var(--font-mono); font-size:11px; letter-spacing:.04em;
+  text-transform:uppercase; color:var(--marigold); margin:0 0 3px;}
+#presenterPanel .term{border-bottom-color:rgba(251,247,240,.5); color:inherit;}
+#presenterPanel .caveat{margin:14px 0 0; padding-top:10px; border-top:1px dashed rgba(251,247,240,.25); color:var(--paper-2); font-size:var(--caption);}
+
 /* ---- Responsive ------------------------------------------------ */
 @media (max-width:920px){
   .stage{grid-template-columns:1fr;}
@@ -207,8 +226,8 @@ input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; 
       <span class="tag">demo agenta</span>
     </div>
     <div class="header-spacer"></div>
-    <a class="header-link" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">
-      Zdobądź klucz API ↗
+    <a class="header-link" href="index.html">
+      Parametry API ↗
     </a>
   </div>
 </header>
@@ -217,7 +236,7 @@ input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; 
   <div class="intro">
     <p class="eyebrow">Interaktywne demo · Agent AI</p>
     <h1 class="display">Jak myśli agent AI</h1>
-    <p>Krok po kroku zobacz, co dzieje się „w głowie” agenta: jak planuje, kiedy sięga po narzędzie i jak buduje ostateczną odpowiedź — bez żargonu, w prostych słowach.</p>
+    <p>Krok po kroku zobacz, co dzieje się „w głowie” <span class="term" title="program, który sam decyduje o kolejnych krokach do celu">agenta</span>: jak planuje, kiedy sięga po <span class="term" title="funkcja aplikacji, o którą model może poprosić">narzędzie</span> i jak buduje ostateczną odpowiedź — bez żargonu, w prostych słowach.</p>
   </div>
 
   <div class="toolbar">
@@ -259,6 +278,7 @@ input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; 
         <h2>Pamięć rozmowy</h2>
       </div>
       <div class="card-body">
+        <p class="card-note">To jest <span class="term" title="wszystko, co model dostaje na wejściu w danej turze">kontekst</span> — rośnie z każdą turą i podnosi liczbę zużytych <span class="term" title="kawałek tekstu ~4 znaki; jednostka rozliczeń">tokenów</span>.</p>
         <div id="ctxStack" class="ctx-stack"></div>
         <div id="costMeter"></div>
       </div>
@@ -268,11 +288,22 @@ input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; 
   <div id="comparePanel" class="card" hidden></div>
 
   <details id="snippets">
-    <summary>Jak zbudowany jest agent? (3 fragmenty kodu)</summary>
+    <summary>Jak zbudowany jest agent? (3 fragmenty kodu <span class="term" title="umowa: model prosi o funkcję nazwą i argumentami w JSON">function calling</span>)</summary>
   </details>
 </main>
 
-<aside id="presenterPanel" hidden></aside>
+<aside id="presenterPanel" hidden>
+  <h2>Notatki prowadzącego</h2>
+  <p class="presenter-hint">Widoczne tylko Tobie — klawisz „n” pokazuje/ukrywa (nie działa, gdy piszesz w polu tekstowym).</p>
+  <ol>
+    <li><span class="moment">Po karcie 📋 Plan</span>„Zapytaj salę: jakiego narzędzia użyje najpierw?”</li>
+    <li><span class="moment">Przy pierwszym 🔧 wywołaniu narzędzia</span>„Podkreśl: model NIE wykonuje kodu — prosi. Pokaż JSON.”</li>
+    <li><span class="moment">Przy błysku pamięci (ctx flash)</span>„Zapytaj: co się stanie z kosztem przy 50 <span class="term" title="jedno przejście pętli: prośba → wykonanie → wynik">okrążeniach</span>?”</li>
+    <li><span class="moment">Przy czerwonej karcie w scenariuszu „Awaria”</span>„Zatrzymaj się: skąd agent wie, że się nie udało? Bo błąd to też obserwacja.”</li>
+    <li><span class="moment">Przy porównaniu chatbot vs agent</span>„Puenta: chatbot zgaduje — to <span class="term" title="pewnie brzmiąca zmyślona odpowiedź">halucynacja</span> — agent sprawdza; różnica to pętla i narzędzia, nie „mądrzejszy model”.”</li>
+  </ol>
+  <p class="caveat">Uwaga o czasie: w trybie na żywo model czasem pomija wyraźną kartę 📋 Plan i idzie prosto do narzędzi — tak działa prawdziwe API. Do prezentacji na scenie używaj trybu demo (scripted) — jest powtarzalny; tryb na żywo pokaż osobno, jako „tu widzicie prawdziwe zachowanie, nieuczesane”.</p>
+</aside>
 
 <script>
 // ============================================================
@@ -1155,7 +1186,7 @@ const awaria = {
       loop: 2,
       title: 'Refleksja',
       body: 'Narzędzie odrzuciło moje wyrażenie — kalkulator przyjmuje tylko liczby i działania. Poprawiam: policzę dni jako liczbę.',
-      why: 'Błąd nie zatrzymuje agenta — wraca do niego jak każda inna obserwacja, a agent próbuje inaczej. Dokładnie po to jest pętla.',
+      why: 'Agent czyta treść błędu i na jej podstawie poprawia swoje argumenty — zamiast uparcie powtarzać ten sam błędny pomysł.',
       wire: {
         label: 'Odpowiedź Gemini: wniosek w postaci tekstu (po błędzie narzędzia)',
         json: {
@@ -1367,6 +1398,15 @@ function pushCtx(ctx){
   updateCost();
 }
 
+// wiadomoscForma(n) — polska odmiana rzeczownika "wiadomość" dla liczników
+// w UI: 1 → liczba pojedyncza ("wiadomość"), każda inna wartość (0, 2, 5,
+// 12, 21…) → "wiadomości". Dla TEGO konkretnego rzeczownika to poprawne —
+// nie trzeba pełnej reguły "kończy się na 2-4, ale nie na 12-14", bo forma
+// dla 2-4 i dla 5+ jest tu identyczna ("wiadomości").
+function wiadomoscForma(n){
+  return n === 1 ? 'wiadomość' : 'wiadomości';
+}
+
 // updateCost() — przerysowuje #costMeter na podstawie liczby bloków w
 // stosie (= liczby "wiadomości") i sumy znaków (przybliżenie: 1 token
 // ≈ 4 znaki — to standardowy szacunek, nie prawdziwy tokenizer).
@@ -1376,7 +1416,7 @@ function updateCost(){
   const n = ctxStackEl.childElementCount;
   const tokens = Math.round(ctxChars / 4);
   costMeterEl.textContent =
-    'Kontekst: ' + n + ' wiadomości · ~' + tokens + ' tokenów — i rośnie z każdym okrążeniem';
+    'Kontekst: ' + n + ' ' + wiadomoscForma(n) + ' · ~' + tokens + ' tokenów — i rośnie z każdym okrążeniem';
 }
 
 // flashCtx() — na każdej "prawdziwej" turze modelu (wywołanie narzędzia
@@ -1700,6 +1740,23 @@ autoBtn.addEventListener('click', () => {
   autoBtn.textContent = '⏸ Auto';
   const speedMs = Number(speedEl.value) * 1000;
   autoTimer = setInterval(step, speedMs);
+});
+
+// ---- Panel prowadzącego: przełącznik klawiszem "n" ------------------
+// Notatki prowadzącego (#presenterPanel) są ukryte domyślnie i widoczne
+// tylko dla osoby pokazującej demo. Klawisz "n" je pokazuje/ukrywa —
+// ALE tylko wtedy, gdy widz/prezenter NIE pisze akurat w polu tekstowym
+// (np. w #apiKeyInput albo w przyszłym polu formularza): inaczej litera
+// "n" wpisywana w klucz API sama otwierałaby panel przy każdym wpisaniu.
+// Sprawdzamy document.activeElement (a nie event.target), bo to on
+// decyduje, do którego pola faktycznie trafiają znaki klawiatury.
+const presenterPanelEl = document.getElementById('presenterPanel');
+document.addEventListener('keydown', (e) => {
+  if(e.key !== 'n' && e.key !== 'N') return;
+  const active = document.activeElement;
+  const tag = active && active.tagName;
+  if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (active && active.isContentEditable)) return;
+  presenterPanelEl.hidden = !presenterPanelEl.hidden;
 });
 
 </script>
