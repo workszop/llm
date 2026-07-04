@@ -608,14 +608,14 @@ const dni100 = {
         label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)',
         json: {
           request: { contents: [
-            { role: 'function', parts: [ { functionResponse: {
+            { role: 'user', parts: [ { functionResponse: {
               name: 'data_i_czas',
               response: { data: '2026-07-04', dzien_tygodnia: 'sobota', numer_dnia: 6 },
             } } ] },
           ] },
         },
       },
-      ctx: { role: 'tool', label: 'functionResponse: data_i_czas', chars: 147 },
+      ctx: { role: 'tool', label: 'functionResponse: data_i_czas', chars: 143 },
     },
 
     // 5) REFLECTION #1 — agent samodzielnie łączy fakt (data) z prostą matematyką.
@@ -669,14 +669,14 @@ const dni100 = {
         label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)',
         json: {
           request: { contents: [
-            { role: 'function', parts: [ { functionResponse: {
+            { role: 'user', parts: [ { functionResponse: {
               name: 'kalkulator',
               response: { wynik: 7 },
             } } ] },
           ] },
         },
       },
-      ctx: { role: 'tool', label: 'functionResponse: kalkulator', chars: 95 },
+      ctx: { role: 'tool', label: 'functionResponse: kalkulator', chars: 91 },
     },
 
     // 8) REFLECTION #2 — agent sprawdza, czy ma już wszystko, czego potrzebuje.
@@ -812,14 +812,14 @@ const bilety = {
         label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)',
         json: {
           request: { contents: [
-            { role: 'function', parts: [ { functionResponse: {
+            { role: 'user', parts: [ { functionResponse: {
               name: 'szukaj',
               response: { zrodlo: 'teatr-apollo.pl', cena_biletu_pln: 85 },
             } } ] },
           ] },
         },
       },
-      ctx: { role: 'tool', label: 'functionResponse: szukaj', chars: 129 },
+      ctx: { role: 'tool', label: 'functionResponse: szukaj', chars: 125 },
     },
 
     {
@@ -870,14 +870,14 @@ const bilety = {
         label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)',
         json: {
           request: { contents: [
-            { role: 'function', parts: [ { functionResponse: {
+            { role: 'user', parts: [ { functionResponse: {
               name: 'notatnik',
               response: { zapisano: 'cena_biletu' },
             } } ] },
           ] },
         },
       },
-      ctx: { role: 'tool', label: 'functionResponse: notatnik', chars: 108 },
+      ctx: { role: 'tool', label: 'functionResponse: notatnik', chars: 104 },
     },
 
     {
@@ -928,14 +928,14 @@ const bilety = {
         label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)',
         json: {
           request: { contents: [
-            { role: 'function', parts: [ { functionResponse: {
+            { role: 'user', parts: [ { functionResponse: {
               name: 'kalkulator',
               response: { wynik: 2380 },
             } } ] },
           ] },
         },
       },
-      ctx: { role: 'tool', label: 'functionResponse: kalkulator', chars: 98 },
+      ctx: { role: 'tool', label: 'functionResponse: kalkulator', chars: 94 },
     },
 
     {
@@ -1058,14 +1058,14 @@ const awaria = {
         label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)',
         json: {
           request: { contents: [
-            { role: 'function', parts: [ { functionResponse: {
+            { role: 'user', parts: [ { functionResponse: {
               name: 'data_i_czas',
               response: { data: '2026-07-04', dzien_tygodnia: 'sobota', numer_dnia: 6 },
             } } ] },
           ] },
         },
       },
-      ctx: { role: 'tool', label: 'functionResponse: data_i_czas', chars: 147 },
+      ctx: { role: 'tool', label: 'functionResponse: data_i_czas', chars: 143 },
     },
 
     {
@@ -1125,14 +1125,14 @@ const awaria = {
         label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)',
         json: {
           request: { contents: [
-            { role: 'function', parts: [ { functionResponse: {
+            { role: 'user', parts: [ { functionResponse: {
               name: 'kalkulator',
               response: { blad: 'Niepoprawne wyrażenie: od 21 czerwca do dziś' },
             } } ] },
           ] },
         },
       },
-      ctx: { role: 'tool', label: 'functionResponse: kalkulator (błąd)', chars: 139 },
+      ctx: { role: 'tool', label: 'functionResponse: kalkulator (błąd)', chars: 135 },
     },
 
     // REFLECTION #2 — dokładna kopia z brief: agent nazywa błąd i
@@ -1187,14 +1187,14 @@ const awaria = {
         label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)',
         json: {
           request: { contents: [
-            { role: 'function', parts: [ { functionResponse: {
+            { role: 'user', parts: [ { functionResponse: {
               name: 'kalkulator',
               response: { wynik: 13 },
             } } ] },
           ] },
         },
       },
-      ctx: { role: 'tool', label: 'functionResponse: kalkulator', chars: 96 },
+      ctx: { role: 'tool', label: 'functionResponse: kalkulator', chars: 92 },
     },
 
     {
