@@ -448,6 +448,19 @@ async function* liveRun(goal){
         why: 'Nie udało się uzyskać poprawnej odpowiedzi od Gemini (sieć, HTTP albo nieoczekiwany kształt odpowiedzi).' };
       return;
     }
+    // Kandydat BEZ treści to poprawny JSON, który NIE rzuca w try powyżej:
+    // API potrafi zwrócić {candidates:[{finishReason:'SAFETY'}]} (też
+    // RECITATION/OTHER/MAX_TOKENS) — content jest wtedy undefined i bez tej
+    // bramki pierwszy dostęp do content.parts rzuciłby TypeError już POZA
+    // try/catch, łamiąc gwarancję "liveRun nigdy nie rzuca".
+    if(!content){
+      const reason = (res.candidates && res.candidates[0] && res.candidates[0].finishReason) || 'nieznany';
+      yield { kind: 'answer', isError: true,
+        body: '⛔ Model nie zwrócił treści (finishReason: ' + reason + ') — przebieg zakończony.',
+        why: 'Odpowiedź została zablokowana lub ucięta po stronie API (np. filtr bezpieczeństwa) — taka tura nie niesie treści, więc agent kończy przebieg.',
+        wire: { label: 'Odpowiedź Gemini: kandydat bez treści', json: res } };
+      return;
+    }
     contents.push(content);
     const text = (content.parts || []).filter(p => p.text).map(p => p.text).join('');
     const fc = (content.parts || []).find(p => p.functionCall)?.functionCall;
