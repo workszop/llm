@@ -157,13 +157,15 @@ input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; 
 @keyframes ctxflash{50%{border-color:var(--marigold); box-shadow:0 0 0 2px var(--marigold-soft);}}
 .ctx-flash-caption{font-size:var(--caption); color:var(--marigold); margin-top:6px; min-height:1em;}
 #costMeter{font-size:var(--caption); color:var(--ink-2); margin-top:10px;}
-.wire{margin-top:10px;} .wire pre{background:var(--ink); color:var(--paper); border-radius:var(--r-sm);
-  padding:10px 12px; font-family:var(--font-mono); font-size:11.5px; overflow:auto; max-height:220px;}
+.wire{margin-top:10px;}
+/* Wspólny wygląd "ciemnego" pre z JSON-em — w kartach (.wire) i w sekcji
+   snippetów; tylko .wire pre dostaje dodatkowo limit wysokości. */
+.wire pre, #snippets pre{background:var(--ink); color:var(--paper); border-radius:var(--r-sm);
+  padding:10px 12px; font-family:var(--font-mono); font-size:11.5px; overflow:auto;}
+.wire pre{max-height:220px;}
 /* Kolory podświetlenia JSON w .wire pre i #snippets pre — te same klasy
    i te same kolory co w podglądzie zapytania w index.html. */
 .req-key{color:#F6997E;} .req-str{color:#86D69A;} .req-num{color:#8FB9EC;} .req-bool{color:#E0B0FF;}
-#snippets pre{background:var(--ink); color:var(--paper); border-radius:var(--r-sm);
-  padding:10px 12px; font-family:var(--font-mono); font-size:11.5px; overflow:auto;}
 #snippets .snippet{margin-top:14px;}
 #snippets .snippet h3{font-size:14px; margin:0 0 6px;}
 #snippets .snippet p{font-size:var(--caption); color:var(--ink-2); margin:6px 0 0;}
@@ -369,7 +371,10 @@ const dni100 = {
             ],
             tools: [ { functionDeclarations: [
               { name: 'data_i_czas', description: 'Zwraca dzisiejszą datę i dzień tygodnia.' },
-              { name: 'kalkulator', description: 'Wykonuje działanie matematyczne.', parameters: { type: 'OBJECT', properties: { wyrazenie: { type: 'STRING' } } } },
+              // Deklaracja kalkulatora 1:1 ze snippetem (a) w sekcji #snippets —
+              // widz porównujący "Co poszło po kablu?" ze snippetem widzi
+              // dokładnie ten sam kształt (OBJECT/STRING + required).
+              { name: 'kalkulator', description: 'Wykonuje działanie matematyczne (np. dodawanie, mnożenie).', parameters: { type: 'OBJECT', properties: { wyrazenie: { type: 'STRING', description: 'Wyrażenie do obliczenia, np. 2 + 2.' } }, required: ['wyrazenie'] } },
               { name: 'szukaj', description: 'Szuka informacji w bazie wiedzy.', parameters: { type: 'OBJECT', properties: { zapytanie: { type: 'STRING' } } } },
               { name: 'notatnik', description: 'Zapisuje i odczytuje notatki.', parameters: { type: 'OBJECT', properties: { akcja: { type: 'STRING' }, klucz: { type: 'STRING' }, wartosc: { type: 'STRING' } } } },
             ] } ],
@@ -558,8 +563,8 @@ const SNIPPETS = [
   "name": "kalkulator",
   "description": "Wykonuje działanie matematyczne (np. dodawanie, mnożenie).",
   "parameters": {
-    "type": "object",
-    "properties": { "wyrazenie": { "type": "string", "description": "Wyrażenie do obliczenia, np. 2 + 2." } },
+    "type": "OBJECT",
+    "properties": { "wyrazenie": { "type": "STRING", "description": "Wyrażenie do obliczenia, np. 2 + 2." } },
     "required": ["wyrazenie"]
   }
 }`,
