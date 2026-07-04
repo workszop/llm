@@ -635,16 +635,27 @@ function renderStep(ev){
 
   timelineEl.appendChild(card);
 
-  // Wjazd karty "od dołu" — dodajemy klasę .shown w kolejnej klatce,
-  // żeby przeglądarka zdążyła policzyć stan początkowy (opacity:0) i
-  // faktycznie zagrała przejście CSS zamiast "przeskoczyć" od razu.
-  requestAnimationFrame(()=> card.classList.add('shown'));
+  // Wjazd karty "od dołu": zanim dodamy klasę .shown, wymuszamy
+  // przeliczenie stylów (odczyt offsetWidth = synchroniczny reflow).
+  // Dzięki temu przeglądarka "zapamięta" stan początkowy (opacity:0,
+  // translateY) i przejście CSS faktycznie zagra. Robimy to synchronicznie,
+  // a NIE przez requestAnimationFrame — rAF nie odpala w kartach w tle
+  // (i bywa pomijany w środowiskach automatycznych), przez co karty
+  // zostawały niewidoczne (opacity:0 na zawsze).
+  void card.offsetWidth;
+  card.classList.add('shown');
   card.scrollIntoView({ behavior:'smooth', block:'end' });
 }
 
 // ---- Stan steppera -------------------------------------------------
+// MAX_ITER — twardy limit "okrążeń" pętli agenta w tym demie. Prawdziwe
+// agenty też mają taki bezpiecznik (żeby nie kręciły się w kółko bez
+// końca); u nas to stała, którą pokazujemy w liczniku „okrążenie N / 5”.
+const MAX_ITER = 5;
+
 let gen = null;          // aktualny generator zdarzeń (mockRun/liveRun)
 let autoTimer = null;    // id setInterval, gdy tryb Auto jest włączony
+let finished = false;    // czy bieżący przebieg dobiegł końca (→ „Od nowa ↺”)
 
 function stopAuto(){
   if(autoTimer){ clearInterval(autoTimer); autoTimer = null; }
@@ -652,15 +663,20 @@ function stopAuto(){
 }
 
 // startRun() — czyści scenę i tworzy nowy generator dla aktualnie
-// wybranego scenariusza + trybu. Tryb "na żywo" (liveRun) to Zadanie 7 —
-// na razie przełącznik #modeToggle jest zablokowany, więc ta gałąź
-// nigdy się nie wykona, ale jest już gotowa: podłączenie liveRun(goal)
-// będzie jednolinijkową zmianą.
+// wybranego scenariusza + trybu, po czym od razu odsłania pierwszą
+// kartę (🎯 cel) — scena nigdy nie stoi pusta po wyborze scenariusza,
+// a pierwsze kliknięcie „Krok ▸” prezentera odsłania już plan.
+// Tryb "na żywo" (liveRun) to Zadanie 7 — na razie przełącznik
+// #modeToggle jest zablokowany, więc ta gałąź nigdy się nie wykona,
+// ale jest już gotowa: podłączenie liveRun(goal) będzie
+// jednolinijkową zmianą.
 function startRun(){
   stopAuto();
   timelineEl.innerHTML = '';
   ctxStackEl.innerHTML = '';
-  loopCounterEl.textContent = 'Krok 0';
+  loopCounterEl.textContent = '';       // licznik pusty na starcie przebiegu
+  finished = false;
+  stepBtn.textContent = 'Krok ▸';
   stepBtn.disabled = false;
 
   const scenario = SCENARIOS.find(s => s.id === presetSel.value);
@@ -669,26 +685,31 @@ function startRun(){
   gen = modeToggle.checked
     ? liveRun(scenario.cel)   // Zadanie 7 — jeszcze nieobecne (przełącznik zablokowany)
     : mockRun(scenario);
+
+  step();                               // od razu pokaż kartę celu (🎯)
 }
 
 // step() — pobiera jedno zdarzenie z generatora i renderuje je (albo
 // kończy przebieg, gdy generator jest wyczerpany).
 async function step(){
-  if(!gen) return;
+  if(!gen || finished) return;
   const { value, done } = await gen.next();
   if(done){
-    stepBtn.disabled = true;
+    // Koniec przebiegu: nie blokujemy przycisku na stałe — zamieniamy
+    // go w „Od nowa ↺”, żeby prezenter mógł jednym kliknięciem
+    // powtórzyć scenariusz (ponowny wybór tej samej opcji w <select>
+    // nie wywołuje zdarzenia change, więc select nie wystarczy).
+    finished = true;
+    stepBtn.textContent = 'Od nowa ↺';
     stopAuto();
     return;
   }
   renderStep(value);
+  // Licznik okrążeń: aktualizujemy TYLKO gdy zdarzenie należy do
+  // okrążenia pętli (ma pole loop). Zdarzenia bez loop (cel, plan,
+  // odpowiedź) nie kasują poprzedniej wartości w trakcie przebiegu.
   if(value.loop != null){
-    // Ile jest "okrążeń" łącznie w scenariuszu — do napisu "okrążenie X / Y".
-    const scenario = SCENARIOS.find(s => s.id === presetSel.value);
-    const totalLoops = scenario ? Math.max(...scenario.steps.map(s=>s.loop||0)) : value.loop;
-    loopCounterEl.textContent = `okrążenie ${value.loop} / ${totalLoops}`;
-  } else {
-    loopCounterEl.textContent = 'Krok ' + timelineEl.children.length;
+    loopCounterEl.textContent = `okrążenie ${value.loop} / ${MAX_ITER}`;
   }
 }
 
@@ -697,7 +718,7 @@ async function step(){
 // Wypełnij #presetSel scenariuszami z SCENARIOS (nie na sztywno w HTML!).
 // Usuwamy placeholdery i budujemy opcje z danych.
 presetSel.innerHTML = '';
-presetSel.appendChild(elT('option', { value:'' }, 'Wybierz scenariusz…'));
+presetSel.appendChild(elT('option', { value:'' }, '— wybierz zadanie —'));
 SCENARIOS.forEach(s => presetSel.appendChild(elT('option', { value:s.id }, s.nazwa)));
 
 // Tryb "na żywo" to Zadanie 7 — na razie zablokowany, z polskim
@@ -709,7 +730,10 @@ presetSel.addEventListener('change', startRun);
 modeToggle.addEventListener('change', startRun);
 
 stepBtn.addEventListener('click', () => {
-  if(!gen) startRun();
+  // Po zakończonym przebiegu przycisk działa jako „Od nowa ↺”:
+  // restartuje ten sam scenariusz (startRun czyści scenę i od razu
+  // pokazuje kartę celu, a etykieta wraca do „Krok ▸”).
+  if(finished || !gen){ startRun(); return; }
   step();
 });
 
@@ -718,7 +742,8 @@ autoBtn.addEventListener('click', () => {
     stopAuto();
     return;
   }
-  if(!gen) startRun();
+  if(finished || !gen) startRun();      // po końcu przebiegu Auto też restartuje
+  if(!gen) return;                      // nadal brak wybranego scenariusza
   autoBtn.textContent = '⏸ Auto';
   const speedMs = Number(speedEl.value) * 1000;
   autoTimer = setInterval(step, speedMs);
