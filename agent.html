@@ -167,6 +167,7 @@ input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; 
 .ctx-flash-caption{font-size:var(--caption); color:var(--marigold); margin-top:6px; min-height:1em;}
 #costMeter{font-size:var(--caption); color:var(--ink-2); margin-top:10px;}
 .wire{margin-top:10px;}
+.wire-label{font-size:var(--caption); color:var(--ink-2); margin:6px 0 4px;}
 /* Wspólny wygląd "ciemnego" pre z JSON-em — w kartach (.wire) i w sekcji
    snippetów; tylko .wire pre dostaje dodatkowo limit wysokości. */
 .wire pre, #snippets pre{background:var(--ink); color:var(--paper); border-radius:var(--r-sm);
@@ -241,9 +242,6 @@ input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; 
   <div class="toolbar">
     <select id="presetSel">
       <option value="">Wybierz scenariusz…</option>
-      <option value="preset-1">Scenariusz 1 (placeholder)</option>
-      <option value="preset-2">Scenariusz 2 (placeholder)</option>
-      <option value="preset-3">Scenariusz 3 (placeholder)</option>
     </select>
 
     <label class="switch-row">
@@ -309,11 +307,12 @@ input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; 
 // edulab · demo agenta — warstwa danych (bez DOM!)
 // ------------------------------------------------------------
 // Ten skrypt NIE dotyka strony (żadnego document.getElementById itd.).
-// To jedynie: (1) narzędzia, które agent może "wywołać", (2) opis
-// scenariusza nr 1 jako gotowa lista zdarzeń (StepEvent), (3) mały
-// generator, który te zdarzenia oddaje po kolei. Renderowanie na
-// ekranie (Zadanie 3) i prawdziwe wywołania Gemini (Zadanie 7)
-// dobudują się na tym kontrakcie, nie zmieniając go.
+// To jedynie: (1) narzędzia, które agent może "wywołać", (2) opisy
+// trzech scenariuszy (dni100, bilety, awaria) jako gotowe listy zdarzeń
+// (StepEvent), (3) mały generator, który te zdarzenia oddaje po kolei.
+// Renderowanie na ekranie (Zadanie 3) i prawdziwe wywołania Gemini
+// (Zadanie 7, liveRun) dobudowały się na tym samym kontrakcie StepEvent,
+// nie zmieniając go — jeden renderer obsługuje oba tryby.
 // ============================================================
 
 // ---- Tryb demo vs tryb "na żywo" ---------------------------------
@@ -465,7 +464,22 @@ async function* liveRun(goal){
     ctx: { role: 'user', label: 'cel użytkownika', chars: JSON.stringify(contents[0]).length },
   };
 
-  for(let i = 1; i <= MAX_ITER + 1; i++){                      // +1: pierwsza tura to plan
+  const CAP_HIT_EVENT = { kind: 'answer', isError: true, body: '⛔ Limit 5 okrążeń osiągnięty — bezpiecznik zadziałał.',
+    why: 'Bez limitu zapętlony agent kręciłby się (i płacił) w nieskończoność.' };
+
+  // planSeen: czy tura 1 była planem (samym tekstem, bez functionCall).
+  // W dokumentacji/brief-ie zakładaliśmy, że tura 1 ZAWSZE jest planem
+  // (stąd pętla "+1"), ale model bywa mniej grzeczny: czasem wywołuje
+  // narzędzie już w turze 1 (patrz raport Zadania 7 — "plan bywa pomijany").
+  // Gdy tak się dzieje, nie ma dodatkowej "darmowej" tury planu — więc
+  // numer okrążenia (iter) liczymy WZGLĘDEM tego, czy plan faktycznie
+  // wystąpił, a nie względem surowego numeru tury (i). Górna granica
+  // pętli (MAX_ITER+2) ma zapas na oba przypadki: gdy planSeen, potrzeba
+  // jednej dodatkowej tury (plan) plus do MAX_ITER+1 tur narzędziowych,
+  // żeby wykryć i zgłosić przekroczenie limitu.
+  let planSeen = false;
+
+  for(let i = 1; i <= MAX_ITER + 2; i++){
     const req = { systemInstruction: { parts: [ { text: SYSTEM } ] }, contents: contents.slice(),
       tools: [ { functionDeclarations: FUNCTION_DECLARATIONS } ] };
 
@@ -495,8 +509,16 @@ async function* liveRun(goal){
     const text = (content.parts || []).filter(p => p.text).map(p => p.text).join('');
     const fc = (content.parts || []).find(p => p.functionCall)?.functionCall;
 
+    // iter — numer okrążenia pokazywany w UI i porównywany z MAX_ITER.
+    // Gdy plan faktycznie wystąpił (planSeen), tura 1 była "darmowa"
+    // (plan), więc okrążenia liczą się od tury 2 → iter = i - 1.
+    // Gdy planu nie było (model strzelił narzędziem od razu w turze 1),
+    // ta sama tura 1 to już pierwsze okrążenie → iter = i.
+    const iter = planSeen ? i - 1 : i;
+
     if(!fc){                                                    // brak prośby o narzędzie = koniec (plan lub odpowiedź)
       if(i === 1){
+        planSeen = true;
         yield { kind: 'plan', title: 'Plan działania', body: text,
           why: 'Zamiast zgadywać, agent najpierw układa plan działania — tak jak dobry pracownik, który rozpisuje kroki, zanim zacznie pracę.',
           wire: { label: 'Odpowiedź Gemini: plan w postaci tekstu (jeszcze bez wywołania narzędzia)', json: res },
@@ -505,9 +527,19 @@ async function* liveRun(goal){
         contents.push(followUp);
         continue;
       }
-      yield { kind: 'answer', body: text, loop: i - 1,
+      yield { kind: 'answer', body: text, loop: iter,
         wire: { label: 'Odpowiedź Gemini: końcowa odpowiedź tekstowa', json: res },
         ctx: { role: 'model', label: 'Odpowiedź agenta', chars: JSON.stringify(content).length } };
+      return;
+    }
+
+    // Bezpiecznik: model poprosił o narzędzie, ale to okrążenie
+    // przekroczyłoby limit MAX_ITER — kończymy kartą "limit osiągnięty"
+    // zamiast faktycznie wykonywać narzędzie. Sprawdzane PRZED runTool,
+    // dokładnie tak jak wymaga tego kontrakt (nie liczymy przekroczonego
+    // okrążenia jako wykonanego).
+    if(iter > MAX_ITER){
+      yield CAP_HIT_EVENT;
       return;
     }
 
@@ -518,9 +550,9 @@ async function* liveRun(goal){
     // podwójnie zawyżałoby stos "Pamięć rozmowy" i licznik kosztu o ten
     // sam fragment tekstu.
     if(text){
-      yield { kind: 'reflection', body: text, loop: i - 1 };
+      yield { kind: 'reflection', body: text, loop: iter };
     }
-    yield { kind: 'tool_call', tool: fc.name, args: fc.args, loop: i - 1,
+    yield { kind: 'tool_call', tool: fc.name, args: fc.args, loop: iter,
       title: 'Wywołanie narzędzia: ' + fc.name,
       body: 'Agent prosi o wywołanie narzędzia „' + fc.name + '”.',
       wire: { label: 'Odpowiedź Gemini: prośba o wywołanie funkcji (functionCall)', json: res },
@@ -531,14 +563,16 @@ async function* liveRun(goal){
     // wraca do rozmowy jako część z role:"user" — patrz raport Zadania 7.
     const funcResponseTurn = { role: 'user', parts: [ { functionResponse: { name: fc.name, response: result } } ] };
     yield { kind: 'observation', tool: fc.name, title: 'Wynik: ' + fc.name,
-      body: JSON.stringify(result, null, 1), isError: !!result.blad, loop: i - 1,
+      body: JSON.stringify(result, null, 1), isError: !!result.blad, loop: iter,
       wire: { label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)', json: { contents: [ funcResponseTurn ] } },
       ctx: { role: 'tool', label: 'functionResponse: ' + fc.name, chars: JSON.stringify(funcResponseTurn).length } };
     contents.push(funcResponseTurn);
   }
 
-  yield { kind: 'answer', isError: true, body: '⛔ Limit 5 okrążeń osiągnięty — bezpiecznik zadziałał.',
-    why: 'Bez limitu zapętlony agent kręciłby się (i płacił) w nieskończoność.' };
+  // Bezpiecznik na wypadek nieosiągnięcia limitu wewnątrz pętli (nie
+  // powinno się zdarzyć — patrz komentarz przy MAX_ITER+2 powyżej —
+  // ale gdyby się zdarzyło, przebieg i tak kończy się tą samą kartą.
+  yield CAP_HIT_EVENT;
 }
 
 // ============================================================
@@ -744,17 +778,17 @@ const dni100 = {
     {
       kind: 'answer',
       title: 'Odpowiedź',
-      body: 'Za 100 dni będzie **poniedziałek**; 1 × 7 = **7**.',
+      body: 'Za 100 dni będzie poniedziałek; 1 × 7 = 7.',
       why: 'To jest ostateczna odpowiedź — zbudowana z dwóch sprawdzonych faktów (daty i obliczenia), a nie z jednego zgadywanego zdania.',
       wire: {
         label: 'Odpowiedź Gemini: tekst finalny pokazywany użytkownikowi',
         json: {
           candidates: [ { content: { role: 'model', parts: [
-            { text: 'Za 100 dni będzie **poniedziałek**; 1 × 7 = **7**.' }
+            { text: 'Za 100 dni będzie poniedziałek; 1 × 7 = 7.' }
           ] } } ],
         },
       },
-      ctx: { role: 'model', label: 'Odpowiedź końcowa', chars: 88 },
+      ctx: { role: 'model', label: 'Odpowiedź końcowa', chars: 80 },
     },
   ],
 };
@@ -984,17 +1018,17 @@ const bilety = {
     {
       kind: 'answer',
       title: 'Odpowiedź',
-      body: 'Grupa 28 studentów zapłaci **2380 zł** za bilety. Cena jednostkowa (85 zł) została zapisana w notatniku na później.',
+      body: 'Grupa 28 studentów zapłaci 2380 zł za bilety. Cena jednostkowa (85 zł) została zapisana w notatniku na później.',
       why: 'To jest ostateczna odpowiedź — zbudowana ze sprawdzonej ceny i sprawdzonego obliczenia, a przy okazji zrealizowana druga część prośby (zapis w notatniku).',
       wire: {
         label: 'Odpowiedź Gemini: tekst finalny pokazywany użytkownikowi',
         json: {
           candidates: [ { content: { role: 'model', parts: [
-            { text: 'Grupa 28 studentów zapłaci **2380 zł** za bilety. Cena jednostkowa (85 zł) została zapisana w notatniku na później.' }
+            { text: 'Grupa 28 studentów zapłaci 2380 zł za bilety. Cena jednostkowa (85 zł) została zapisana w notatniku na później.' }
           ] } } ],
         },
       },
-      ctx: { role: 'model', label: 'Odpowiedź końcowa', chars: 153 },
+      ctx: { role: 'model', label: 'Odpowiedź końcowa', chars: 149 },
     },
   ],
 };
@@ -1243,17 +1277,17 @@ const awaria = {
     {
       kind: 'answer',
       title: 'Odpowiedź',
-      body: 'Od premiery strony (21 czerwca 2026) minęło **13 dni**.',
+      body: 'Od premiery strony (21 czerwca 2026) minęło 13 dni.',
       why: 'To jest ostateczna odpowiedź — zbudowana z faktu (dzisiejsza data) i poprawionego obliczenia, mimo że po drodze jedno wywołanie narzędzia zakończyło się błędem.',
       wire: {
         label: 'Odpowiedź Gemini: tekst finalny pokazywany użytkownikowi',
         json: {
           candidates: [ { content: { role: 'model', parts: [
-            { text: 'Od premiery strony (21 czerwca 2026) minęło **13 dni**.' }
+            { text: 'Od premiery strony (21 czerwca 2026) minęło 13 dni.' }
           ] } } ],
         },
       },
-      ctx: { role: 'model', label: 'Odpowiedź końcowa', chars: 93 },
+      ctx: { role: 'model', label: 'Odpowiedź końcowa', chars: 89 },
     },
   ],
 };
@@ -1406,6 +1440,16 @@ function wiadomoscForma(n){
   return n === 1 ? 'wiadomość' : 'wiadomości';
 }
 
+// okrazenieForma(n) — polska odmiana rzeczownika "okrążenie" wg reguły
+// paucalnej: 1 → "okrążenie", 2-4 (ale NIE 12-14, bo to "nastki" mają
+// swoją formę) → "okrążenia", 0/5+ (i 12-14) → "okrążeń".
+function okrazenieForma(n){
+  if(n === 1) return 'okrążenie';
+  const mod10 = n % 10, mod100 = n % 100;
+  if(mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14)) return 'okrążenia';
+  return 'okrążeń';
+}
+
 // updateCost() — przerysowuje #costMeter na podstawie liczby bloków w
 // stosie (= liczby "wiadomości") i sumy znaków (przybliżenie: 1 token
 // ≈ 4 znaki — to standardowy szacunek, nie prawdziwy tokenizer).
@@ -1478,6 +1522,11 @@ function renderStep(ev){
   // tekstowych (textContent), a nie przez sklejanie stringów do innerHTML.
   if(ev.kind === 'tool_call' && ev.tool){
     const argsLine = el('p', { class:'k-args' });
+    // TOOLS_UI daje ikonkę narzędzia po polsku dla człowieka (statyczne,
+    // nasze dane) — dokładamy ją przed nazwą narzędzia, tak samo bezpiecznie
+    // (textContent-owy węzeł) jak resztę tej linii.
+    const uiInfo = TOOLS_UI[ev.tool];
+    if(uiInfo) argsLine.appendChild(document.createTextNode(uiInfo.icon + ' '));
     argsLine.appendChild(document.createTextNode(ev.tool + '('));
     const entries = Object.entries(ev.args || {});
     entries.forEach(([key, val], i)=>{
@@ -1503,6 +1552,13 @@ function renderStep(ev){
   if(ev.wire){
     const details = el('details', { class:'wire' });
     details.appendChild(elT('summary', {}, 'Co poszło po kablu?'));
+    // ev.wire.label to nasz krótki podpis, co dokładnie widać w tym JSON-ie
+    // (np. "Zapytanie wysłane do Gemini…") — pokazujemy go jako podpis nad
+    // <pre>, wewnątrz <details> (widoczny dopiero po rozwinięciu). Nasz
+    // tekst, ale i tak przez textContent, dla spójności z resztą karty.
+    if(ev.wire.label){
+      details.appendChild(elT('div', { class:'wire-label' }, ev.wire.label));
+    }
     const pre = el('pre', {});
     // syntaxHighlight ucieka &,<,> zanim owinie fragmenty w <span>,
     // więc przypisanie przez innerHTML jest tu bezpieczne (patrz komentarz
@@ -1551,6 +1607,14 @@ let finished = false;    // czy bieżący przebieg dobiegł końca (→ „Od no
 let currentScenario = null;
 let maxLoopSeen = 0;
 
+// lastAnswer — dokładnie ta karta 'answer', którą FAKTYCZNIE pokazał ten
+// przebieg (mock albo live), niezależnie od tego, czy to sukces czy karta
+// błędu. showCompare() czyta stąd, a NIE ze scenariusza — inaczej po
+// przebiegu na żywo w panelu porównania wciąż widniałaby stara, spreparowana
+// odpowiedź mock (błędna data, albo odpowiedź mimo że przebieg skończył się
+// błędem). Resetowane na null przy każdym startRun().
+let lastAnswer = null;
+
 function stopAuto(){
   if(autoTimer){ clearInterval(autoTimer); autoTimer = null; }
   autoBtn.textContent = '▶ Auto';
@@ -1560,10 +1624,11 @@ function stopAuto(){
 // wybranego scenariusza + trybu, po czym od razu odsłania pierwszą
 // kartę (🎯 cel) — scena nigdy nie stoi pusta po wyborze scenariusza,
 // a pierwsze kliknięcie „Krok ▸” prezentera odsłania już plan.
-// Tryb "na żywo" (liveRun) to Zadanie 7 — na razie przełącznik
-// #modeToggle jest zablokowany, więc ta gałąź nigdy się nie wykona,
-// ale jest już gotowa: podłączenie liveRun(goal) będzie
-// jednolinijkową zmianą.
+// Tryb "na żywo" (liveRun, Zadanie 7) jest w pełni podłączony: przełącznik
+// #modeToggle wybiera między mockRun(scenario) (odtwarzacz scenariusza) i
+// liveRun(scenario.cel) (prawdziwe wywołania Gemini) — obie gałęzie
+// faktycznie się wykonują, jeden i ten sam step()/renderStep() poniżej
+// obsługuje zdarzenia z obu.
 function startRun(){
   stopAuto();
   timelineEl.innerHTML = '';
@@ -1589,6 +1654,7 @@ function startRun(){
   compareBtn.disabled = true;
   compareBtn.title = 'najpierw dokończ przebieg';
   maxLoopSeen = 0;
+  lastAnswer = null;
 
   const scenario = SCENARIOS.find(s => s.id === presetSel.value);
   currentScenario = scenario || null;
@@ -1610,7 +1676,14 @@ function startRun(){
 // kończy przebieg, gdy generator jest wyczerpany).
 async function step(){
   if(!gen || finished) return;
+  // myGen — migawka generatora sprzed await. Tryb na żywo robi prawdziwy
+  // fetch wewnątrz gen.next(), więc jeśli w międzyczasie ktoś kliknął nowy
+  // scenariusz/przełącznik (startRun() podmienia `gen` na nowy generator),
+  // ten "osierocony" `await` w końcu się rozwiąże z kartą ze STAREGO
+  // przebiegu — bez tej straży dorysowałaby się na scenie NOWEGO przebiegu.
+  const myGen = gen;
   const { value, done } = await gen.next();
+  if(myGen !== gen) return;               // stary przebieg — nic nie rysujemy
   if(done){
     // Koniec przebiegu: nie blokujemy przycisku na stałe — zamieniamy
     // go w „Od nowa ↺”, żeby prezenter mógł jednym kliknięciem
@@ -1619,14 +1692,28 @@ async function step(){
     finished = true;
     stepBtn.textContent = 'Od nowa ↺';
     stopAuto();
-    // Zadanie 6: dopiero teraz porównanie ma sens — odblokuj #compareBtn.
+    // Zadanie 6: dopiero teraz porównanie ma sens — odblokuj #compareBtn,
+    // ale TYLKO gdy przebieg faktycznie skończył się dobrą odpowiedzią.
+    // Karta błędu (np. brak klucza API, błąd sieci, limit okrążeń) nie
+    // daje sensownej odpowiedzi agenta do porównania.
     if(currentScenario){
-      compareBtn.disabled = false;
-      compareBtn.title = '';
+      if(lastAnswer && !lastAnswer.isError){
+        compareBtn.disabled = false;
+        compareBtn.title = '';
+      } else {
+        compareBtn.disabled = true;
+        compareBtn.title = 'przebieg zakończył się błędem — porównanie niedostępne';
+      }
     }
     return;
   }
   renderStep(value);
+  // Zapamiętujemy DOKŁADNIE tę kartę 'answer', którą ten przebieg pokazał —
+  // showCompare() użyje jej zamiast szukać odpowiedzi w danych scenariusza
+  // (patrz komentarz przy definicji lastAnswer).
+  if(value.kind === 'answer'){
+    lastAnswer = { body: value.body, isError: !!value.isError };
+  }
   // Licznik okrążeń: aktualizujemy TYLKO gdy zdarzenie należy do
   // okrążenia pętli (ma pole loop). Zdarzenia bez loop (cel, plan,
   // odpowiedź) nie kasują poprzedniej wartości w trakcie przebiegu.
@@ -1659,14 +1746,17 @@ function showCompare(){
   oneshotCard.appendChild(elT('p', { class:'compare-meta' }, currentScenario.oneshot.why));
   grid.appendChild(oneshotCard);
 
-  // Prawa karta: agent z pętlą narzędzi — ostatnie zdarzenie 'answer'
-  // z właśnie zakończonego przebiegu, plus liczba okrążeń i koszt.
+  // Prawa karta: agent z pętlą narzędzi — DOKŁADNIE ta karta 'answer',
+  // którą pokazał ten właśnie, faktycznie zakończony przebieg (lastAnswer;
+  // patrz komentarz przy jej definicji) — NIE odpowiedź ze scenariusza mock,
+  // bo w trybie na żywo byłaby po prostu nieprawdziwa (inna data itd.).
+  // #compareBtn jest zablokowany, dopóki lastAnswer nie jest udaną
+  // odpowiedzią, więc tutaj lastAnswer zawsze istnieje i nie jest błędem.
   const agentCard = el('div', { class:'compare-card agent' });
   agentCard.appendChild(elT('h3', {}, '🛠 Agent — pętla z narzędziami'));
-  const answerStep = currentScenario.steps.find(s => s.kind === 'answer');
-  agentCard.appendChild(elT('p', {}, answerStep ? answerStep.body : ''));
+  agentCard.appendChild(elT('p', {}, lastAnswer ? lastAnswer.body : ''));
   const tokens = Math.round(ctxChars / 4);
-  agentCard.appendChild(elT('p', { class:'compare-meta' }, `${maxLoopSeen} okrążeń · ~${tokens} tokenów`));
+  agentCard.appendChild(elT('p', { class:'compare-meta' }, `${maxLoopSeen} ${okrazenieForma(maxLoopSeen)} · ~${tokens} tokenów`));
   grid.appendChild(agentCard);
 
   comparePanelEl.appendChild(grid);
