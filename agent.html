@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>edulab · Jak myśli agent AI</title>
+<meta name="description" content="Interaktywne demo edulab: krok po kroku zobacz, jak agent AI myśli, wywołuje narzędzia i buduje odpowiedź." />
+<link rel="icon" href="assets/edulab-mark-teal.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   edulab — Editorial Color design tokens
+   (z design_handoff_demo_lab/tokens/colors_and_type.css)
+   ============================================================ */
+:root{
+  --font-display:'Bricolage Grotesque','Hanken Grotesk',system-ui,sans-serif;
+  --font-sans:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+  --font-mono:'DM Mono',ui-monospace,'SF Mono',Menlo,monospace;
+
+  --paper:#FBF7F0; --paper-2:#F4EDDF; --paper-3:#ECE1CF; --surface:#FFFFFF;
+  --ink:#211E1A; --ink-2:#5B554D; --ink-3:#938A7C; --line:#E7DCCB; --line-2:#D6C8B2;
+
+  --marigold:#E8920C; --marigold-600:#CE800A; --marigold-soft:#FBE7C2; --marigold-ink:#8A4F00;
+  --teal:#0E8C7F; --teal-600:#0B7468; --teal-soft:#D2EBE6; --teal-ink:#0A5A52;
+  --coral:#EF5B3F; --coral-600:#D44A30; --coral-soft:#FBDDD4; --coral-ink:#9A2E1B;
+  --sky:#2E78C9; --sky-soft:#D9E7F6; --sky-ink:#1B4E88;
+  --play-grape:#7A5AC2;
+
+  --success:#2F8F5B; --success-soft:#D7EEDD; --success-ink:#1C6A3E;
+  --warning:#C9810A; --warning-soft:#FBEAC6; --warning-ink:#855207;
+  --danger:#D8412A; --danger-soft:#FAD9D2; --danger-ink:#97271A;
+
+  --focus-ring:0 0 0 3px rgba(232,146,12,.38);
+
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:24px;
+  --sp-8:32px; --sp-10:40px; --sp-12:48px;
+
+  --r-xs:6px; --r-sm:10px; --r-md:14px; --r-lg:20px; --r-xl:28px; --r-pill:999px;
+
+  --shadow-sm:0 1px 2px rgba(33,30,26,.06),0 1px 1px rgba(33,30,26,.04);
+  --shadow-md:0 4px 16px rgba(33,30,26,.08),0 1px 3px rgba(33,30,26,.05);
+  --shadow-lg:0 16px 40px rgba(33,30,26,.12),0 3px 8px rgba(33,30,26,.06);
+  --shadow-marigold:0 8px 22px rgba(232,146,12,.28);
+
+  --h1:44px; --h2:33px; --h3:25px; --h4:19px;
+  --body-lg:18px; --body:16px; --body-sm:14px; --caption:13px; --overline:12px;
+}
+
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--font-sans); font-size:var(--body); line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--teal-ink); text-decoration:none;}
+a:hover{text-decoration:underline;}
+
+/* ---- Header ---------------------------------------------------- */
+header.site{
+  position:sticky; top:0; z-index:50;
+  background:rgba(251,247,240,.85); backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-inner{
+  max-width:1240px; margin:0 auto; padding:15px 30px;
+  display:flex; align-items:center; gap:16px;
+}
+.brand{display:flex; align-items:center; gap:10px;}
+.brand img{width:32px; height:32px;}
+.brand .word{font-family:var(--font-display); font-weight:700; font-size:22px; color:var(--ink); letter-spacing:-.01em;}
+.brand .tag{
+  font-family:var(--font-mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--teal-ink); background:var(--teal-soft); padding:3px 8px; border-radius:var(--r-pill);
+}
+.header-spacer{flex:1;}
+.header-link{
+  font-family:var(--font-mono); font-size:12px; letter-spacing:.04em;
+  color:var(--ink-2); display:inline-flex; align-items:center; gap:6px;
+}
+
+/* ---- Layout ---------------------------------------------------- */
+main{max-width:1240px; margin:0 auto; padding:34px 30px 80px;}
+.intro{max-width:680px; margin-bottom:28px;}
+.eyebrow{
+  font-family:var(--font-mono); font-weight:500; font-size:var(--overline);
+  letter-spacing:.14em; text-transform:uppercase; color:var(--marigold-ink); margin:0 0 12px;
+}
+h1.display{font-family:var(--font-display); font-weight:700; font-size:var(--h1); line-height:1.06; letter-spacing:-.02em; margin:0 0 14px;}
+.intro p{font-size:var(--body-lg); color:var(--ink-2); margin:0;}
+
+/* ---- Cards ------------------------------------------------------ */
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r-xl); box-shadow:var(--shadow-md);}
+.card + .card{margin-top:18px;}
+.card-head{padding:20px 24px 0; display:flex; align-items:baseline; justify-content:space-between; gap:12px;}
+.card-head h2{font-family:var(--font-display); font-weight:600; font-size:var(--h4); margin:0; letter-spacing:-.01em;}
+.card-head .sub{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3);}
+.card-body{padding:18px 24px 24px;}
+
+/* ---- Form fields -------------------------------------------------- */
+select{
+  width:auto; font-family:var(--font-sans); font-size:var(--body-sm); color:var(--ink);
+  background:var(--paper); border:1px solid var(--line-2); border-radius:var(--r-md);
+  padding:10px 12px; transition:border-color .15s, box-shadow .15s;
+}
+select:focus{outline:none; border-color:var(--marigold); box-shadow:var(--focus-ring);}
+select{appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235B554D' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:34px;}
+
+/* ---- Toggle switch ------------------------------------------------ */
+.switch{position:relative; display:inline-block; width:38px; height:22px; flex:none;}
+.switch input{opacity:0; width:0; height:0;}
+.switch .slider{position:absolute; inset:0; cursor:pointer; background:var(--line-2); border-radius:var(--r-pill); transition:background .18s;}
+.switch .slider::before{content:""; position:absolute; height:16px; width:16px; left:3px; top:3px; background:#fff; border-radius:50%; box-shadow:var(--shadow-sm); transition:transform .18s;}
+.switch input:checked + .slider{background:var(--teal);}
+.switch input:checked + .slider::before{transform:translateX(16px);}
+.switch input:focus-visible + .slider{box-shadow:var(--focus-ring);}
+.switch-row{display:flex; align-items:center; gap:9px; font-size:var(--body-sm); color:var(--ink-2);}
+
+/* ---- Range sliders ------------------------------------------------ */
+input[type=range]{-webkit-appearance:none; appearance:none; width:140px; height:8px; border-radius:var(--r-pill); background:rgba(33,30,26,.12); outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:20px; height:20px; border-radius:50%; background:#fff; border:2px solid var(--ink); box-shadow:var(--shadow-sm); cursor:pointer; margin-top:0;}
+input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; background:#fff; border:2px solid var(--ink); box-shadow:var(--shadow-sm); cursor:pointer;}
+
+/* ---- Buttons -------------------------------------------------------- */
+.btn{font-family:var(--font-sans); font-weight:700; font-size:var(--body-sm); border:none; border-radius:var(--r-pill); padding:12px 22px; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:transform .12s cubic-bezier(.32,.72,.32,1), background .15s, box-shadow .15s;}
+.btn:active{transform:scale(.96);}
+.btn-primary{background:var(--marigold); color:#fff; box-shadow:var(--shadow-marigold);}
+.btn-primary:hover{background:var(--marigold-600);}
+.btn-primary:disabled{background:var(--line-2); color:var(--ink-3); box-shadow:none; cursor:not-allowed; transform:none;}
+.btn-ghost{background:var(--paper-2); color:var(--ink); border:1px solid var(--line);}
+.btn-ghost:hover{background:var(--paper-3);}
+
+.chip{font-family:var(--font-mono); font-size:11px; letter-spacing:.02em; background:var(--sky-soft); color:var(--sky-ink); border-radius:var(--r-pill); padding:5px 11px;}
+
+/* ---- Page-specific -------------------------------------------------- */
+.toolbar{display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-bottom:22px;}
+.stage{display:grid; grid-template-columns:1.25fr .75fr; gap:22px; align-items:start;}
+.step-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg);
+  box-shadow:var(--shadow-sm); padding:16px 18px; margin-bottom:14px;
+  opacity:0; transform:translateY(8px); transition:opacity .35s, transform .35s;}
+.step-card.shown{opacity:1; transform:none;}
+.step-card .k-icon{font-size:20px; margin-right:8px;}
+.step-card .k-title{font-family:var(--font-display); font-weight:600; font-size:var(--h4);}
+.step-card .k-body{margin:8px 0 0; white-space:pre-wrap;}
+.step-card .k-why{font-size:var(--caption); color:var(--ink-2); border-top:1px dashed var(--line-2);
+  margin-top:10px; padding-top:8px;}
+.step-card[data-kind="answer"]{border-color:var(--success); background:var(--success-soft);}
+.step-card[data-kind="observation"][data-error="true"]{border-color:var(--danger); background:var(--danger-soft);}
+.ctx-block{font-family:var(--font-mono); font-size:11px; padding:6px 10px; border-radius:var(--r-sm);
+  border:1px solid var(--line-2); margin-top:6px; background:var(--paper-2);}
+.ctx-block[data-role="model"]{background:var(--teal-soft);}
+.ctx-block[data-role="tool"]{background:var(--sky-soft);}
+.ctx-stack.flash .ctx-block{animation:ctxflash .6s;}
+@keyframes ctxflash{50%{border-color:var(--marigold); box-shadow:0 0 0 2px var(--marigold-soft);}}
+.wire{margin-top:10px;} .wire pre{background:var(--ink); color:var(--paper); border-radius:var(--r-sm);
+  padding:10px 12px; font-family:var(--font-mono); font-size:11.5px; overflow:auto; max-height:220px;}
+.term{border-bottom:1px dotted var(--ink-3); cursor:help;}
+
+/* ---- Responsive ------------------------------------------------ */
+@media (max-width:920px){
+  .stage{grid-template-columns:1fr;}
+  .header-inner, main{padding-left:20px; padding-right:20px;}
+  h1.display{font-size:34px;}
+}
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="header-inner">
+    <div class="brand">
+      <img src="assets/edulab-mark-teal.png" alt="edulab" />
+      <span class="word">edulab</span>
+      <span class="tag">demo agenta</span>
+    </div>
+    <div class="header-spacer"></div>
+    <a class="header-link" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">
+      Zdobądź klucz API ↗
+    </a>
+  </div>
+</header>
+
+<main>
+  <div class="intro">
+    <p class="eyebrow">Interaktywne demo · Agent AI</p>
+    <h1 class="display">Jak myśli agent AI</h1>
+    <p>Krok po kroku zobacz, co dzieje się „w głowie” agenta: jak planuje, kiedy sięga po narzędzie i jak buduje ostateczną odpowiedź — bez żargonu, w prostych słowach.</p>
+  </div>
+
+  <div class="toolbar">
+    <select id="presetSel">
+      <option value="">Wybierz scenariusz…</option>
+      <option value="preset-1">Scenariusz 1 (placeholder)</option>
+      <option value="preset-2">Scenariusz 2 (placeholder)</option>
+      <option value="preset-3">Scenariusz 3 (placeholder)</option>
+    </select>
+
+    <label class="switch-row">
+      <span class="switch">
+        <input type="checkbox" id="modeToggle" />
+        <span class="slider"></span>
+      </span>
+      Tryb na żywo (wymaga klucza API)
+    </label>
+
+    <button id="stepBtn" class="btn btn-primary">Krok ▸</button>
+    <button id="autoBtn" class="btn btn-ghost">Auto</button>
+
+    <label class="switch-row">
+      Szybkość
+      <input type="range" id="speed" min="0.5" max="3" step="0.1" value="1.5" />
+    </label>
+
+    <span id="loopCounter" class="chip">Krok 0</span>
+
+    <button id="compareBtn" class="btn btn-ghost">Porównaj ze zwykłym chatbotem</button>
+  </div>
+
+  <div class="stage">
+    <div id="timeline"></div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>Pamięć rozmowy</h2>
+      </div>
+      <div class="card-body">
+        <div id="ctxStack" class="ctx-stack"></div>
+        <div id="costMeter"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="comparePanel" class="card" hidden></div>
+
+  <details id="snippets">
+    <summary>Jak zbudowany jest agent? (3 fragmenty kodu)</summary>
+  </details>
+</main>
+
+<aside id="presenterPanel" hidden></aside>
+
+</body>
+</html>
