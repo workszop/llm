@@ -159,6 +159,14 @@ input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; 
 #costMeter{font-size:var(--caption); color:var(--ink-2); margin-top:10px;}
 .wire{margin-top:10px;} .wire pre{background:var(--ink); color:var(--paper); border-radius:var(--r-sm);
   padding:10px 12px; font-family:var(--font-mono); font-size:11.5px; overflow:auto; max-height:220px;}
+/* Kolory podświetlenia JSON w .wire pre i #snippets pre — te same klasy
+   i te same kolory co w podglądzie zapytania w index.html. */
+.req-key{color:#F6997E;} .req-str{color:#86D69A;} .req-num{color:#8FB9EC;} .req-bool{color:#E0B0FF;}
+#snippets pre{background:var(--ink); color:var(--paper); border-radius:var(--r-sm);
+  padding:10px 12px; font-family:var(--font-mono); font-size:11.5px; overflow:auto;}
+#snippets .snippet{margin-top:14px;}
+#snippets .snippet h3{font-size:14px; margin:0 0 6px;}
+#snippets .snippet p{font-size:var(--caption); color:var(--ink-2); margin:6px 0 0;}
 .term{border-bottom:1px dotted var(--ink-3); cursor:help;}
 
 /* ---- Responsive ------------------------------------------------ */
@@ -535,6 +543,39 @@ const dni100 = {
 // następne zadania.
 const SCENARIOS = [ dni100 ];
 
+// ---- SNIPPETS — trzy dozwolone fragmenty kodu dla sekcji "Jak zbudowany
+// jest agent?". To NIE jest pełny kod agenta (tego demo świadomie nie
+// pokazuje) — to trzy JSON-y, które tłumaczą całą ideę function calling:
+// (a) jak OPISUJEMY narzędzie modelowi, (b) jak model PROSI o jego użycie,
+// (c) jak wynik wraca do rozmowy jako zwykła wiadomość. Teksty poniżej są
+// ręcznie sformatowane (nie przez JSON.stringify), żeby zmieścić się w
+// limicie ≤10 linii — ale każdy z nich jest poprawnym JSON-em.
+const SNIPPETS = [
+  {
+    title: '1. Opis narzędzia (functionDeclaration)',
+    caption: 'Tak OPISUJEMY narzędzie modelowi — sam opis, zero kodu.',
+    text: `{
+  "name": "kalkulator",
+  "description": "Wykonuje działanie matematyczne (np. dodawanie, mnożenie).",
+  "parameters": {
+    "type": "object",
+    "properties": { "wyrazenie": { "type": "string", "description": "Wyrażenie do obliczenia, np. 2 + 2." } },
+    "required": ["wyrazenie"]
+  }
+}`,
+  },
+  {
+    title: '2. Model prosi o narzędzie (functionCall)',
+    caption: 'Tak model PROSI o narzędzie…',
+    text: JSON.stringify({ tool: 'kalkulator', args: { wyrazenie: '365 * 3 + 14' } }, null, 2),
+  },
+  {
+    title: '3. Wynik wraca do rozmowy (functionResponse)',
+    caption: '…a tak wraca wynik — zwykła wiadomość w rozmowie.',
+    text: JSON.stringify({ tool: 'kalkulator', result: { wynik: 1109 } }, null, 2),
+  },
+];
+
 // ---- mockRun — "odtwarzacz" scenariusza ---------------------------
 // Async generator: po kolei oddaje gotowe zdarzenia (StepEvent) ze
 // scenariusza. Nic nie liczy w locie — cała "inteligencja" siedzi już
@@ -568,6 +609,24 @@ function elT(tag, attrs={}, text){
   return e;
 }
 
+// ---- syntaxHighlight — skopiowane WERBATIM z index.html (linie 566-576):
+// koloruje JSON (klucze/stringi/liczby/booleany) do wyświetlenia w .wire pre
+// i #snippets pre. Najpierw ucieka &, <, > (żeby dowolny tekst w JSON-ie —
+// nawet zawierający np. "<img>" — trafił na ekran jako tekst, a nie znacznik),
+// dopiero potem owija fragmenty w <span class="req-*">. Dzięki tej kolejności
+// wynik jest bezpieczny do wstawienia przez innerHTML — tak samo jak w index.html.
+function syntaxHighlight(json){
+  return json
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
+      let cls="req-num";
+      if(/^"/.test(m)) cls = /:$/.test(m) ? "req-key" : "req-str";
+      else if(/true|false/.test(m)) cls="req-bool";
+      else if(/null/.test(m)) cls="req-bool";
+      return `<span class="${cls}">${m}</span>`;
+    });
+}
+
 // KIND_META — ikonka i polska etykieta dla każdego rodzaju zdarzenia.
 // Statyczne, kontrolowane przez nas napisy — nie pochodzą od modelu.
 const KIND_META = {
@@ -588,6 +647,7 @@ const speedEl    = document.getElementById('speed');
 const loopCounterEl = document.getElementById('loopCounter');
 const ctxStackEl = document.getElementById('ctxStack');
 const costMeterEl = document.getElementById('costMeter');
+const snippetsEl = document.getElementById('snippets');
 
 // ============================================================
 // Zadanie 4: stos kontekstu rozmowy (#ctxStack) + licznik kosztu
@@ -706,6 +766,23 @@ function renderStep(ev){
     card.appendChild(elT('div', { class:'k-why' }, ev.why));
   }
 
+  // Zadanie 5: "Co poszło po kablu?" — domyślnie zwinięty <details> z
+  // dokładnym fragmentem żądania/odpowiedzi Gemini (ev.wire.json),
+  // podświetlonym tak samo jak podgląd zapytania w index.html. To dla
+  // ciekawskich widzów, którzy chcą zobaczyć "surowy" JSON, a nie tylko
+  // nasze polskie streszczenie kroku.
+  if(ev.wire){
+    const details = el('details', { class:'wire' });
+    details.appendChild(elT('summary', {}, 'Co poszło po kablu?'));
+    const pre = el('pre', {});
+    // syntaxHighlight ucieka &,<,> zanim owinie fragmenty w <span>,
+    // więc przypisanie przez innerHTML jest tu bezpieczne (patrz komentarz
+    // przy definicji funkcji) — ten sam wzorzec co w index.html.
+    pre.innerHTML = syntaxHighlight(JSON.stringify(ev.wire.json, null, 2));
+    details.appendChild(pre);
+    card.appendChild(details);
+  }
+
   timelineEl.appendChild(card);
 
   // Zadanie 4: jeśli zdarzenie niesie fragment kontekstu (ev.ctx), dokładamy
@@ -817,6 +894,21 @@ modeToggle.title = 'Tryb na żywo: wkrótce (wymaga klucza API) — na razie dos
 
 presetSel.addEventListener('change', startRun);
 modeToggle.addEventListener('change', startRun);
+
+// Wypełnij #snippets trzema kartami z SNIPPETS (kod trzymamy w danych,
+// nie na sztywno w HTML — ten sam wzorzec co przy #presetSel). Treść
+// snippetów to nasz własny, przygotowany JSON (nie dane użytkownika),
+// ale i tak przepuszczamy ją przez syntaxHighlight — ta sama funkcja
+// i te same klasy koloru co w .wire pre.
+SNIPPETS.forEach(s => {
+  const box = el('div', { class:'snippet' });
+  box.appendChild(elT('h3', {}, s.title));
+  const pre = el('pre', {});
+  pre.innerHTML = syntaxHighlight(s.text);
+  box.appendChild(pre);
+  box.appendChild(elT('p', {}, s.caption));
+  snippetsEl.appendChild(box);
+});
 
 stepBtn.addEventListener('click', () => {
   // Po zakończonym przebiegu przycisk działa jako „Od nowa ↺”:
