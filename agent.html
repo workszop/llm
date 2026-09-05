@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.547.0/dist/umd/lucide.min.js"></script>
 <style>
 /* ============================================================
    edulab – Editorial Color design tokens
@@ -81,7 +82,7 @@ h1.display{font-family:var(--font-display); font-weight:700; font-size:var(--h1)
 .scen:hover{transform:translateY(-2px); box-shadow:var(--shadow-md);}
 .scen:focus-visible{outline:none; box-shadow:var(--focus-ring);}
 .scen[aria-pressed="true"]{border-color:var(--marigold); background:var(--marigold-soft); box-shadow:var(--shadow-marigold);}
-.scen .s-icon{font-size:26px; line-height:1;}
+svg.s-icon{width:26px; height:26px; color:var(--teal-ink);}
 .scen .s-domain{font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--teal-ink);}
 .scen .s-title{font-family:var(--font-display); font-weight:600; font-size:16px; line-height:1.2;}
 .scen .s-lesson{font-size:var(--caption); color:var(--ink-2); line-height:1.4;}
@@ -99,6 +100,9 @@ input[type=range]{-webkit-appearance:none; appearance:none; width:120px; height:
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:20px; height:20px; border-radius:50%; background:#fff; border:2px solid var(--ink); box-shadow:var(--shadow-sm); cursor:pointer;}
 input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; background:#fff; border:2px solid var(--ink); box-shadow:var(--shadow-sm); cursor:pointer;}
 
+.btn svg{width:16px; height:16px;}
+.chat-col h3 svg{width:18px; height:18px; vertical-align:-3px; margin-right:6px;}
+.ctx-flash-caption svg{width:14px; height:14px; vertical-align:-2px; margin-right:4px;}
 .btn{font-family:var(--font-sans); font-weight:700; font-size:var(--body-sm); border:none; border-radius:var(--r-pill); padding:12px 22px; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:transform .12s cubic-bezier(.32,.72,.32,1), background .15s, box-shadow .15s;}
 .btn:active{transform:scale(.96);}
 .btn:focus-visible{outline:none; box-shadow:var(--focus-ring);}
@@ -131,7 +135,10 @@ kbd{font-family:var(--font-mono); font-size:11px; background:var(--paper-3); bor
 .step-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--shadow-sm); padding:16px 18px; margin-bottom:12px; opacity:0; transform:translateY(8px); transition:opacity .35s, transform .35s;}
 .step-card.shown{opacity:1; transform:none;}
 .step-card .k-head{display:flex; align-items:center; gap:8px;}
-.step-card .k-icon{font-size:20px;}
+.step-card svg.k-icon{width:20px; height:20px; flex:none; color:var(--ink-2);}
+.step-card[data-kind="answer"] svg.k-icon{color:var(--success-ink);}
+.step-card[data-kind="decision"] svg.k-icon{color:var(--warning-ink);}
+.step-card[data-error="true"] svg.k-icon{color:var(--danger-ink);}
 .step-card .k-title{font-family:var(--font-display); font-weight:600; font-size:var(--h4);}
 .step-card .k-kind{margin-left:auto; font-family:var(--font-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3);}
 .step-card .k-body{margin:8px 0 0; white-space:pre-wrap;}
@@ -150,14 +157,15 @@ kbd{font-family:var(--font-mono); font-size:11px; background:var(--paper-3); bor
 /* ─── Tools panel ─── */
 .tool-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;}
 .tool{display:grid; grid-template-columns:auto 1fr auto; gap:10px; align-items:start; padding:8px 10px; border:1px solid var(--line); border-radius:var(--r-sm); background:var(--paper); transition:background .2s, border-color .2s;}
-.tool .t-icon{font-size:18px; line-height:1.3;}
+.tool svg.t-icon{width:18px; height:18px; color:var(--ink-2); margin-top:2px;}
+.tool .t-name svg{width:13px; height:13px; vertical-align:-2px; color:var(--success-ink); margin-left:4px;}
 .tool .t-name{font-family:var(--font-mono); font-size:12px; color:var(--ink);}
 .tool .t-desc{font-size:var(--caption); color:var(--ink-2); line-height:1.35;}
 .tool .t-kind{font-family:var(--font-mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; border-radius:var(--r-pill); padding:2px 8px; white-space:nowrap;}
 .tool[data-act="false"] .t-kind{background:var(--sky-soft); color:var(--sky-ink);}
 .tool[data-act="true"] .t-kind{background:var(--coral-soft); color:var(--coral-ink);}
 .tool[data-active="true"]{background:var(--marigold-soft); border-color:var(--marigold);}
-.tool[data-used="true"] .t-name::after{content:" ✓"; color:var(--success-ink);}
+.tool[data-used="false"] .t-name svg{display:none;}
 
 /* ─── Memory ─── */
 .ctx-block{font-family:var(--font-mono); font-size:11px; padding:6px 10px; border-radius:var(--r-sm); border:1px solid var(--line-2); margin-top:6px; background:var(--paper-2);}
@@ -193,10 +201,10 @@ kbd{font-family:var(--font-mono); font-size:11px; background:var(--paper-3); bor
 .bubble .who{display:block; font-family:var(--font-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); margin-bottom:4px;}
 .gaps{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px;}
 .gaps li{font-size:var(--caption); color:var(--coral-ink); background:var(--coral-soft); border-radius:var(--r-sm); padding:7px 10px;}
-.gaps li::before{content:"✕ "; font-weight:700;}
+.gaps li svg, .wins li svg{width:14px; height:14px; vertical-align:-2px; margin-right:6px;}
 .wins{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px;}
 .wins li{font-size:var(--caption); color:var(--success-ink); background:var(--success-soft); border-radius:var(--r-sm); padding:7px 10px;}
-.wins li::before{content:"✓ "; font-weight:700;}
+
 .chat-col .pending{font-size:var(--caption); color:var(--ink-3); font-style:italic;}
 
 /* ─── Presenter notes ─── */
@@ -248,15 +256,15 @@ kbd{font-family:var(--font-mono); font-size:11px; background:var(--paper-3); bor
     </div>
 
     <div class="toolbar">
-      <button id="stepBtn" class="btn btn-primary">Krok ▸</button>
-      <button id="autoBtn" class="btn btn-ghost">▶ Auto</button>
+      <button id="stepBtn" class="btn btn-primary"><span id="stepLabel">Krok</span><i data-lucide="chevron-right"></i></button>
+      <button id="autoBtn" class="btn btn-ghost"><i data-lucide="play"></i><span id="autoLabel">Auto</span></button>
       <label class="speed-row">Pauza
         <input type="range" id="speed" min="0.5" max="4" step="0.5" value="1.5" />
         <output id="speedOut">1,5 s</output>
       </label>
       <span id="loopCounter" class="chip"></span>
       <span class="spacer"></span>
-      <button id="chatBtn" class="btn btn-ghost" aria-pressed="false">💬 Jak zrobiłby to zwykły czat</button>
+      <button id="chatBtn" class="btn btn-ghost" aria-pressed="false"><i data-lucide="message-square"></i>Jak zrobiłby to zwykły czat</button>
     </div>
 
     <div class="phases" id="phases">
@@ -311,12 +319,12 @@ kbd{font-family:var(--font-mono); font-size:11px; background:var(--paper-3); bor
   <h2>Notatki prowadzącego</h2>
   <p class="presenter-hint">Widoczne tylko Tobie. Klawisz „n” pokazuje i ukrywa.</p>
   <ol>
-    <li><span class="moment">Faktura · karta ⚖ Decyzja</span>„Agent miał narzędzie do księgowania i go NIE użył. Zapytaj: czego się bali w tej sali, gdy słyszeli „agent z dostępem do księgowości”?”</li>
+    <li><span class="moment">Faktura · karta Decyzja</span>„Agent miał narzędzie do księgowania i go NIE użył. Zapytaj: czego się bali w tej sali, gdy słyszeli „agent z dostępem do księgowości”?”</li>
     <li><span class="moment">Zastępstwo · odrzucenie Marka</span>„Trzy źródła danych, jedna decyzja. Czat dałby listę nazwisk. Kto w Waszej firmie robi to dziś ręcznie?”</li>
-    <li><span class="moment">Papier · karta ⏸ Czekam</span>„Czat nie może poczekać do jutra. Agent może, ale każde sprawdzenie kosztuje. Pokaż licznik.”</li>
+    <li><span class="moment">Papier · karta Czekam</span>„Czat nie może poczekać do jutra. Agent może, ale każde sprawdzenie kosztuje. Pokaż licznik.”</li>
     <li><span class="moment">Ułamki · błędna odpowiedź 2/7</span>„Tu pętla dotyczy człowieka. Agent zmienia zadanie po błędzie ucznia. Czat wytłumaczyłby raz i tyle.”</li>
     <li><span class="moment">Serwer · drugie sprawdzenie statusu</span>„Zrobił i SPRAWDZIŁ, że zadziałało. Dopiero potem powiadomił. Kolejność: obserwuj, działaj, zweryfikuj, zgłoś.”</li>
-    <li><span class="moment">Przy każdym „Zwykły czat”</span>„Odpowiedź czatu brzmi pomocnie. Czytaj listę ✕: wszystko, co zostaje do zrobienia Tobie.”</li>
+    <li><span class="moment">Przy każdym „Zwykły czat”</span>„Odpowiedź czatu brzmi pomocnie. Czytaj czerwoną listę: wszystko, co zostaje do zrobienia Tobie.”</li>
   </ol>
 </aside>
 
@@ -333,35 +341,35 @@ const MAX_ITER = 8;
 // zamówienie, restart), act:false = tylko czyta. schema to opis, jaki
 // dostaje model; wszystkie wyniki są symulowane na potrzeby demo.
 const TOOLS = {
-  czytaj_dokument:   { icon:'📄', act:false, desc:'Czyta dokument z systemu (faktura, umowa).',
+  czytaj_dokument:   { icon:'file-text', act:false, desc:'Czyta dokument z systemu (faktura, umowa).',
     schema:{ type:'object', properties:{ id:{ type:'string', description:'Numer dokumentu' } }, required:['id'] } },
-  szukaj_zamowienie: { icon:'🗂', act:false, desc:'Znajduje zamówienie powiązane z dostawcą lub fakturą.',
+  szukaj_zamowienie: { icon:'folder-search', act:false, desc:'Znajduje zamówienie powiązane z dostawcą lub fakturą.',
     schema:{ type:'object', properties:{ dostawca:{ type:'string' }, faktura:{ type:'string' } } } },
-  kalkulator:        { icon:'🧮', act:false, desc:'Liczy wyrażenie arytmetyczne.',
+  kalkulator:        { icon:'calculator', act:false, desc:'Liczy wyrażenie arytmetyczne.',
     schema:{ type:'object', properties:{ wyrazenie:{ type:'string' } }, required:['wyrazenie'] } },
-  ksieguj:           { icon:'🧾', act:true,  desc:'Księguje fakturę w systemie finansowym.',
+  ksieguj:           { icon:'receipt', act:true,  desc:'Księguje fakturę w systemie finansowym.',
     schema:{ type:'object', properties:{ id:{ type:'string' } }, required:['id'] } },
-  kalendarz_odczyt:  { icon:'📅', act:false, desc:'Zwraca spotkania osoby w danym dniu.',
+  kalendarz_odczyt:  { icon:'calendar', act:false, desc:'Zwraca spotkania osoby w danym dniu.',
     schema:{ type:'object', properties:{ osoby:{ type:'array', items:{ type:'string' } }, data:{ type:'string' } }, required:['osoby','data'] } },
-  kalendarz_zapis:   { icon:'✍️', act:true,  desc:'Dodaje lub przenosi spotkanie w kalendarzu.',
+  kalendarz_zapis:   { icon:'calendar-plus', act:true,  desc:'Dodaje lub przenosi spotkanie w kalendarzu.',
     schema:{ type:'object', properties:{ osoba:{ type:'string' }, spotkania:{ type:'array', items:{ type:'string' } } }, required:['osoba','spotkania'] } },
-  szukaj_pracownika: { icon:'👥', act:false, desc:'Szuka osób o podanych kompetencjach w katalogu firmy.',
+  szukaj_pracownika: { icon:'users', act:false, desc:'Szuka osób o podanych kompetencjach w katalogu firmy.',
     schema:{ type:'object', properties:{ kompetencje:{ type:'array', items:{ type:'string' } } }, required:['kompetencje'] } },
-  sprawdz_cene:      { icon:'🏷', act:false, desc:'Pobiera aktualną cenę produktu u dostawcy.',
+  sprawdz_cene:      { icon:'tag', act:false, desc:'Pobiera aktualną cenę produktu u dostawcy.',
     schema:{ type:'object', properties:{ produkt:{ type:'string' } }, required:['produkt'] } },
-  zamow:             { icon:'🛒', act:true,  desc:'Składa zamówienie u dostawcy.',
+  zamow:             { icon:'shopping-cart', act:true,  desc:'Składa zamówienie u dostawcy.',
     schema:{ type:'object', properties:{ produkt:{ type:'string' }, ilosc:{ type:'integer' }, cena_max:{ type:'number' } }, required:['produkt','ilosc'] } },
-  notatnik:          { icon:'📝', act:true,  desc:'Zapisuje i odczytuje notatki agenta między krokami i dniami.',
+  notatnik:          { icon:'notebook-pen', act:true,  desc:'Zapisuje i odczytuje notatki agenta między krokami i dniami.',
     schema:{ type:'object', properties:{ akcja:{ type:'string', enum:['zapisz','odczytaj'] }, klucz:{ type:'string' }, wartosc:{ type:'string' } }, required:['akcja','klucz'] } },
-  zadaj_pytanie:     { icon:'🙋', act:true,  desc:'Wyświetla uczniowi pytanie i zwraca jego odpowiedź.',
+  zadaj_pytanie:     { icon:'message-circle-question', act:true,  desc:'Wyświetla uczniowi pytanie i zwraca jego odpowiedź.',
     schema:{ type:'object', properties:{ tresc:{ type:'string' }, podpowiedz:{ type:'string' } }, required:['tresc'] } },
-  sprawdz_status:    { icon:'📡', act:false, desc:'Sprawdza stan usług (www, cache, baza).',
+  sprawdz_status:    { icon:'radio', act:false, desc:'Sprawdza stan usług (www, cache, baza).',
     schema:{ type:'object', properties:{ system:{ type:'string' } }, required:['system'] } },
-  czytaj_logi:       { icon:'🪵', act:false, desc:'Zwraca ostatnie wpisy z logów usługi.',
+  czytaj_logi:       { icon:'scroll-text', act:false, desc:'Zwraca ostatnie wpisy z logów usługi.',
     schema:{ type:'object', properties:{ usluga:{ type:'string' }, linie:{ type:'integer' } }, required:['usluga'] } },
-  restartuj_usluge:  { icon:'🔁', act:true,  desc:'Restartuje wskazaną usługę.',
+  restartuj_usluge:  { icon:'refresh-cw', act:true,  desc:'Restartuje wskazaną usługę.',
     schema:{ type:'object', properties:{ usluga:{ type:'string' } }, required:['usluga'] } },
-  powiadom:          { icon:'📣', act:true,  desc:'Wysyła wiadomość do osoby lub kanału.',
+  powiadom:          { icon:'megaphone', act:true,  desc:'Wysyła wiadomość do osoby lub kanału.',
     schema:{ type:'object', properties:{ do:{ type:'string' }, tresc:{ type:'string' } }, required:['do','tresc'] } },
 };
 
@@ -377,7 +385,7 @@ const TOOLS = {
 //   {answer, why}                wynik dla użytkownika
 const SCENARIOS = [
   {
-    id:'faktura', icon:'🧾', domain:'finanse', title:'Faktura, która się nie zgadza',
+    id:'faktura', icon:'receipt', domain:'finanse', title:'Faktura, która się nie zgadza',
     lesson:'Agent z prawem do księgowania sprawdza, zanim zaksięguje. I potrafi odmówić.',
     goal:'Sprawdź fakturę FV/2026/0712 od firmy Nowak i jeśli wszystko się zgadza, zaksięguj ją.',
     tools:['czytaj_dokument','szukaj_zamowienie','kalkulator','ksieguj'],
@@ -408,7 +416,7 @@ const SCENARIOS = [
     },
   },
   {
-    id:'zastepstwo', icon:'📅', domain:'HR i organizacja', title:'Kto zastąpi Annę',
+    id:'zastepstwo', icon:'calendar-days', domain:'HR i organizacja', title:'Kto zastąpi Annę',
     lesson:'Trzy źródła danych, jedna decyzja i wpis w kalendarzu. Czat zatrzymałby się na liście nazwisk.',
     goal:'Anna jest chora we wtorek 7 lipca. Znajdź zastępstwo na jej spotkania i zaktualizuj kalendarz.',
     tools:['kalendarz_odczyt','szukaj_pracownika','kalendarz_zapis'],
@@ -443,7 +451,7 @@ const SCENARIOS = [
     },
   },
   {
-    id:'papier', icon:'🏷', domain:'zakupy', title:'Cena spadła, kup teraz',
+    id:'papier', icon:'tag', domain:'zakupy', title:'Cena spadła, kup teraz',
     lesson:'Agent potrafi czekać i sprawdzać codziennie. Czat żyje tylko w tej jednej rozmowie.',
     goal:'Zamów 50 ryz papieru A4, gdy cena spadnie poniżej 18 zł za ryzę. Sprawdzaj raz dziennie.',
     tools:['sprawdz_cene','notatnik','zamow'],
@@ -483,7 +491,7 @@ const SCENARIOS = [
     },
   },
   {
-    id:'ulamki', icon:'🙋', domain:'edukacja', title:'Uczeń, który utknął',
+    id:'ulamki', icon:'graduation-cap', domain:'edukacja', title:'Uczeń, który utknął',
     lesson:'Pętla może dotyczyć człowieka. Agent zmienia zadanie po błędzie ucznia i zostawia notatkę nauczycielowi.',
     goal:'Pomóż Kubie z dodawaniem ułamków. Zacznij od sprawdzenia, co już umie, i zapisz wnioski dla nauczyciela.',
     tools:['zadaj_pytanie','notatnik'],
@@ -522,7 +530,7 @@ const SCENARIOS = [
     },
   },
   {
-    id:'serwer', icon:'📡', domain:'IT', title:'Serwer nie odpowiada',
+    id:'serwer', icon:'server', domain:'IT', title:'Serwer nie odpowiada',
     lesson:'Obserwuj, działaj, zweryfikuj, zgłoś. Czat dałby listę kontrolną; agent przechodzi ją sam.',
     goal:'Strona sklepu nie działa. Ustal przyczynę, napraw, jeśli to bezpieczne, i powiadom dyżurnego.',
     tools:['sprawdz_status','czytaj_logi','restartuj_usluge','powiadom'],
@@ -572,14 +580,14 @@ const SNIPPETS = [
 ];
 
 const KIND_META = {
-  goal:        { icon:'🎯', label:'Zadanie' },
-  plan:        { icon:'📋', label:'Plan' },
-  replan:      { icon:'🔀', label:'Zmiana planu' },
-  tool_call:   { icon:'🔧', label:'Prośba o narzędzie' },
-  observation: { icon:'👁', label:'Wynik narzędzia' },
-  decision:    { icon:'⚖️', label:'Decyzja' },
-  wait:        { icon:'⏸', label:'Czekam' },
-  answer:      { icon:'✅', label:'Wynik' },
+  goal:        { icon:'target', label:'Zadanie' },
+  plan:        { icon:'list-checks', label:'Plan' },
+  replan:      { icon:'shuffle', label:'Zmiana planu' },
+  tool_call:   { icon:'wrench', label:'Prośba o narzędzie' },
+  observation: { icon:'eye', label:'Wynik narzędzia' },
+  decision:    { icon:'scale', label:'Decyzja' },
+  wait:        { icon:'pause', label:'Czekam' },
+  answer:      { icon:'circle-check', label:'Wynik' },
 };
 const ROLE_LABEL = { user:'użytkownik', model:'model', tool:'narzędzie' };
 
@@ -627,6 +635,9 @@ const presenterPanelEl = document.getElementById('presenterPanel');
 // ═══════════════════════════════════════════════════════════════
 function el(tag, attrs={}){ const e=document.createElement(tag); for(const k in attrs) e.setAttribute(k, attrs[k]); return e; }
 function elT(tag, attrs={}, text){ const e=el(tag, attrs); if(text!=null) e.textContent=text; return e; }
+// ic(name, cls): placeholder, który lucide.createIcons() zamienia na <svg> z tą samą klasą.
+function ic(name, cls){ return el('i', { 'data-lucide':name, class:cls || '', 'aria-hidden':'true' }); }
+function refreshIcons(){ if(window.lucide) lucide.createIcons({ icons: lucide.icons }); }
 
 function syntaxHighlight(json){
   return json
@@ -708,13 +719,14 @@ function buildSteps(sc){
 function renderPicker(){
   SCENARIOS.forEach(sc => {
     const b = el('button', { type:'button', class:'scen', 'data-id':sc.id, 'aria-pressed':'false' });
-    b.appendChild(elT('span', { class:'s-icon' }, sc.icon));
+    b.appendChild(ic(sc.icon, 's-icon'));
     b.appendChild(elT('span', { class:'s-domain' }, sc.domain));
     b.appendChild(elT('span', { class:'s-title' }, sc.title));
     b.appendChild(elT('span', { class:'s-lesson' }, sc.lesson));
     b.addEventListener('click', () => selectScenario(sc.id));
     scenGrid.appendChild(b);
   });
+  refreshIcons();
 }
 
 function renderTools(sc){
@@ -722,14 +734,15 @@ function renderTools(sc){
   sc.tools.forEach(name => {
     const t = TOOLS[name];
     const li = el('li', { class:'tool', 'data-tool':name, 'data-act':t.act, 'data-active':'false', 'data-used':'false' });
-    li.appendChild(elT('span', { class:'t-icon' }, t.icon));
+    li.appendChild(ic(t.icon, 't-icon'));
     const mid = el('div');
-    mid.appendChild(elT('div', { class:'t-name' }, name));
+    const nm = elT('div', { class:'t-name' }, name); nm.appendChild(ic('check')); mid.appendChild(nm);
     mid.appendChild(elT('div', { class:'t-desc' }, t.desc));
     li.appendChild(mid);
     li.appendChild(elT('span', { class:'t-kind' }, t.act ? 'działanie' : 'odczyt'));
     toolListEl.appendChild(li);
   });
+  refreshIcons();
 }
 
 function setPhase(kind){
@@ -756,14 +769,14 @@ function updateCost(){
 }
 function flashCtx(){
   if(!flashCaptionEl){ flashCaptionEl = elT('div', { class:'ctx-flash-caption' }, ''); ctxStackEl.after(flashCaptionEl); }
-  flashCaptionEl.textContent = '⤴ cała ta pamięć właśnie poleciała do modelu, ponownie';
+  flashCaptionEl.textContent = ''; flashCaptionEl.appendChild(ic('corner-right-up')); flashCaptionEl.appendChild(document.createTextNode('cała ta pamięć właśnie poleciała do modelu, ponownie')); refreshIcons();
   ctxStackEl.classList.remove('flash'); void ctxStackEl.offsetWidth; ctxStackEl.classList.add('flash');
   if(flashTimer) clearTimeout(flashTimer);
   flashTimer = setTimeout(() => { ctxStackEl.classList.remove('flash'); if(flashCaptionEl) flashCaptionEl.textContent = ''; flashTimer = null; }, 600);
 }
 
 function renderStep(ev){
-  const meta = KIND_META[ev.kind] || { icon:'❔', label:ev.kind };
+  const meta = KIND_META[ev.kind] || { icon:'circle-help', label:ev.kind };
 
   if(ev.loop && ev.loop !== lastLoop && ev.kind === 'tool_call'){
     timelineEl.appendChild(elT('div', { class:'loop-divider' }, 'Okrążenie ' + ev.loop + ' z maks. ' + MAX_ITER));
@@ -775,7 +788,7 @@ function renderStep(ev){
   if(ev.kind === 'tool_call' && TOOLS[ev.tool]?.act) card.setAttribute('data-act', 'true');
 
   const head = el('div', { class:'k-head' });
-  head.appendChild(elT('span', { class:'k-icon' }, meta.icon));
+  head.appendChild(ic(meta.icon, 'k-icon'));
   head.appendChild(elT('span', { class:'k-title' }, ev.title || meta.label));
   if(ev.kind === 'tool_call' && TOOLS[ev.tool]?.act) head.appendChild(elT('span', { class:'k-act' }, 'działanie · symulowane'));
   head.appendChild(elT('span', { class:'k-kind' }, meta.label));
@@ -786,7 +799,7 @@ function renderStep(ev){
   if(ev.kind === 'tool_call'){
     const t = TOOLS[ev.tool];
     const line = el('p', { class:'k-args' });
-    line.appendChild(document.createTextNode((t ? t.icon + ' ' : '') + ev.tool + '('));
+    line.appendChild(document.createTextNode(ev.tool + '('));
     const entries = Object.entries(ev.args || {});
     entries.forEach(([k, v], i) => {
       line.appendChild(document.createTextNode(k + ': ' + JSON.stringify(v) + (i < entries.length - 1 ? ', ' : '')));
@@ -812,6 +825,7 @@ function renderStep(ev){
   }
 
   timelineEl.appendChild(card);
+  refreshIcons();
   if(ev.ctx) pushCtx(ev.ctx);
   if(ev.kind === 'tool_call' || ev.kind === 'answer' || ev.kind === 'decision' || ev.kind === 'replan') flashCtx();
   setPhase(ev.kind);
@@ -824,16 +838,16 @@ function renderStep(ev){
 function renderChat(){
   if(!current) return;
   chatLeft.innerHTML = ''; chatRight.innerHTML = '';
-  chatLeft.appendChild(elT('h3', {}, '💬 Zwykły czat'));
+  const h1 = elT('h3', {}, 'Zwykły czat'); h1.prepend(ic('message-square')); chatLeft.appendChild(h1);
   const u = elT('p', { class:'bubble user' }, current.goal); u.prepend(elT('span', { class:'who' }, 'Ty'));
   chatLeft.appendChild(u);
   const b = elT('p', { class:'bubble bot' }, current.chat.reply); b.prepend(elT('span', { class:'who' }, 'czat'));
   chatLeft.appendChild(b);
   const gaps = el('ul', { class:'gaps' });
-  current.chat.gaps.forEach(g => gaps.appendChild(elT('li', {}, g)));
+  current.chat.gaps.forEach(g => { const li = elT('li', {}, g); li.prepend(ic('x')); gaps.appendChild(li); });
   chatLeft.appendChild(gaps);
 
-  chatRight.appendChild(elT('h3', {}, '🛠 Agent na pulpicie'));
+  const h2 = elT('h3', {}, 'Agent na pulpicie'); h2.prepend(ic('bot')); chatRight.appendChild(h2);
   const u2 = elT('p', { class:'bubble user' }, current.goal); u2.prepend(elT('span', { class:'who' }, 'Ty'));
   chatRight.appendChild(u2);
   if(finished && lastAnswer){
@@ -843,17 +857,25 @@ function renderChat(){
     chatRight.appendChild(elT('p', { class:'pending' }, 'Wynik agenta pojawi się tutaj po przejściu scenariusza do końca. Kliknij „Krok ▸” lub „Auto”.'));
   }
   const wins = el('ul', { class:'wins' });
-  current.chat.wins.forEach(w => wins.appendChild(elT('li', {}, w)));
+  current.chat.wins.forEach(w => { const li = elT('li', {}, w); li.prepend(ic('check')); wins.appendChild(li); });
   chatRight.appendChild(wins);
+  refreshIcons();
 }
 
 // ═══════════════════════════════════════════════════════════════
 // Run control
 // ═══════════════════════════════════════════════════════════════
-function stopAuto(){ if(autoTimer){ clearInterval(autoTimer); autoTimer = null; } autoBtn.textContent = '▶ Auto'; }
+function setBtn(btn, iconName, label, iconFirst){
+  btn.innerHTML = '';
+  if(iconFirst) btn.appendChild(ic(iconName));
+  btn.appendChild(elT('span', {}, label));
+  if(!iconFirst) btn.appendChild(ic(iconName));
+  refreshIcons();
+}
+function stopAuto(){ if(autoTimer){ clearInterval(autoTimer); autoTimer = null; } setBtn(autoBtn, 'play', 'Auto', true); }
 function startAuto(){
   if(finished) restart();
-  autoBtn.textContent = '⏸ Auto';
+  setBtn(autoBtn, 'pause', 'Auto', true);
   autoTimer = setInterval(step, Number(speedEl.value) * 1000);
 }
 
@@ -876,7 +898,7 @@ function restart(){
   timelineEl.innerHTML = ''; ctxStackEl.innerHTML = ''; costMeterEl.textContent = '';
   ctxStackEl.classList.remove('flash'); if(flashTimer){ clearTimeout(flashTimer); flashTimer = null; } if(flashCaptionEl) flashCaptionEl.textContent = '';
   loopCounterEl.textContent = '';
-  stepBtn.textContent = 'Krok ▸';
+  setBtn(stepBtn, 'chevron-right', 'Krok', false);
   toolListEl.querySelectorAll('.tool').forEach(li => { li.dataset.active = 'false'; li.dataset.used = 'false'; });
   phasesEl.querySelectorAll('.phase').forEach(p => p.dataset.state = '');
   if(!chatPanel.hidden) renderChat();
@@ -891,7 +913,7 @@ function step(){
   if(ev.loop) loopCounterEl.textContent = 'okrążenie ' + ev.loop + ' / ' + MAX_ITER;
   if(ev.kind === 'answer') lastAnswer = ev.body;
   if(cursor >= steps.length){
-    finished = true; stepBtn.textContent = 'Od nowa ↺'; stopAuto();
+    finished = true; setBtn(stepBtn, 'rotate-ccw', 'Od nowa', true); stopAuto();
     if(!chatPanel.hidden) renderChat();
   }
 }
@@ -937,6 +959,7 @@ SNIPPETS.forEach(s => {
   box.appendChild(elT('p', {}, s.caption));
   snippetsEl.appendChild(box);
 });
+refreshIcons();
 </script>
 </body>
 </html>

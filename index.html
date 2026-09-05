@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.547.0/dist/umd/lucide.min.js"></script>
 <style>
 /* ============================================================
    edulab — Editorial Color design tokens
@@ -179,6 +180,8 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
 .model-status[data-state="ok"]{color:var(--teal-ink);}
 
 .presets{display:flex; flex-wrap:wrap; gap:8px;}
+.preset svg{width:13px; height:13px; vertical-align:-2px; margin-right:6px;}
+.e-title svg{width:16px; height:16px; vertical-align:-3px; margin-right:6px;}
 .preset{font-family:var(--font-mono); font-size:12px; letter-spacing:.02em; background:var(--paper-2); border:1px solid var(--line); color:var(--ink); border-radius:var(--r-pill); padding:7px 14px; cursor:pointer; transition:background .15s, border-color .15s;}
 .preset:hover{background:var(--teal-soft); border-color:var(--teal);}
 
@@ -319,10 +322,10 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
         <div class="card-body">
 
           <div class="presets" style="margin-bottom:6px;">
-            <button class="preset" data-preset="deterministic">⊹ Deterministyczny</button>
-            <button class="preset" data-preset="creative">✦ Kreatywny</button>
-            <button class="preset" data-preset="json">{ } Ekstrakcja JSON</button>
-            <button class="preset" data-preset="reset">↺ Domyślne</button>
+            <button class="preset" data-preset="deterministic"><i data-lucide="crosshair"></i>Deterministyczny</button>
+            <button class="preset" data-preset="creative"><i data-lucide="sparkles"></i>Kreatywny</button>
+            <button class="preset" data-preset="json"><i data-lucide="braces"></i>Ekstrakcja JSON</button>
+            <button class="preset" data-preset="reset"><i data-lucide="rotate-ccw"></i>Domyślne</button>
           </div>
 
           <div id="params"></div>
@@ -673,9 +676,10 @@ function clearRaw(msg){
 function showError(title, detail){
   out.innerHTML = "";
   const box = el("div",{class:"error-box"});
-  box.appendChild(elT("div",{class:"e-title"}, "⚠ "+title));
+  const et = elT("div",{class:"e-title"}, title); et.prepend(el("i",{"data-lucide":"triangle-alert","aria-hidden":"true"})); box.appendChild(et);
   box.appendChild(elT("div",{class:"e-body"}, detail));
   out.appendChild(box);
+  if(window.lucide) lucide.createIcons({ icons: lucide.icons });
   usageEl.innerHTML = ""; latencyEl.textContent="";
 }
 
@@ -846,9 +850,10 @@ async function handleStream(res){
     const detail = `[${streamError.code||"?"} ${streamError.status||""}] ${streamError.message||JSON.stringify(streamError)}`;
     if(hasContent){ // zachowaj częściową odpowiedź, dołóż błąd pod spodem
       const box = el("div",{class:"error-box"}); box.style.marginTop = "16px";
-      box.appendChild(elT("div",{class:"e-title"}, "⚠ Błąd API w trakcie strumienia"));
+      const et = elT("div",{class:"e-title"}, "Błąd API w trakcie strumienia"); et.prepend(el("i",{"data-lucide":"triangle-alert","aria-hidden":"true"})); box.appendChild(et);
       box.appendChild(elT("div",{class:"e-body"}, detail));
       out.appendChild(box);
+      if(window.lucide) lucide.createIcons({ icons: lucide.icons });
     } else {
       showError("Błąd API w trakcie strumienia", detail);
       return;
@@ -1027,7 +1032,7 @@ function init(){
   document.querySelectorAll(".copy-btn").forEach(b => {
     b.addEventListener("click", async () => {
       const src = document.getElementById(b.dataset.copy);
-      try { await navigator.clipboard.writeText(src.textContent); b.textContent = "Skopiowano ✓"; }
+      try { await navigator.clipboard.writeText(src.textContent); b.textContent = "Skopiowano"; }
       catch(e){ b.textContent = "Błąd"; }
       setTimeout(() => { b.textContent = "Kopiuj"; }, 1600);
     });
@@ -1035,6 +1040,7 @@ function init(){
 
   renderParams();
   refresh();
+  if(window.lucide) lucide.createIcons({ icons: lucide.icons });
 }
 init();
 </script>
