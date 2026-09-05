@@ -19,6 +19,10 @@ jak zmienia się ładunek zapytania oraz odpowiedź modelu.
   - Bezpieczeństwo: `safetySettings` dla 4 kategorii szkód
 - **Podgląd zapytania na żywo** — dokładny JSON wysyłany metodą POST aktualizuje się przy każdej
   zmianie. Do zapytania trafiają tylko *włączone* parametry — to główny mechanizm dydaktyczny.
+- **Trzy najnowsze modele Flash** — lista modeli pokazuje tylko trzy najnowsze tekstowe modele
+  Gemini Flash (domyślnie `gemini-3.8-flash`, `gemini-3.7-flash`, `gemini-3.5-flash`). Przycisk
+  **Odśwież** pobiera `models.list` z API, wybiera trzy najnowsze modele Flash obsługujące
+  `generateContent` (bez wariantów image/live/tts) i zapamiętuje je w `localStorage`.
 - **Presety** — Deterministyczny, Kreatywny, Ekstrakcja JSON.
 - **Strumieniowanie (SSE)** — przełącznik między `generateContent` a `streamGenerateContent`.
 
@@ -36,6 +40,7 @@ Header: x-goog-api-key: {KLUCZ}
 ```
 
 Wersja strumieniowa: `:streamGenerateContent?alt=sse`.
+Lista modeli (przycisk Odśwież): `GET https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000`.
 
 ## Demo agenta (agent.html)
 

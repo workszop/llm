@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>edulab · Plac zabaw z parametrami Gemini</title>
-<meta name="description" content="Interaktywne demo edulab: poznaj parametry wywołań API Gemini — temperatura, topP, topK, myślenie i więcej — i zobacz, jak wpływają na odpowiedź modelu." />
+<meta name="description" content="Demo edulab: poznaj parametry wywołań API Gemini (temperatura, topP, topK, myślenie) i zobacz, jak wpływają na odpowiedź modelu." />
 <link rel="icon" href="assets/edulab-mark-teal.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -84,10 +84,6 @@ header.site{
 /* ---- Layout ---------------------------------------------------- */
 main{max-width:1240px; margin:0 auto; padding:34px 30px 80px;}
 .intro{max-width:680px; margin-bottom:28px;}
-.eyebrow{
-  font-family:var(--font-mono); font-weight:500; font-size:var(--overline);
-  letter-spacing:.14em; text-transform:uppercase; color:var(--marigold-ink); margin:0 0 12px;
-}
 h1.display{font-family:var(--font-display); font-weight:700; font-size:var(--h1); line-height:1.06; letter-spacing:-.02em; margin:0 0 14px;}
 .intro p{font-size:var(--body-lg); color:var(--ink-2); margin:0;}
 
@@ -165,7 +161,10 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
 .btn-sm{font-size:var(--caption); padding:7px 14px;}
 
 .key-row{display:flex; gap:8px; align-items:center;}
-.key-row input{flex:1; min-width:0;}
+.key-row input, .key-row select{flex:1; min-width:0;}
+.model-status{margin:6px 0 0; min-height:1em;}
+.model-status[data-state="error"]{color:var(--coral-ink);}
+.model-status[data-state="ok"]{color:var(--teal-ink);}
 
 .presets{display:flex; flex-wrap:wrap; gap:8px;}
 .preset{font-family:var(--font-mono); font-size:12px; letter-spacing:.02em; background:var(--paper-2); border:1px solid var(--line); color:var(--ink); border-radius:var(--r-pill); padding:7px 14px; cursor:pointer; transition:background .15s, border-color .15s;}
@@ -234,11 +233,10 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
 
 <main>
   <div class="intro">
-    <p class="eyebrow">Interaktywne demo · Gemini API</p>
     <h1 class="display">Plac zabaw z parametrami Gemini</h1>
     <p>Pokręć każdą gałką wywołania API i zobacz, jak zmienia się odpowiedź modelu. Włączaj
-       i wyłączaj pojedyncze parametry, podglądaj dokładny ładunek zapytania na żywo i ucz się,
-       co naprawdę robi temperatura, topP, myślenie i reszta.</p>
+       i wyłączaj pojedyncze parametry, podglądaj na żywo dokładny ładunek zapytania i sprawdź,
+       co robią temperatura, topP, myślenie i pozostałe parametry.</p>
   </div>
 
   <div class="grid">
@@ -259,16 +257,16 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
           </label>
           <label class="field">
             <span class="flabel">Model</span>
-            <span class="fhelp">Modele 3.x używają „poziomu myślenia”, modele 2.5 — „budżetu myślenia”. Panel myślenia dopasuje się sam.</span>
-            <select id="model">
-              <option value="gemini-3.5-flash" selected>gemini-3.5-flash</option>
-              <option value="gemini-3.1-pro-preview">gemini-3.1-pro-preview</option>
-              <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite</option>
-              <option value="gemini-3-flash-preview">gemini-3-flash-preview</option>
-              <option value="gemini-2.5-pro">gemini-2.5-pro</option>
-              <option value="gemini-2.5-flash">gemini-2.5-flash</option>
-              <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
-            </select>
+            <span class="fhelp">Trzy najnowsze modele Gemini Flash. „Odśwież” pobiera aktualną listę z API. W modelach 3.x głębokość myślenia ustawia się parametrem thinkingLevel.</span>
+            <span class="key-row">
+              <select id="model">
+                <option value="gemini-3.8-flash" selected>gemini-3.8-flash</option>
+                <option value="gemini-3.7-flash">gemini-3.7-flash</option>
+                <option value="gemini-3.5-flash">gemini-3.5-flash</option>
+              </select>
+              <button type="button" class="btn btn-ghost btn-sm" id="modelRefresh" title="Pobierz z API listę modeli i pokaż trzy najnowsze modele Flash">Odśwież</button>
+            </span>
+            <span class="fhelp model-status" id="modelStatus" aria-live="polite" data-state="idle"></span>
           </label>
         </div>
       </div>
@@ -318,7 +316,7 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
               Strumieniowo (SSE)
             </label>
           </div>
-          <p class="notice">Wskazówka: włączaj/wyłączaj parametry przełącznikiem po lewej. Tylko <em>włączone</em> pola trafiają do zapytania — podgląd po prawej pokazuje dokładnie, co zostanie wysłane. Skrót: <strong>Ctrl+Enter</strong> (⌘+Enter) wysyła zapytanie.</p>
+          <p class="notice">Wskazówka: włączaj/wyłączaj parametry przełącznikiem po lewej. Tylko <em>włączone</em> pola trafiają do zapytania. Podgląd po prawej pokazuje dokładnie, co wyślesz. Skrót: <strong>Ctrl+Enter</strong> (⌘+Enter) wysyła zapytanie.</p>
         </div>
       </div>
 
@@ -340,7 +338,7 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
         <div class="card-body">
           <div class="req-endpoint" id="reqEndpoint"></div>
           <div class="req-preview"><pre id="reqBody"></pre></div>
-          <p class="notice">To dokładny ładunek JSON wysyłany metodą POST. Nagłówek <code style="font-family:var(--font-mono)">x-goog-api-key</code> niesie Twój klucz.</p>
+          <p class="notice">To dokładny ładunek JSON wysyłany metodą POST. Nagłówek <code style="font-family:var(--font-mono)">x-goog-api-key</code> zawiera Twój klucz.</p>
         </div>
       </div>
 
@@ -348,7 +346,7 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
         <div class="card-head"><h2>Podgląd odpowiedzi</h2><span class="card-head-right"><span class="sub" id="resKind">surowy JSON</span><button type="button" class="btn btn-ghost btn-sm copy-btn" data-copy="resBody">Kopiuj</button></span></div>
         <div class="card-body">
           <div class="req-preview"><pre id="resBody"><span class="placeholder">Surowa odpowiedź API pojawi się tutaj po wysłaniu zapytania…</span></pre></div>
-          <p class="notice">Pełny, surowy JSON zwrócony przez API — zobacz <code style="font-family:var(--font-mono)">candidates</code>, <code style="font-family:var(--font-mono)">finishReason</code>, <code style="font-family:var(--font-mono)">usageMetadata</code> i resztę pól. W trybie strumieniowym to lista kolejnych fragmentów (chunków) SSE.</p>
+          <p class="notice">Pełny, surowy JSON zwrócony przez API. Zobacz <code style="font-family:var(--font-mono)">candidates</code>, <code style="font-family:var(--font-mono)">finishReason</code>, <code style="font-family:var(--font-mono)">usageMetadata</code> i resztę pól. W trybie strumieniowym to lista kolejnych fragmentów (chunków) SSE.</p>
         </div>
       </div>
 
@@ -372,11 +370,11 @@ const GROUPS = [
       type:"range", min:0, max:1, step:0.01, def:0.95, accent:"accent-topp", on:false },
     { key:"topK", label:"topK", desc:"Ogranicza wybór do K najbardziej prawdopodobnych tokenów w każdym kroku.",
       type:"int", min:1, max:100, step:1, def:40, on:false },
-    { key:"seed", label:"seed", desc:"Ziarno losowości. Ten sam seed + te same parametry → powtarzalny wynik.",
+    { key:"seed", label:"seed", desc:"Ziarno losowości. Ten sam seed i te same parametry dają powtarzalny wynik.",
       type:"int", min:0, max:2147483647, step:1, def:42, on:false },
   ]},
   { title:"Długość i zatrzymanie", params:[
-    { key:"maxOutputTokens", label:"maxOutputTokens", desc:"Górny limit liczby tokenów w odpowiedzi (modele 3.x i 2.5 wspierają do 65 536). Zbyt niski przytnie tekst.",
+    { key:"maxOutputTokens", label:"maxOutputTokens", desc:"Górny limit liczby tokenów w odpowiedzi (dla modeli 3.x maksymalnie 65 536). Zbyt niski przytnie tekst.",
       type:"int", min:1, max:65536, step:1, def:1024, on:false },
     { key:"stopSequences", label:"stopSequences", desc:"Sekwencje, po napotkaniu których model przerywa generowanie. Oddziel przecinkami.",
       type:"csv", def:"", on:false },
@@ -384,15 +382,15 @@ const GROUPS = [
       type:"int", min:1, max:8, step:1, def:1, on:false },
   ]},
   { title:"Kary za powtórzenia", params:[
-    { key:"presencePenalty", label:"presencePenalty", desc:"Karze tokeny, które już wystąpiły (niezależnie ile razy) — zachęca do nowych tematów. Zakres −2 do 2.",
+    { key:"presencePenalty", label:"presencePenalty", desc:"Karze tokeny, które już wystąpiły, niezależnie od tego ile razy. Zachęca model do nowych tematów. Zakres od −2 do 2.",
       type:"range", min:-2, max:2, step:0.1, def:0, accent:"accent-sky", on:false },
-    { key:"frequencyPenalty", label:"frequencyPenalty", desc:"Karze tokeny proporcjonalnie do częstości — ogranicza dosłowne powtórzenia. Zakres −2 do 2.",
+    { key:"frequencyPenalty", label:"frequencyPenalty", desc:"Karze tokeny proporcjonalnie do tego, jak często już wystąpiły. Ogranicza dosłowne powtórzenia. Zakres od −2 do 2.",
       type:"range", min:-2, max:2, step:0.1, def:0, accent:"accent-sky", on:false },
   ]},
   { title:"Myślenie (reasoning)", params:[
-    { key:"thinkingLevel", label:"thinkingLevel", desc:"Głębokość rozumowania dla modeli 3.x. Wyższy poziom = lepsze trudne zadania, ale wolniej i drożej. „minimal” wspierają tylko nowsze modele Flash (3.5 Flash, 3.1 Flash-Lite, 3 Flash).",
+    { key:"thinkingLevel", label:"thinkingLevel", desc:"Głębokość rozumowania w modelach 3.x. Wyższy poziom lepiej radzi sobie z trudnymi zadaniami, ale odpowiada wolniej i kosztuje więcej. Domyślnie Flash-Lite używa „minimal”, a Gemini 3.5 Flash i nowsze „medium”.",
       type:"select", options:["minimal","low","medium","high"], def:"medium", on:false, family:"3" },
-    { key:"thinkingBudget", label:"thinkingBudget", desc:"Liczba tokenów myślenia dla modeli 2.5. 0 = wyłącz myślenie, −1 = dynamicznie (model sam decyduje).",
+    { key:"thinkingBudget", label:"thinkingBudget", desc:"Liczba tokenów myślenia w modelach 2.5. Wartość 0 wyłącza myślenie, a −1 pozwala modelowi samemu dobrać budżet.",
       type:"int", min:-1, max:24576, step:1, def:1024, on:false, family:"2" },
     { key:"includeThoughts", label:"includeThoughts", desc:"Dołącz do odpowiedzi podsumowanie toku rozumowania modelu (tokeny myślenia są liczone tak czy inaczej).",
       type:"bool", def:false, on:false },
@@ -516,12 +514,12 @@ function renderParams(){
   // Bezpieczeństwo
   paramsEl.appendChild(el("div",{class:"group-title"}, "Bezpieczeństwo (safetySettings)"));
   const sf = el("div",{class:"param"});
-  sf.appendChild(el("p",{class:"param-desc"}, "Próg blokowania dla każdej kategorii szkód. „—” = nie wysyłaj (model użyje domyślnego progu)."));
+  sf.appendChild(el("p",{class:"param-desc"}, "Próg blokowania dla każdej kategorii szkód. „–” oznacza: nie wysyłaj, model użyje domyślnego progu."));
   SAFETY_CATEGORIES.forEach(c => {
     const lab = el("label",{class:"field"}); lab.style.margin="12px 0 0";
     lab.appendChild(el("span",{class:"flabel"}, c.label));
     const s = el("select");
-    s.appendChild(el("option",{value:""}, "— domyślny —"));
+    s.appendChild(el("option",{value:""}, "– domyślny –"));
     SAFETY_THRESHOLDS.forEach(([val,txt]) => { const o=el("option",{value:val}, txt); if(val===safetyState[c.key]) o.selected=true; s.appendChild(o); });
     s.addEventListener("change",()=>{ safetyState[c.key]=s.value; refresh(); });
     lab.appendChild(s); sf.appendChild(lab);
@@ -529,7 +527,8 @@ function renderParams(){
   paramsEl.appendChild(sf);
 }
 
-function currentFamily(){ return document.getElementById("model").value.startsWith("gemini-3") ? "3" : "2"; }
+/* Modele 2.x używają thinkingBudget; wszystko nowsze (3.x i kolejne rodziny) — thinkingLevel. */
+function currentFamily(){ return /^gemini-2\./.test(document.getElementById("model").value) ? "2" : "3"; }
 
 /* ============================================================
    buildRequest() — czysta funkcja: stan → ciało zapytania JSON
@@ -814,6 +813,95 @@ function applyPreset(name){
 }
 
 /* ============================================================
+   Odkrywanie modeli — przycisk „Odśwież” pobiera models.list z API,
+   wybiera trzy najnowsze modele tekstowe z rodziny Flash (obsługujące
+   generateContent) i podmienia nimi listę. Wynik trafia do localStorage,
+   więc przeżywa przeładowanie strony.
+   ============================================================ */
+const MODELS_LIST_URL = "https://generativelanguage.googleapis.com/v1beta/models";
+const FLASH_MODELS_KEY = "gemini_models_flash";
+const FLASH_MODELS_SHOWN = 3;
+
+function modelId(m){ return (m.name || "").replace(/^models\//, ""); }
+
+/* Tekstowe modele Flash: gemini-*flash*, bez wariantów image/live/tts/audio/embedding,
+   z generateContent na liście metod. */
+function isFlashModel(m){
+  const id = modelId(m);
+  if(!/^gemini-\d/.test(id) || !/flash/i.test(id)) return false;
+  if(/image|live|tts|audio|embedding|robotics/i.test(id)) return false;
+  return (m.supportedGenerationMethods || []).includes("generateContent");
+}
+
+/* Ranking „najnowsze”: wyższa wersja (3.8 > 3.7 > 3.5), przy remisie model bazowy
+   przed -lite/-preview (krótsza nazwa), na końcu alfabetycznie. */
+function modelVersion(id){ const m = id.match(/^gemini-(\d+(?:\.\d+)?)/); return m ? parseFloat(m[1]) : 0; }
+function compareNewest(a, b){
+  return (modelVersion(b) - modelVersion(a)) || (a.length - b.length) || a.localeCompare(b);
+}
+
+function setModelOptions(ids){
+  const sel = document.getElementById("model");
+  const current = sel.value;
+  sel.innerHTML = "";
+  ids.forEach(id => { const o = el("option", { value:id }); o.textContent = id; sel.appendChild(o); });
+  sel.value = ids.includes(current) ? current : ids[0];
+}
+
+function loadFlashModels(){
+  try {
+    const saved = JSON.parse(localStorage.getItem(FLASH_MODELS_KEY) || "null");
+    if(Array.isArray(saved) && saved.length && saved.every(x => typeof x === "string")) setModelOptions(saved);
+  } catch(e){ /* uszkodzony wpis — zostaje lista domyślna */ }
+}
+
+function setModelStatus(text, state){ const st = document.getElementById("modelStatus"); st.textContent = text; st.dataset.state = state || "idle"; }
+
+async function fetchAllModels(key){
+  const models = []; let pageToken = "";
+  do {
+    const url = `${MODELS_LIST_URL}?pageSize=1000${pageToken ? "&pageToken="+encodeURIComponent(pageToken) : ""}`;
+    const res = await fetch(url, { headers:{ "x-goog-api-key":key } });
+    if(!res.ok){
+      let detail = `HTTP ${res.status}`;
+      try { const j = await res.json(); if(j.error) detail = `[${j.error.code} ${j.error.status}] ${j.error.message}`; } catch(e){}
+      throw new Error(detail);
+    }
+    const data = await res.json();
+    (data.models || []).forEach(m => models.push(m));
+    pageToken = data.nextPageToken || "";
+  } while(pageToken);
+  return models;
+}
+
+async function refreshModels(){
+  const key = document.getElementById("apiKey").value.trim();
+  if(!key){ setModelStatus("Wklej klucz API, żeby pobrać listę modeli.", "error"); return; }
+  const btn = document.getElementById("modelRefresh");
+  const sel = document.getElementById("model");
+  btn.disabled = true; setModelStatus("Pobieranie listy modeli…", "busy");
+  try {
+    const all = await fetchAllModels(key);
+    const flash = [...new Set(all.filter(isFlashModel).map(modelId))].sort(compareNewest);
+    if(!flash.length){ setModelStatus("API nie zwróciło żadnego modelu Flash z generateContent. Lista bez zmian.", "error"); return; }
+    const before = [...sel.options].map(o => o.value);
+    const top = flash.slice(0, FLASH_MODELS_SHOWN);
+    const added = top.filter(id => !before.includes(id));
+    const previous = sel.value;
+    setModelOptions(top);
+    localStorage.setItem(FLASH_MODELS_KEY, JSON.stringify(top));
+    if(sel.value !== previous){ localStorage.setItem("gemini_model", sel.value); renderParams(); refresh(); }
+    setModelStatus(added.length
+      ? `Nowe modele Flash: ${added.join(", ")}. Lista pokazuje ${top.length} najnowsze z ${flash.length} dostępnych w API.`
+      : `Lista jest aktualna: ${top.length} najnowsze modele Flash z ${flash.length} dostępnych w API.`, "ok");
+  } catch(e){
+    setModelStatus("Nie udało się pobrać modeli: " + e.message, "error");
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ============================================================
    Inicjalizacja
    ============================================================ */
 function init(){
@@ -822,15 +910,18 @@ function init(){
   if(savedKey) document.getElementById("apiKey").value = savedKey;
   document.getElementById("apiKey").addEventListener("input", e => localStorage.setItem("gemini_api_key", e.target.value.trim()));
 
+  loadFlashModels(); // lista pobrana wcześniej przez „Odśwież” (jeśli była)
   const savedModel = localStorage.getItem("gemini_model");
   const modelSel = document.getElementById("model");
-  if(savedModel && [...modelSel.options].some(o => o.value === savedModel)) modelSel.value = savedModel;
+  // zapisany model, jeśli nadal jest na liście; w przeciwnym razie najnowszy (pierwszy)
+  modelSel.value = (savedModel && [...modelSel.options].some(o => o.value === savedModel)) ? savedModel : modelSel.options[0].value;
 
   document.getElementById("model").addEventListener("change", e => { localStorage.setItem("gemini_model", e.target.value); renderParams(); refresh(); });
   document.getElementById("streamToggle").addEventListener("change", refresh);
   document.getElementById("systemInstruction").addEventListener("input", refresh);
   document.getElementById("prompt").addEventListener("input", refresh);
   document.getElementById("sendBtn").addEventListener("click", send);
+  document.getElementById("modelRefresh").addEventListener("click", refreshModels);
   document.querySelectorAll(".preset").forEach(b => b.addEventListener("click", () => applyPreset(b.dataset.preset)));
 
   // Ctrl+Enter / ⌘+Enter wysyła zapytanie

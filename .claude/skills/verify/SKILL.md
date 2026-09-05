@@ -16,6 +16,11 @@ cd /home/andrzey/git-claude/llm && python3 -m http.server 8642 --bind 127.0.0.1
 Open `http://127.0.0.1:8642/index.html` (serve over localhost, not file://, so
 `navigator.clipboard` works). Drive with claude-in-chrome; if `Page.captureScreenshot`
 times out (minimized window), ref-based clicks + `javascript_tool` DOM readbacks still work.
+If the extension is not connected, fall back to headless Chrome over CDP
+(`google-chrome --headless=new --no-sandbox --user-data-dir=<scratch>/prof --remote-debugging-port=9333`,
+then a Node 22 script: `PUT /json/new`, `Page.navigate`, `Runtime.evaluate`). Disable the cache
+(`Network.setCacheDisabled`) and never redeclare `const` across separate `Runtime.evaluate` calls —
+the second one throws and the probe reads stale state.
 
 ## Flows worth driving
 
@@ -30,6 +35,15 @@ times out (minimized window), ref-based clicks + `javascript_tool` DOM readbacks
 - **HTML-injection regression**: model text containing `<img onerror=...>` must render
   as literal text in `#output` (no elements created, no handler fired). Same for
   thoughts and error details.
+- **Model discovery (`#modelRefresh`)**: no key → `#modelStatus` says "Wklej klucz API" with
+  `data-state="error"`. With a key, stub `window.fetch` to return `models.list` JSON
+  (`{models:[{name:'models/gemini-4-flash', supportedGenerationMethods:['generateContent']}], nextPageToken}`;
+  a second page when `pageToken=` is in the URL). The select is REPLACED by the 3 newest
+  text Flash models (`gemini-<n>*flash*` with `generateContent`; image/live/tts/audio variants
+  and Pro/embedding models excluded; version desc, base before -lite/-preview). The 3 ids land in
+  `localStorage.gemini_models_flash` and survive reload; a selected model that drops out of the
+  top 3 falls back to the newest one and the request preview URL follows. Second click → "Lista jest
+  aktualna". A 4xx body `{error:{...}}` → status `data-state="error"`, list untouched, button re-enables.
 - **Stale saved model**: `localStorage.setItem('gemini_model','<removed-model>')` +
   reload → select must fall back to the default option, not go empty.
 
