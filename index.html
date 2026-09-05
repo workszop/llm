@@ -83,7 +83,7 @@ header.site{
 
 /* ---- Layout ---------------------------------------------------- */
 main{max-width:1240px; margin:0 auto; padding:34px 30px 80px;}
-.intro{max-width:680px; margin-bottom:28px;}
+.intro{max-width:none; margin-bottom:28px;}
 h1.display{font-family:var(--font-display); font-weight:700; font-size:var(--h1); line-height:1.06; letter-spacing:-.02em; margin:0 0 14px;}
 .intro p{font-size:var(--body-lg); color:var(--ink-2); margin:0;}
 
@@ -130,8 +130,18 @@ select{appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='h
 .param[data-on="false"] .param-value{color:var(--ink-3);}
 
 /* groups */
-.group-title{font-family:var(--font-mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--teal-ink); margin:22px 0 2px; padding-top:8px;}
-.group-title:first-of-type{margin-top:4px;}
+.group{border-top:1px solid var(--line); margin-top:6px;}
+.group-title{display:flex; align-items:center; gap:10px; width:100%; background:none; border:none; cursor:pointer; text-align:left; padding:14px 0 12px; font-family:var(--font-mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--teal-ink);}
+.group-title:hover{color:var(--teal-600);}
+.group-title .chev{display:inline-block; width:8px; height:8px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(-45deg); transition:transform .18s; flex:0 0 auto;}
+.group[data-open="true"] .group-title .chev{transform:rotate(45deg);}
+.group-title .count{margin-left:auto; font-size:10px; letter-spacing:.06em; color:var(--marigold-ink); background:var(--marigold-soft); padding:2px 8px; border-radius:var(--r-pill);}
+.group-title .count:empty{display:none;}
+.group-body{display:none; padding-bottom:6px;}
+.group[data-open="true"] .group-body{display:block; animation:groupIn .18s ease-out;}
+@keyframes groupIn{from{opacity:0; transform:translateY(-4px);} to{opacity:1; transform:none;}}
+.group-body .param:first-child{border-top:none; padding-top:4px;}
+.pinned .param{border-top:none; padding-top:6px;}
 
 /* ---- Toggle switch --------------------------------------------- */
 .switch{position:relative; display:inline-block; width:38px; height:22px; flex:none;}
@@ -234,8 +244,8 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
 <main>
   <div class="intro">
     <h1 class="display">Plac zabaw z parametrami Gemini</h1>
-    <p>Pokręć każdą gałką wywołania API i zobacz, jak zmienia się odpowiedź modelu. Włączaj
-       i wyłączaj pojedyncze parametry, podglądaj na żywo dokładny ładunek zapytania i sprawdź,
+    <p>Zmień parametry wywołania API i zobacz, jak zmienia się odpowiedź modelu. Włączaj
+       i wyłączaj pojedyncze parametry, podglądaj na żywo zapytanie i sprawdź,
        co robią temperatura, topP, myślenie i pozostałe parametry.</p>
   </div>
 
@@ -249,7 +259,6 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
         <div class="card-body">
           <label class="field">
             <span class="flabel">Klucz API Gemini</span>
-            <span class="fhelp">Klucz zostaje wyłącznie w Twojej przeglądarce (localStorage) i jest wysyłany bezpośrednio do Google. Nie trafia na żaden inny serwer.</span>
             <span class="key-row">
               <input type="password" id="apiKey" class="mono-input" placeholder="AIza..." autocomplete="off" spellcheck="false" />
               <button type="button" class="btn btn-ghost btn-sm" id="keyToggle" aria-label="Pokaż lub ukryj klucz">Pokaż</button>
@@ -257,7 +266,6 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
           </label>
           <label class="field">
             <span class="flabel">Model</span>
-            <span class="fhelp">Trzy najnowsze modele Gemini Flash. „Odśwież” pobiera aktualną listę z API. W modelach 3.x głębokość myślenia ustawia się parametrem thinkingLevel.</span>
             <span class="key-row">
               <select id="model">
                 <option value="gemini-3.8-flash" selected>gemini-3.8-flash</option>
@@ -277,14 +285,29 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
         <div class="card-body">
           <label class="field">
             <span class="flabel">Instrukcja systemowa</span>
-            <span class="fhelp">Stały kontekst i „osobowość” modelu (systemInstruction). Zostaw puste, by pominąć.</span>
+            <span class="fhelp">Stały kontekst i „osobowość” modelu (systemInstruction).</span>
             <textarea id="systemInstruction" rows="2" placeholder="Jesteś zwięzłym asystentem, który odpowiada po polsku."></textarea>
           </label>
           <label class="field">
             <span class="flabel">Wiadomość użytkownika</span>
-            <span class="fhelp">Treść, którą wysyłasz do modelu (contents).</span>
             <textarea id="prompt" rows="4" placeholder="Napisz limeryk o programowaniu w Pythonie.">Wyjaśnij w trzech zdaniach, czym jest temperatura w modelach językowych.</textarea>
           </label>
+        </div>
+      </div>
+
+      <!-- Wyślij -->
+      <div class="card">
+        <div class="card-body">
+          <div class="send-row">
+            <button class="btn btn-primary" id="sendBtn">
+              <span id="sendLabel">Wyślij zapytanie</span>
+            </button>
+            <label class="stream-toggle">
+              <span class="switch"><input type="checkbox" id="streamToggle" /><span class="slider"></span></span>
+              Strumieniowo (SSE)
+            </label>
+          </div>
+          <p class="notice">Wskazówka: kliknij tytuł sekcji, żeby rozwinąć kolejne parametry, a przełącznikiem po lewej włączaj i wyłączaj pojedyncze pola. Tylko <em>włączone</em> pola trafiają do zapytania. Podgląd po prawej pokazuje dokładnie, co wyślesz. Skrót: <strong>Ctrl+Enter</strong> (⌘+Enter) wysyła zapytanie.</p>
         </div>
       </div>
 
@@ -301,22 +324,6 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
           </div>
 
           <div id="params"></div>
-        </div>
-      </div>
-
-      <!-- Wyślij -->
-      <div class="card">
-        <div class="card-body">
-          <div class="send-row">
-            <button class="btn btn-primary" id="sendBtn">
-              <span id="sendLabel">Wyślij zapytanie</span>
-            </button>
-            <label class="stream-toggle">
-              <span class="switch"><input type="checkbox" id="streamToggle" /><span class="slider"></span></span>
-              Strumieniowo (SSE)
-            </label>
-          </div>
-          <p class="notice">Wskazówka: włączaj/wyłączaj parametry przełącznikiem po lewej. Tylko <em>włączone</em> pola trafiają do zapytania. Podgląd po prawej pokazuje dokładnie, co wyślesz. Skrót: <strong>Ctrl+Enter</strong> (⌘+Enter) wysyła zapytanie.</p>
         </div>
       </div>
 
@@ -364,11 +371,11 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
    ============================================================ */
 const GROUPS = [
   { title:"Próbkowanie", params:[
-    { key:"temperature", label:"temperature", desc:"Steruje losowością. Niska = przewidywalnie i powtarzalnie, wysoka = kreatywnie i różnorodnie. Zakres 0–2.",
+    { key:"temperature", label:"temperature", desc:"Steruje losowością odpowiedzi. Niska wartość daje przewidywalny, powtarzalny tekst, wysoka bardziej zróżnicowany i zaskakujący. Zakres 0–2.",
       type:"range", min:0, max:2, step:0.05, def:1.0, accent:"accent-temp", on:true },
-    { key:"topP", label:"topP", desc:"Próbkowanie jądrowe (nucleus). Bierze najbardziej prawdopodobne tokeny, których prawdopodobieństwa sumują się do P. Niższe = bezpieczniej.",
+    { key:"topP", label:"topP", desc:"Próbkowanie jądrowe (nucleus). Model wybiera tylko spośród najbardziej prawdopodobnych tokenów, których łączne prawdopodobieństwo sięga P. Niższa wartość daje bardziej zachowawcze odpowiedzi.",
       type:"range", min:0, max:1, step:0.01, def:0.95, accent:"accent-topp", on:false },
-    { key:"topK", label:"topK", desc:"Ogranicza wybór do K najbardziej prawdopodobnych tokenów w każdym kroku.",
+    { key:"topK", label:"topK", desc:"W każdym kroku model wybiera tylko spośród K najbardziej prawdopodobnych tokenów.",
       type:"int", min:1, max:100, step:1, def:40, on:false },
     { key:"seed", label:"seed", desc:"Ziarno losowości. Ten sam seed i te same parametry dają powtarzalny wynik.",
       type:"int", min:0, max:2147483647, step:1, def:42, on:false },
@@ -376,9 +383,9 @@ const GROUPS = [
   { title:"Długość i zatrzymanie", params:[
     { key:"maxOutputTokens", label:"maxOutputTokens", desc:"Górny limit liczby tokenów w odpowiedzi (dla modeli 3.x maksymalnie 65 536). Zbyt niski przytnie tekst.",
       type:"int", min:1, max:65536, step:1, def:1024, on:false },
-    { key:"stopSequences", label:"stopSequences", desc:"Sekwencje, po napotkaniu których model przerywa generowanie. Oddziel przecinkami.",
+    { key:"stopSequences", label:"stopSequences", desc:"Ciągi znaków, przy których model przerywa generowanie. Kolejne sekwencje oddziel przecinkami.",
       type:"csv", def:"", on:false },
-    { key:"candidateCount", label:"candidateCount", desc:"Ile niezależnych odpowiedzi wygenerować naraz. Każda kosztuje tokeny.",
+    { key:"candidateCount", label:"candidateCount", desc:"Liczba niezależnych odpowiedzi generowanych naraz. Za każdą płacisz osobno tokenami.",
       type:"int", min:1, max:8, step:1, def:1, on:false },
   ]},
   { title:"Kary za powtórzenia", params:[
@@ -392,13 +399,13 @@ const GROUPS = [
       type:"select", options:["minimal","low","medium","high"], def:"medium", on:false, family:"3" },
     { key:"thinkingBudget", label:"thinkingBudget", desc:"Liczba tokenów myślenia w modelach 2.5. Wartość 0 wyłącza myślenie, a −1 pozwala modelowi samemu dobrać budżet.",
       type:"int", min:-1, max:24576, step:1, def:1024, on:false, family:"2" },
-    { key:"includeThoughts", label:"includeThoughts", desc:"Dołącz do odpowiedzi podsumowanie toku rozumowania modelu (tokeny myślenia są liczone tak czy inaczej).",
+    { key:"includeThoughts", label:"includeThoughts", desc:"Dołącza do odpowiedzi podsumowanie toku rozumowania modelu. Tokeny myślenia są rozliczane niezależnie od tego, czy je pokażesz.",
       type:"bool", def:false, on:false },
   ]},
   { title:"Format odpowiedzi", params:[
-    { key:"responseMimeType", label:"responseMimeType", desc:"Wymuś format wyjścia. application/json zmusza model do zwrócenia poprawnego JSON-a.",
+    { key:"responseMimeType", label:"responseMimeType", desc:"Format odpowiedzi. Wartość application/json wymusza na modelu zwrócenie poprawnego JSON-a.",
       type:"select", options:["text/plain","application/json"], def:"text/plain", on:false },
-    { key:"responseSchema", label:"responseSchema", desc:"Opcjonalny schemat JSON opisujący strukturę odpowiedzi (działa z application/json).",
+    { key:"responseSchema", label:"responseSchema", desc:"Opcjonalny schemat JSON opisujący strukturę odpowiedzi. Działa razem z application/json.",
       type:"json", def:'{\n  "type": "object",\n  "properties": {\n    "odpowiedz": { "type": "string" }\n  }\n}', on:false },
   ]},
 ];
@@ -411,9 +418,9 @@ const SAFETY_CATEGORIES = [
 ];
 const SAFETY_THRESHOLDS = [
   ["BLOCK_NONE","Nie blokuj"],
-  ["BLOCK_ONLY_HIGH","Tylko wysokie"],
-  ["BLOCK_MEDIUM_AND_ABOVE","Średnie i wyżej"],
-  ["BLOCK_LOW_AND_ABOVE","Niskie i wyżej"],
+  ["BLOCK_ONLY_HIGH","Blokuj tylko wysokie ryzyko"],
+  ["BLOCK_MEDIUM_AND_ABOVE","Blokuj średnie i wyższe"],
+  ["BLOCK_LOW_AND_ABOVE","Blokuj niskie i wyższe"],
   ["OFF","Wyłączone (OFF)"],
 ];
 
@@ -502,17 +509,49 @@ function updateVal(p, valEl){
   else valEl.textContent = "";
 }
 
+/* Sekcje parametrów są zwijane. Na wierzchu zostaje tylko temperatura; każdą
+   sekcję rozwija kliknięcie w tytuł. Stan rozwinięcia pamiętamy w localStorage,
+   a preset rozwija sekcje, w których włączył jakiś parametr. */
+const PINNED_PARAM = "temperature";
+const FOLDS_KEY = "gemini_folds";
+let folds = {};
+try { folds = JSON.parse(localStorage.getItem(FOLDS_KEY) || "{}") || {}; } catch(e){ folds = {}; }
+
+function buildGroup(title, enabledCount, fill){
+  const open = !!folds[title];
+  const g = el("div",{class:"group", "data-group":title}); g.dataset.open = open;
+  const btn = el("button",{type:"button", class:"group-title", "aria-expanded":open});
+  btn.appendChild(el("span",{class:"chev"}));
+  btn.appendChild(elT("span",{}, title));
+  btn.appendChild(elT("span",{class:"count"}, enabledCount ? `${enabledCount} wł.` : ""));
+  const body = el("div",{class:"group-body"});
+  fill(body);
+  btn.addEventListener("click", () => {
+    const now = g.dataset.open !== "true";
+    g.dataset.open = now; btn.setAttribute("aria-expanded", now);
+    folds[title] = now; localStorage.setItem(FOLDS_KEY, JSON.stringify(folds));
+  });
+  g.appendChild(btn); g.appendChild(body);
+  return g;
+}
+
 function renderParams(){
   paramsEl.innerHTML = "";
+  // temperatura zawsze na wierzchu
+  const pinned = GROUPS.flatMap(g=>g.params).find(p => p.key===PINNED_PARAM);
+  const pinWrap = el("div",{class:"pinned"}); pinWrap.appendChild(buildParamRow(pinned)); paramsEl.appendChild(pinWrap);
   GROUPS.forEach(g => {
-    paramsEl.appendChild(el("div",{class:"group-title"}, g.title));
-    g.params.forEach(p => {
-      if(p.family && p.family!==currentFamily()) return; // pokaż tylko właściwą kontrolkę myślenia
-      paramsEl.appendChild(buildParamRow(p));
-    });
+    const visible = g.params.filter(p => p.key!==PINNED_PARAM && !(p.family && p.family!==currentFamily())); // tylko właściwa kontrolka myślenia
+    if(!visible.length) return;
+    const enabled = visible.filter(p => state[p.key].on).length;
+    paramsEl.appendChild(buildGroup(g.title, enabled, body => visible.forEach(p => body.appendChild(buildParamRow(p)))));
   });
   // Bezpieczeństwo
-  paramsEl.appendChild(el("div",{class:"group-title"}, "Bezpieczeństwo (safetySettings)"));
+  const safetyEnabled = SAFETY_CATEGORIES.filter(c => safetyState[c.key]).length;
+  paramsEl.appendChild(buildGroup("Bezpieczeństwo (safetySettings)", safetyEnabled, body => body.appendChild(buildSafety())));
+}
+
+function buildSafety(){
   const sf = el("div",{class:"param"});
   sf.appendChild(el("p",{class:"param-desc"}, "Próg blokowania dla każdej kategorii szkód. „–” oznacza: nie wysyłaj, model użyje domyślnego progu."));
   SAFETY_CATEGORIES.forEach(c => {
@@ -524,7 +563,7 @@ function renderParams(){
     s.addEventListener("change",()=>{ safetyState[c.key]=s.value; refresh(); });
     lab.appendChild(s); sf.appendChild(lab);
   });
-  paramsEl.appendChild(sf);
+  return sf;
 }
 
 /* Modele 2.x używają thinkingBudget; wszystko nowsze (3.x i kolejne rodziny) — thinkingLevel. */
@@ -577,7 +616,18 @@ function syntaxHighlight(json){
     });
 }
 
+function updateGroupCounts(){
+  document.querySelectorAll(".group").forEach(g => {
+    const title = g.dataset.group;
+    const grp = GROUPS.find(x => x.title===title);
+    const n = grp ? grp.params.filter(p => p.key!==PINNED_PARAM && !(p.family && p.family!==currentFamily()) && state[p.key].on).length
+                  : SAFETY_CATEGORIES.filter(c => safetyState[c.key]).length;
+    g.querySelector(".count").textContent = n ? `${n} wł.` : "";
+  });
+}
+
 function refresh(){
+  updateGroupCounts();
   const model = document.getElementById("model").value;
   const stream = document.getElementById("streamToggle").checked;
   const method = stream ? "streamGenerateContent" : "generateContent";
@@ -809,6 +859,10 @@ function applyPreset(name){
     setOn("responseMimeType", true, "application/json");
     setOn("responseSchema", true);
   }
+  // rozwiń sekcje, w których preset coś włączył; „Domyślne” zwija wszystko
+  GROUPS.forEach(g => { folds[g.title] = name!=="reset" && g.params.some(p => p.key!==PINNED_PARAM && state[p.key].on); });
+  folds["Bezpieczeństwo (safetySettings)"] = false;
+  localStorage.setItem(FOLDS_KEY, JSON.stringify(folds));
   renderParams(); refresh();
 }
 

@@ -44,6 +44,11 @@ the second one throws and the probe reads stale state.
   `localStorage.gemini_models_flash` and survive reload; a selected model that drops out of the
   top 3 falls back to the newest one and the request preview URL follows. Second click → "Lista jest
   aktualna". A 4xx body `{error:{...}}` → status `data-state="error"`, list untouched, button re-enables.
+- **Foldable parameter groups**: on a fresh load only `.param[data-key=temperature]` is visible
+  (pinned above the groups); every `.group` has `data-open="false"` and its `.group-title` button
+  `aria-expanded="false"`. Clicking the title toggles both and writes `localStorage.gemini_folds`
+  (survives reload). The `.count` badge shows "N wł." for enabled params in that group and updates
+  on switch toggles. Presets open the groups where they enabled something; "Domyślne" folds all.
 - **Stale saved model**: `localStorage.setItem('gemini_model','<removed-model>')` +
   reload → select must fall back to the default option, not go empty.
 
