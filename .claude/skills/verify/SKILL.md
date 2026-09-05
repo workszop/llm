@@ -64,3 +64,24 @@ the second one throws and the probe reads stale state.
 - The extension's DLP may redact raw `#output` text in tool results — read booleans
   (`textContent.includes(...)`) instead of dumping page text.
 - Copy-button label reverts after 1.6 s; read it within ~1 s of the click.
+
+## agent.html (demo agenta)
+
+Same server; open `http://127.0.0.1:8642/agent.html`. Fully scripted, no API calls.
+
+- Picker: 5 `.scen` buttons; clicking one calls `selectScenario(id)`, unhides `#run` and
+  renders the goal card immediately. `step()` advances; after the last card `finished` is
+  true and `#stepBtn` reads "Od nowa ↺". Expected card counts: faktura 10, zastepstwo 12,
+  papier 20, ulamki 16 (one `[data-error=true]`), serwer 14. Loop counter must never
+  exceed `MAX_ITER` (8).
+- Tools panel: `.tool[data-used=true]` for every tool the run called; in "faktura"
+  `ksieguj` must stay `data-used=false` (that is the lesson). Active tool highlighted via
+  `data-active`.
+- Phases: all four `.phase[data-state=done]` after the answer card.
+- Chat compare: `#chatBtn` toggles `#chatPanel`; before the run ends the right column
+  shows `.pending`, afterwards a `.bubble.agent` with loops and token estimate. 3 `.gaps li`
+  and 3 `.wins li` per scenario.
+- Keys: space / ArrowRight step, `a` toggles auto, `c` toggles chat, `n` presenter notes;
+  all ignored while an input has focus.
+- Escaping: `buildSteps({goal:'<img onerror=…>', …})` rendered through `renderStep` must
+  create no elements.

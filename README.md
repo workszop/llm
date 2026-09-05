@@ -44,26 +44,30 @@ Lista modeli (przycisk Odśwież): `GET https://generativelanguage.googleapis.co
 
 ## Demo agenta (agent.html)
 
-Drugie demo w tym repo: **`agent.html`** pokazuje krok po kroku, jak myśli agent AI —
-w odróżnieniu od `index.html` (surowe parametry wywołania), tu chodzi o samą *pętlę*
-agenta: plan → wywołanie narzędzia → wynik → refleksja → (powtórz) → odpowiedź.
+Drugie demo w tym repo: **`agent.html`** pokazuje krok po kroku, jak pracuje agent AI
+uruchomiony w aplikacji na pulpicie (np. Claude Desktop) i podłączony do narzędzi firmy.
+W odróżnieniu od `index.html` (surowe parametry wywołania) tu chodzi o samą pętlę:
+zadanie → plan → prośba o narzędzie → wynik → (powtórz) → decyzja → wynik dla użytkownika.
 
-- **Dwa tryby:**
-  - **Demo (scripted)** — trzy ręcznie spreparowane scenariusze odtwarzane z gotowych
-    danych, bez wywołań API. Powtarzalne i bezpieczne do pokazywania na scenie — to
-    domyślny i zalecany tryb prezentacji.
-  - **Na żywo** — prawdziwe wywołania Gemini z function calling (wymaga własnego
-    klucza API, wklejanego lokalnie w przeglądarce). Pokazuje rzeczywiste, nieuczesane
-    zachowanie modelu — w tym czasem pominiętą kartę „📋 Plan” (model od razu sięga po
-    narzędzie). To normalne — do stabilnej prezentacji używaj trybu demo, tryb na żywo
-    pokaż osobno jako „a tak wygląda to naprawdę”.
-- **Trzy scenariusze:** „Za 100 dni” (data + matematyka), „Bilety do teatru”
-  (wyszukiwanie + notatnik + kalkulator) i „Awaria” — celowo uczący scenariusz z błędem
-  narzędzia, który pokazuje, że agent nie wywala się na błędzie, tylko próbuje inaczej.
-- **Sterowanie prezentera:** przycisk **Krok ▸** pokazuje jedno zdarzenie na raz,
-  **Auto** odtwarza scenariusz samodzielnie (z regulowaną szybkością), a klawisz **`n`**
-  pokazuje/ukrywa panel notatek prowadzącego (niewidoczny dla widowni, z podpowiedziami
-  „co powiedzieć” przy kluczowych momentach demo).
+- **Pięć scenariuszy z różnych dziedzin.** Każdy kończy się czymś, czego zwykły czat
+  nie zrobi: faktura z rozbieżnością, której agent nie księguje (finanse); zastępstwo
+  wpisane do kalendarza po sprawdzeniu trzech źródeł (HR); zamówienie papieru złożone
+  czwartego dnia, gdy cena spadła poniżej progu (zakupy); korepetycje z ułamków, w których
+  agent zmienia plan po błędzie ucznia (edukacja); naprawa serwera z weryfikacją i
+  powiadomieniem dyżurnego (IT).
+- **Wszystko jest symulowane.** Narzędzia i ich wyniki to dane w pliku, więc demo jest
+  powtarzalne i bezpieczne na scenie. Karty narzędzi oznaczone „działanie” to te, które
+  w prawdziwym wdrożeniu zmieniałyby coś w świecie.
+- **„Jak zrobiłby to zwykły czat”.** Każdy scenariusz ma przycisk, który pokazuje obok
+  siebie odpowiedź czatu bez narzędzi (brzmi pomocnie, ale zostawia pracę Tobie) i wynik
+  agenta z liczbą okrążeń i szacunkiem tokenów.
+- **Łatwe śledzenie.** Pasek faz (zadanie, plan, pętla, wynik), separatory okrążeń,
+  panel podłączonych narzędzi z podświetleniem aktywnego i pamięć rozmowy z licznikiem.
+  Każda karta ma zwijany „Protokół” z JSON-em wymiany aplikacja ↔ model w kształcie
+  `tool_use` / `tool_result`.
+- **Sterowanie prezentera:** „Krok ▸” lub <kbd>spacja</kbd>/<kbd>→</kbd>, „Auto” lub
+  <kbd>a</kbd> z regulowaną pauzą, <kbd>c</kbd> porównanie z czatem, <kbd>n</kbd> notatki
+  prowadzącego (niewidoczne dla widowni).
 
 ## Design
 

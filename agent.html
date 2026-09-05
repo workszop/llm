@@ -3,16 +3,15 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>edulab · Jak myśli agent AI</title>
-<meta name="description" content="Interaktywne demo edulab: krok po kroku zobacz, jak agent AI myśli, wywołuje narzędzia i buduje odpowiedź." />
+<title>edulab · Jak pracuje agent AI</title>
+<meta name="description" content="Demo edulab: pięć scenariuszy pokazujących krok po kroku, jak agent AI na pulpicie planuje, używa narzędzi firmy, sprawdza wyniki i kończy zadanie, którego zwykły czat nie dokończy." />
 <link rel="icon" href="assets/edulab-mark-teal.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
 /* ============================================================
-   edulab — Editorial Color design tokens
-   (z design_handoff_demo_lab/tokens/colors_and_type.css)
+   edulab – Editorial Color design tokens
    ============================================================ */
 :root{
   --font-display:'Bricolage Grotesque','Hanken Grotesk',system-ui,sans-serif;
@@ -26,17 +25,13 @@
   --teal:#0E8C7F; --teal-600:#0B7468; --teal-soft:#D2EBE6; --teal-ink:#0A5A52;
   --coral:#EF5B3F; --coral-600:#D44A30; --coral-soft:#FBDDD4; --coral-ink:#9A2E1B;
   --sky:#2E78C9; --sky-soft:#D9E7F6; --sky-ink:#1B4E88;
-  --play-grape:#7A5AC2;
+  --grape:#7A5AC2; --grape-soft:#E6DFF5; --grape-ink:#4B3480;
 
   --success:#2F8F5B; --success-soft:#D7EEDD; --success-ink:#1C6A3E;
   --warning:#C9810A; --warning-soft:#FBEAC6; --warning-ink:#855207;
   --danger:#D8412A; --danger-soft:#FAD9D2; --danger-ink:#97271A;
 
   --focus-ring:0 0 0 3px rgba(232,146,12,.38);
-
-  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:24px;
-  --sp-8:32px; --sp-10:40px; --sp-12:48px;
-
   --r-xs:6px; --r-sm:10px; --r-md:14px; --r-lg:20px; --r-xl:28px; --r-pill:999px;
 
   --shadow-sm:0 1px 2px rgba(33,30,26,.06),0 1px 1px rgba(33,30,26,.04);
@@ -50,48 +45,28 @@
 
 *{box-sizing:border-box;}
 html{scroll-behavior:smooth;}
-body{
-  margin:0; background:var(--paper); color:var(--ink);
-  font-family:var(--font-sans); font-size:var(--body); line-height:1.6;
-  -webkit-font-smoothing:antialiased;
-}
+body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--font-sans); font-size:var(--body); line-height:1.6; -webkit-font-smoothing:antialiased;}
 a{color:var(--teal-ink); text-decoration:none;}
 a:hover{text-decoration:underline;}
 
-/* ---- Header ---------------------------------------------------- */
-header.site{
-  position:sticky; top:0; z-index:50;
-  background:rgba(251,247,240,.85); backdrop-filter:blur(12px);
-  border-bottom:1px solid var(--line);
-}
-.header-inner{
-  max-width:1240px; margin:0 auto; padding:15px 30px;
-  display:flex; align-items:center; gap:16px;
-}
+/* ─── Header ─── */
+header.site{position:sticky; top:0; z-index:50; background:rgba(251,247,240,.85); backdrop-filter:blur(12px); border-bottom:1px solid var(--line);}
+.header-inner{max-width:1240px; margin:0 auto; padding:15px 30px; display:flex; align-items:center; gap:16px;}
 .brand{display:flex; align-items:center; gap:10px;}
 .brand img{width:32px; height:32px;}
 .brand .word{font-family:var(--font-display); font-weight:700; font-size:22px; color:var(--ink); letter-spacing:-.01em;}
-.brand .tag{
-  font-family:var(--font-mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase;
-  color:var(--teal-ink); background:var(--teal-soft); padding:3px 8px; border-radius:var(--r-pill);
-}
+.brand .tag{font-family:var(--font-mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--teal-ink); background:var(--teal-soft); padding:3px 8px; border-radius:var(--r-pill);}
 .header-spacer{flex:1;}
-.header-link{
-  font-family:var(--font-mono); font-size:12px; letter-spacing:.04em;
-  color:var(--ink-2); display:inline-flex; align-items:center; gap:6px;
-}
+.header-link{font-family:var(--font-mono); font-size:12px; letter-spacing:.04em; color:var(--ink-2); display:inline-flex; align-items:center; gap:6px;}
 
-/* ---- Layout ---------------------------------------------------- */
+/* ─── Layout ─── */
 main{max-width:1240px; margin:0 auto; padding:34px 30px 80px;}
-.intro{max-width:680px; margin-bottom:28px;}
-.eyebrow{
-  font-family:var(--font-mono); font-weight:500; font-size:var(--overline);
-  letter-spacing:.14em; text-transform:uppercase; color:var(--marigold-ink); margin:0 0 12px;
-}
+.intro{margin-bottom:26px;}
 h1.display{font-family:var(--font-display); font-weight:700; font-size:var(--h1); line-height:1.06; letter-spacing:-.02em; margin:0 0 14px;}
-.intro p{font-size:var(--body-lg); color:var(--ink-2); margin:0;}
+.intro p{font-size:var(--body-lg); color:var(--ink-2); margin:0; max-width:900px;}
+.overline{font-family:var(--font-mono); font-weight:500; font-size:var(--overline); letter-spacing:.14em; text-transform:uppercase; color:var(--teal-ink); margin:0 0 10px;}
 
-/* ---- Cards ------------------------------------------------------ */
+/* ─── Cards ─── */
 .card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r-xl); box-shadow:var(--shadow-md);}
 .card + .card{margin-top:18px;}
 .card-head{padding:20px 24px 0; display:flex; align-items:baseline; justify-content:space-between; gap:12px;}
@@ -100,117 +75,144 @@ h1.display{font-family:var(--font-display); font-weight:700; font-size:var(--h1)
 .card-note{font-size:var(--caption); color:var(--ink-2); margin:0 0 12px;}
 .card-body{padding:18px 24px 24px;}
 
-/* ---- Form fields -------------------------------------------------- */
-select{
-  width:auto; font-family:var(--font-sans); font-size:var(--body-sm); color:var(--ink);
-  background:var(--paper); border:1px solid var(--line-2); border-radius:var(--r-md);
-  padding:10px 12px; transition:border-color .15s, box-shadow .15s;
-}
-select:focus{outline:none; border-color:var(--marigold); box-shadow:var(--focus-ring);}
-select{appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235B554D' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:34px;}
+/* ─── Scenario picker ─── */
+.scen-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:26px;}
+.scen{background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg); padding:16px 16px 14px; text-align:left; cursor:pointer; font-family:var(--font-sans); color:var(--ink); box-shadow:var(--shadow-sm); transition:transform .12s, box-shadow .15s, border-color .15s; display:flex; flex-direction:column; gap:6px; min-height:150px;}
+.scen:hover{transform:translateY(-2px); box-shadow:var(--shadow-md);}
+.scen:focus-visible{outline:none; box-shadow:var(--focus-ring);}
+.scen[aria-pressed="true"]{border-color:var(--marigold); background:var(--marigold-soft); box-shadow:var(--shadow-marigold);}
+.scen .s-icon{font-size:26px; line-height:1;}
+.scen .s-domain{font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--teal-ink);}
+.scen .s-title{font-family:var(--font-display); font-weight:600; font-size:16px; line-height:1.2;}
+.scen .s-lesson{font-size:var(--caption); color:var(--ink-2); line-height:1.4;}
 
-/* ---- Toggle switch ------------------------------------------------ */
-.switch{position:relative; display:inline-block; width:38px; height:22px; flex:none;}
-.switch input{opacity:0; width:0; height:0;}
-.switch .slider{position:absolute; inset:0; cursor:pointer; background:var(--line-2); border-radius:var(--r-pill); transition:background .18s;}
-.switch .slider::before{content:""; position:absolute; height:16px; width:16px; left:3px; top:3px; background:#fff; border-radius:50%; box-shadow:var(--shadow-sm); transition:transform .18s;}
-.switch input:checked + .slider{background:var(--teal);}
-.switch input:checked + .slider::before{transform:translateX(16px);}
-.switch input:focus-visible + .slider{box-shadow:var(--focus-ring);}
-.switch-row{display:flex; align-items:center; gap:9px; font-size:var(--body-sm); color:var(--ink-2);}
-
-/* ---- API key input (tryb na żywo) --------------------------------- */
-#apiKeyInput{
-  font-family:var(--font-mono); font-size:var(--body-sm); color:var(--ink);
-  background:var(--paper); border:1px solid var(--line-2); border-radius:var(--r-md);
-  padding:9px 12px; width:220px; transition:border-color .15s, box-shadow .15s;
-}
-#apiKeyInput:focus{outline:none; border-color:var(--marigold); box-shadow:var(--focus-ring);}
-
-/* ---- Range sliders ------------------------------------------------ */
-input[type=range]{-webkit-appearance:none; appearance:none; width:140px; height:8px; border-radius:var(--r-pill); background:rgba(33,30,26,.12); outline:none;}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:20px; height:20px; border-radius:50%; background:#fff; border:2px solid var(--ink); box-shadow:var(--shadow-sm); cursor:pointer; margin-top:0;}
+/* ─── Run header + toolbar ─── */
+.run-head{display:flex; flex-wrap:wrap; align-items:flex-start; gap:14px 22px; margin-bottom:14px;}
+.run-head .goal{flex:1 1 420px; font-size:var(--body-lg); margin:0;}
+.run-head .goal strong{font-family:var(--font-display); font-weight:600;}
+.run-head .lesson{flex:1 1 320px; font-size:var(--body-sm); color:var(--ink-2); margin:0; padding:10px 14px; background:var(--teal-soft); border-radius:var(--r-md);}
+.toolbar{display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-bottom:16px;}
+.toolbar .spacer{flex:1;}
+.speed-row{display:flex; align-items:center; gap:9px; font-size:var(--body-sm); color:var(--ink-2);}
+.speed-row output{font-family:var(--font-mono); font-size:12px; min-width:44px;}
+input[type=range]{-webkit-appearance:none; appearance:none; width:120px; height:8px; border-radius:var(--r-pill); background:rgba(33,30,26,.12); outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:20px; height:20px; border-radius:50%; background:#fff; border:2px solid var(--ink); box-shadow:var(--shadow-sm); cursor:pointer;}
 input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; background:#fff; border:2px solid var(--ink); box-shadow:var(--shadow-sm); cursor:pointer;}
 
-/* ---- Buttons -------------------------------------------------------- */
 .btn{font-family:var(--font-sans); font-weight:700; font-size:var(--body-sm); border:none; border-radius:var(--r-pill); padding:12px 22px; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:transform .12s cubic-bezier(.32,.72,.32,1), background .15s, box-shadow .15s;}
 .btn:active{transform:scale(.96);}
+.btn:focus-visible{outline:none; box-shadow:var(--focus-ring);}
 .btn-primary{background:var(--marigold); color:#fff; box-shadow:var(--shadow-marigold);}
 .btn-primary:hover{background:var(--marigold-600);}
 .btn-primary:disabled{background:var(--line-2); color:var(--ink-3); box-shadow:none; cursor:not-allowed; transform:none;}
 .btn-ghost{background:var(--paper-2); color:var(--ink); border:1px solid var(--line);}
 .btn-ghost:hover{background:var(--paper-3);}
-
+.btn-ghost[aria-pressed="true"]{background:var(--coral-soft); border-color:var(--coral); color:var(--coral-ink);}
+.btn-ghost:disabled{opacity:.5; cursor:not-allowed;}
 .chip{font-family:var(--font-mono); font-size:11px; letter-spacing:.02em; background:var(--sky-soft); color:var(--sky-ink); border-radius:var(--r-pill); padding:5px 11px;}
+.chip:empty{display:none;}
+kbd{font-family:var(--font-mono); font-size:11px; background:var(--paper-3); border:1px solid var(--line-2); border-bottom-width:2px; border-radius:5px; padding:1px 6px; color:var(--ink-2);}
 
-/* ---- Page-specific -------------------------------------------------- */
-.toolbar{display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-bottom:22px;}
-.stage{display:grid; grid-template-columns:1.25fr .75fr; gap:22px; align-items:start;}
-.step-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg);
-  box-shadow:var(--shadow-sm); padding:16px 18px; margin-bottom:14px;
-  opacity:0; transform:translateY(8px); transition:opacity .35s, transform .35s;}
+/* ─── Phase bar ─── */
+.phases{display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:18px;}
+.phase{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); background:var(--paper-2); border:1px solid var(--line); border-radius:var(--r-sm); padding:8px 12px; display:flex; align-items:center; gap:8px; transition:background .2s, color .2s;}
+.phase .n{display:inline-flex; width:20px; height:20px; border-radius:50%; align-items:center; justify-content:center; background:var(--line-2); color:var(--ink); font-size:10px;}
+.phase[data-state="done"]{color:var(--teal-ink); background:var(--teal-soft); border-color:var(--teal-soft);}
+.phase[data-state="done"] .n{background:var(--teal); color:#fff;}
+.phase[data-state="active"]{color:var(--marigold-ink); background:var(--marigold-soft); border-color:var(--marigold);}
+.phase[data-state="active"] .n{background:var(--marigold); color:#fff;}
+
+/* ─── Stage ─── */
+.stage{display:grid; grid-template-columns:1.3fr .7fr; gap:22px; align-items:start;}
+.stage-side{position:sticky; top:78px; max-height:calc(100vh - 92px); overflow:auto; padding-right:2px;}
+.empty{border:1px dashed var(--line-2); border-radius:var(--r-lg); padding:36px 20px; text-align:center; color:var(--ink-3);}
+.loop-divider{font-family:var(--font-mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--grape-ink); display:flex; align-items:center; gap:10px; margin:18px 0 10px;}
+.loop-divider::before, .loop-divider::after{content:""; flex:1; height:1px; background:var(--grape-soft);}
+.step-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--shadow-sm); padding:16px 18px; margin-bottom:12px; opacity:0; transform:translateY(8px); transition:opacity .35s, transform .35s;}
 .step-card.shown{opacity:1; transform:none;}
-.step-card .k-icon{font-size:20px; margin-right:8px;}
+.step-card .k-head{display:flex; align-items:center; gap:8px;}
+.step-card .k-icon{font-size:20px;}
 .step-card .k-title{font-family:var(--font-display); font-weight:600; font-size:var(--h4);}
+.step-card .k-kind{margin-left:auto; font-family:var(--font-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3);}
 .step-card .k-body{margin:8px 0 0; white-space:pre-wrap;}
-.step-card .k-args{font-family:var(--font-mono); font-size:var(--caption); color:var(--ink-2); margin:6px 0 0;}
-.step-card .k-why{font-size:var(--caption); color:var(--ink-2); border-top:1px dashed var(--line-2);
-  margin-top:10px; padding-top:8px;}
-.step-card[data-kind="answer"]{border-color:var(--success); background:var(--success-soft);}
+.step-card .k-args{font-family:var(--font-mono); font-size:var(--caption); color:var(--ink-2); margin:6px 0 0; background:var(--paper-2); border-radius:var(--r-sm); padding:6px 10px; overflow-wrap:anywhere;}
+.step-card .k-why{font-size:var(--caption); color:var(--ink-2); border-top:1px dashed var(--line-2); margin-top:10px; padding-top:8px;}
+.step-card[data-kind="goal"]{border-left:4px solid var(--sky);}
+.step-card[data-kind="plan"], .step-card[data-kind="replan"]{border-left:4px solid var(--grape);}
+.step-card[data-kind="tool_call"]{border-left:4px solid var(--marigold);}
+.step-card[data-kind="observation"]{border-left:4px solid var(--sky);}
 .step-card[data-kind="observation"][data-error="true"]{border-color:var(--danger); background:var(--danger-soft);}
-.ctx-block{font-family:var(--font-mono); font-size:11px; padding:6px 10px; border-radius:var(--r-sm);
-  border:1px solid var(--line-2); margin-top:6px; background:var(--paper-2);}
+.step-card[data-kind="decision"]{border-color:var(--warning); background:var(--warning-soft);}
+.step-card[data-kind="wait"]{background:var(--paper-2); border-style:dashed;}
+.step-card[data-kind="answer"]{border-color:var(--success); background:var(--success-soft);}
+.step-card[data-kind="tool_call"][data-act="true"] .k-act{font-family:var(--font-mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--coral-ink); background:var(--coral-soft); border-radius:var(--r-pill); padding:2px 8px;}
+
+/* ─── Tools panel ─── */
+.tool-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;}
+.tool{display:grid; grid-template-columns:auto 1fr auto; gap:10px; align-items:start; padding:8px 10px; border:1px solid var(--line); border-radius:var(--r-sm); background:var(--paper); transition:background .2s, border-color .2s;}
+.tool .t-icon{font-size:18px; line-height:1.3;}
+.tool .t-name{font-family:var(--font-mono); font-size:12px; color:var(--ink);}
+.tool .t-desc{font-size:var(--caption); color:var(--ink-2); line-height:1.35;}
+.tool .t-kind{font-family:var(--font-mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; border-radius:var(--r-pill); padding:2px 8px; white-space:nowrap;}
+.tool[data-act="false"] .t-kind{background:var(--sky-soft); color:var(--sky-ink);}
+.tool[data-act="true"] .t-kind{background:var(--coral-soft); color:var(--coral-ink);}
+.tool[data-active="true"]{background:var(--marigold-soft); border-color:var(--marigold);}
+.tool[data-used="true"] .t-name::after{content:" ✓"; color:var(--success-ink);}
+
+/* ─── Memory ─── */
+.ctx-block{font-family:var(--font-mono); font-size:11px; padding:6px 10px; border-radius:var(--r-sm); border:1px solid var(--line-2); margin-top:6px; background:var(--paper-2);}
 .ctx-block[data-role="model"]{background:var(--teal-soft);}
 .ctx-block[data-role="tool"]{background:var(--sky-soft);}
 .ctx-stack.flash .ctx-block{animation:ctxflash .6s;}
 @keyframes ctxflash{50%{border-color:var(--marigold); box-shadow:0 0 0 2px var(--marigold-soft);}}
 .ctx-flash-caption{font-size:var(--caption); color:var(--marigold); margin-top:6px; min-height:1em;}
 #costMeter{font-size:var(--caption); color:var(--ink-2); margin-top:10px;}
+
+/* ─── Wire / snippets ─── */
 .wire{margin-top:10px;}
+.wire summary{cursor:pointer; font-family:var(--font-mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3);}
 .wire-label{font-size:var(--caption); color:var(--ink-2); margin:6px 0 4px;}
-/* Wspólny wygląd "ciemnego" pre z JSON-em — w kartach (.wire) i w sekcji
-   snippetów; tylko .wire pre dostaje dodatkowo limit wysokości. */
-.wire pre, #snippets pre{background:var(--ink); color:var(--paper); border-radius:var(--r-sm);
-  padding:10px 12px; font-family:var(--font-mono); font-size:11.5px; overflow:auto;}
-.wire pre{max-height:220px;}
-/* Kolory podświetlenia JSON w .wire pre i #snippets pre — te same klasy
-   i te same kolory co w podglądzie zapytania w index.html. */
+.wire pre, #snippets pre{background:var(--ink); color:var(--paper); border-radius:var(--r-sm); padding:10px 12px; font-family:var(--font-mono); font-size:11.5px; overflow:auto; margin:0;}
+.wire pre{max-height:240px;}
 .req-key{color:#F6997E;} .req-str{color:#86D69A;} .req-num{color:#8FB9EC;} .req-bool{color:#E0B0FF;}
+#snippets{margin-top:26px;}
+#snippets summary{cursor:pointer; font-family:var(--font-display); font-weight:600; font-size:var(--h4);}
 #snippets .snippet{margin-top:14px;}
 #snippets .snippet h3{font-size:14px; margin:0 0 6px;}
 #snippets .snippet p{font-size:var(--caption); color:var(--ink-2); margin:6px 0 0;}
 .term{border-bottom:1px dotted var(--ink-3); cursor:help;}
 
-/* ---- Porównanie: zwykły chatbot vs agent (#comparePanel) ------------ */
-.compare-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
-.compare-card{border-radius:var(--r-lg); padding:16px 18px; border:1px solid var(--line);}
-.compare-card.oneshot{background:var(--coral-soft); border-color:var(--coral);}
-.compare-card.agent{background:var(--teal-soft); border-color:var(--teal);}
-.compare-card h3{font-family:var(--font-display); font-size:var(--h4); margin:0 0 8px;}
-.compare-card p{margin:0 0 8px; white-space:pre-wrap;}
-.compare-card .compare-meta{font-family:var(--font-mono); font-size:var(--caption); color:var(--ink-2); margin:0;}
-@media (max-width:920px){ .compare-grid{grid-template-columns:1fr;} }
+/* ─── Chat compare ─── */
+#chatPanel{margin-top:22px; border-color:var(--coral);}
+.chat-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+.chat-col h3{font-family:var(--font-display); font-size:var(--h4); margin:0 0 10px;}
+.bubble{border-radius:var(--r-lg); padding:12px 16px; margin:0 0 10px; white-space:pre-wrap; font-size:var(--body-sm); line-height:1.55;}
+.bubble.user{background:var(--sky-soft); border-bottom-right-radius:6px; margin-left:40px;}
+.bubble.bot{background:var(--paper-2); border:1px solid var(--line); border-bottom-left-radius:6px; margin-right:40px;}
+.bubble.agent{background:var(--success-soft); border:1px solid var(--success); border-bottom-left-radius:6px; margin-right:40px;}
+.bubble .who{display:block; font-family:var(--font-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); margin-bottom:4px;}
+.gaps{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px;}
+.gaps li{font-size:var(--caption); color:var(--coral-ink); background:var(--coral-soft); border-radius:var(--r-sm); padding:7px 10px;}
+.gaps li::before{content:"✕ "; font-weight:700;}
+.wins{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px;}
+.wins li{font-size:var(--caption); color:var(--success-ink); background:var(--success-soft); border-radius:var(--r-sm); padding:7px 10px;}
+.wins li::before{content:"✓ "; font-weight:700;}
+.chat-col .pending{font-size:var(--caption); color:var(--ink-3); font-style:italic;}
 
-/* ---- Panel prowadzącego (#presenterPanel) — notatki dla osoby
-   pokazującej demo, nie dla widowni. Ukryty domyślnie (atrybut hidden),
-   przełączany klawiszem "n" (patrz JS na dole pliku). Stała pozycja w
-   rogu ekranu, żeby nie zasłaniać sceny (#timeline / #ctxStack). ------ */
-#presenterPanel{
-  position:fixed; right:20px; bottom:20px; z-index:80; width:340px; max-height:70vh;
-  overflow:auto; background:var(--ink); color:var(--paper); border-radius:var(--r-lg);
-  box-shadow:var(--shadow-lg); padding:18px 20px; font-size:var(--body-sm);
-}
+/* ─── Presenter notes ─── */
+#presenterPanel{position:fixed; right:20px; bottom:20px; z-index:80; width:360px; max-height:70vh; overflow:auto; background:var(--ink); color:var(--paper); border-radius:var(--r-lg); box-shadow:var(--shadow-lg); padding:18px 20px; font-size:var(--body-sm);}
 #presenterPanel h2{font-family:var(--font-display); font-size:var(--h4); margin:0 0 4px; color:#fff;}
 #presenterPanel .presenter-hint{font-family:var(--font-mono); font-size:11px; color:var(--ink-3); margin:0 0 14px;}
 #presenterPanel ol{margin:0; padding-left:20px; display:flex; flex-direction:column; gap:12px;}
 #presenterPanel li{line-height:1.5;}
-#presenterPanel .moment{display:block; font-family:var(--font-mono); font-size:11px; letter-spacing:.04em;
-  text-transform:uppercase; color:var(--marigold); margin:0 0 3px;}
-#presenterPanel .caveat{margin:14px 0 0; padding-top:10px; border-top:1px dashed rgba(251,247,240,.25); color:var(--paper-2); font-size:var(--caption);}
+#presenterPanel .moment{display:block; font-family:var(--font-mono); font-size:11px; letter-spacing:.04em; text-transform:uppercase; color:var(--marigold); margin:0 0 3px;}
 
-/* ---- Responsive ------------------------------------------------ */
-@media (max-width:920px){
-  .stage{grid-template-columns:1fr;}
+@media (max-width:1024px){ .scen-grid{grid-template-columns:repeat(3,1fr);} }
+@media (max-width:768px){
+  .scen-grid{grid-template-columns:1fr 1fr;}
+  .stage-side{position:static; max-height:none;}
+  .stage, .chat-grid{grid-template-columns:1fr;}
+  .phases{grid-template-columns:1fr 1fr;}
   .header-inner, main{padding-left:20px; padding-right:20px;}
   h1.display{font-size:34px;}
 }
@@ -223,1638 +225,718 @@ input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; 
     <div class="brand">
       <img src="assets/edulab-mark-teal.png" alt="edulab" />
       <span class="word">edulab</span>
-      <span class="tag">demo agenta</span>
+      <span class="tag">agent na pulpicie</span>
     </div>
     <div class="header-spacer"></div>
-    <a class="header-link" href="index.html">
-      Parametry API ↗
-    </a>
+    <a class="header-link" href="index.html">Parametry API ↗</a>
   </div>
 </header>
 
 <main>
   <div class="intro">
-    <p class="eyebrow">Interaktywne demo · Agent AI</p>
-    <h1 class="display">Jak myśli agent AI</h1>
-    <p>Krok po kroku zobacz, co dzieje się „w głowie” <span class="term" title="program, który sam decyduje o kolejnych krokach do celu">agenta</span>: jak planuje, kiedy sięga po <span class="term" title="funkcja aplikacji, o którą model może poprosić">narzędzie</span> i jak buduje ostateczną odpowiedź — bez żargonu, w prostych słowach. Zobaczysz też, czym różni się od zwykłego chatbota, który zamiast sprawdzać potrafi zmyślać — czyli serwować <span class="term" title="pewnie brzmiąca zmyślona odpowiedź">halucynacje</span>.</p>
+    <h1 class="display">Jak pracuje agent AI</h1>
+    <p>Wyobraź sobie asystenta AI zainstalowanego na komputerze (jak Claude Desktop), podłączonego do narzędzi firmy: kalendarza, dokumentów, systemu księgowego. Dostaje zadanie, układa plan, prosi o narzędzia, czyta wyniki i poprawia kurs, aż zadanie jest skończone. Wybierz scenariusz i przejdź go krok po kroku. Przy każdym sprawdzisz też, jak poradziłby sobie zwykły czat.</p>
   </div>
 
-  <div class="toolbar">
-    <select id="presetSel">
-      <option value="">Wybierz scenariusz…</option>
-    </select>
+  <p class="overline">Wybierz scenariusz</p>
+  <div class="scen-grid" id="scenGrid"></div>
 
-    <label class="switch-row">
-      <span class="switch">
-        <input type="checkbox" id="modeToggle" />
-        <span class="slider"></span>
-      </span>
-      Tryb na żywo (wymaga klucza API)
-    </label>
+  <section id="run" hidden>
+    <div class="run-head">
+      <p class="goal"><strong>Zadanie:</strong> <span id="goalText"></span></p>
+      <p class="lesson" id="lessonText"></p>
+    </div>
 
-    <input type="password" id="apiKeyInput" placeholder="Wklej klucz API Gemini…" hidden autocomplete="off" />
+    <div class="toolbar">
+      <button id="stepBtn" class="btn btn-primary">Krok ▸</button>
+      <button id="autoBtn" class="btn btn-ghost">▶ Auto</button>
+      <label class="speed-row">Pauza
+        <input type="range" id="speed" min="0.5" max="4" step="0.5" value="1.5" />
+        <output id="speedOut">1,5 s</output>
+      </label>
+      <span id="loopCounter" class="chip"></span>
+      <span class="spacer"></span>
+      <button id="chatBtn" class="btn btn-ghost" aria-pressed="false">💬 Jak zrobiłby to zwykły czat</button>
+    </div>
 
-    <button id="stepBtn" class="btn btn-primary">Krok ▸</button>
-    <button id="autoBtn" class="btn btn-ghost">Auto</button>
+    <div class="phases" id="phases">
+      <div class="phase" data-phase="goal"><span class="n">1</span>Zadanie</div>
+      <div class="phase" data-phase="plan"><span class="n">2</span>Plan</div>
+      <div class="phase" data-phase="loop"><span class="n">3</span>Pętla narzędzi</div>
+      <div class="phase" data-phase="answer"><span class="n">4</span>Wynik</div>
+    </div>
 
-    <label class="switch-row">
-      Szybkość
-      <input type="range" id="speed" min="0.5" max="3" step="0.1" value="1.5" />
-    </label>
+    <div class="stage">
+      <div id="timeline"></div>
 
-    <span id="loopCounter" class="chip"></span>
+      <div class="stage-side">
+        <div class="card">
+          <div class="card-head"><h2>Narzędzia agenta</h2><span class="sub">podłączone</span></div>
+          <div class="card-body">
+            <p class="card-note">To, co aplikacja na pulpicie udostępnia modelowi. Model nie uruchamia ich sam: prosi po nazwie, a aplikacja wykonuje. Narzędzia oznaczone <em>działanie</em> zmieniają coś w świecie.</p>
+            <ul class="tool-list" id="toolList"></ul>
+          </div>
+        </div>
 
-    <button id="compareBtn" class="btn btn-ghost">Porównaj ze zwykłym chatbotem</button>
-  </div>
-
-  <div class="stage">
-    <div id="timeline"></div>
-
-    <div class="card">
-      <div class="card-head">
-        <h2>Pamięć rozmowy</h2>
-      </div>
-      <div class="card-body">
-        <p class="card-note">To jest <span class="term" title="wszystko, co model dostaje na wejściu w danej turze">kontekst</span> — rośnie z każdym <span class="term" title="jedno przejście pętli: prośba → wykonanie → wynik">okrążeniem</span> pętli i podnosi liczbę zużytych <span class="term" title="kawałek tekstu ~4 znaki; jednostka rozliczeń">tokenów</span>.</p>
-        <div id="ctxStack" class="ctx-stack"></div>
-        <div id="costMeter"></div>
+        <div class="card">
+          <div class="card-head"><h2>Pamięć rozmowy</h2></div>
+          <div class="card-body">
+            <p class="card-note">Wszystko, co model dostaje na wejściu. Rośnie z każdym <span class="term" title="jedno przejście pętli: prośba o narzędzie → wykonanie → wynik">okrążeniem</span> i przy każdej turze leci do modelu od nowa.</p>
+            <div id="ctxStack" class="ctx-stack"></div>
+            <div id="costMeter"></div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div id="comparePanel" class="card" hidden></div>
+    <div id="chatPanel" class="card" hidden>
+      <div class="card-head"><h2>Zwykły czat kontra agent</h2><span class="sub">to samo zadanie</span></div>
+      <div class="card-body">
+        <div class="chat-grid">
+          <div class="chat-col" id="chatLeft"></div>
+          <div class="chat-col" id="chatRight"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <p class="empty" id="emptyHint">Wybierz scenariusz powyżej, żeby zacząć. Sterowanie: <kbd>spacja</kbd> lub <kbd>→</kbd> kolejny krok, <kbd>a</kbd> auto, <kbd>c</kbd> porównanie z czatem, <kbd>n</kbd> notatki prowadzącego.</p>
 
   <details id="snippets">
-    <summary>Jak zbudowany jest agent? (3 fragmenty kodu <span class="term" title="umowa: model prosi o funkcję nazwą i argumentami w JSON">function calling</span>)</summary>
+    <summary>Jak to wygląda „pod maską”? Trzy fragmenty protokołu narzędzi</summary>
   </details>
 </main>
 
 <aside id="presenterPanel" hidden>
   <h2>Notatki prowadzącego</h2>
-  <p class="presenter-hint">Widoczne tylko Tobie — klawisz „n” pokazuje/ukrywa (nie działa, gdy piszesz w polu tekstowym).</p>
+  <p class="presenter-hint">Widoczne tylko Tobie. Klawisz „n” pokazuje i ukrywa.</p>
   <ol>
-    <li><span class="moment">Po karcie 📋 Plan</span>„Zapytaj salę: jakiego narzędzia użyje najpierw?”</li>
-    <li><span class="moment">Przy pierwszym 🔧 wywołaniu narzędzia</span>„Podkreśl: model NIE wykonuje kodu — prosi. Pokaż JSON.”</li>
-    <li><span class="moment">Przy błysku pamięci (ctx flash)</span>„Zapytaj: co się stanie z kosztem przy 50 okrążeniach?”</li>
-    <li><span class="moment">Przy czerwonej karcie w scenariuszu „Awaria”</span>„Zatrzymaj się: skąd agent wie, że się nie udało? Bo błąd to też obserwacja.”</li>
-    <li><span class="moment">Przy porównaniu chatbot vs agent</span>„Puenta: chatbot zgaduje, agent sprawdza — różnica to pętla i narzędzia, nie ‘mądrzejszy model'.”</li>
+    <li><span class="moment">Faktura · karta ⚖ Decyzja</span>„Agent miał narzędzie do księgowania i go NIE użył. Zapytaj: czego się bali w tej sali, gdy słyszeli „agent z dostępem do księgowości”?”</li>
+    <li><span class="moment">Zastępstwo · odrzucenie Marka</span>„Trzy źródła danych, jedna decyzja. Czat dałby listę nazwisk. Kto w Waszej firmie robi to dziś ręcznie?”</li>
+    <li><span class="moment">Papier · karta ⏸ Czekam</span>„Czat nie może poczekać do jutra. Agent może, ale każde sprawdzenie kosztuje. Pokaż licznik.”</li>
+    <li><span class="moment">Ułamki · błędna odpowiedź 2/7</span>„Tu pętla dotyczy człowieka. Agent zmienia zadanie po błędzie ucznia. Czat wytłumaczyłby raz i tyle.”</li>
+    <li><span class="moment">Serwer · drugie sprawdzenie statusu</span>„Zrobił i SPRAWDZIŁ, że zadziałało. Dopiero potem powiadomił. Kolejność: obserwuj, działaj, zweryfikuj, zgłoś.”</li>
+    <li><span class="moment">Przy każdym „Zwykły czat”</span>„Odpowiedź czatu brzmi pomocnie. Czytaj listę ✕: wszystko, co zostaje do zrobienia Tobie.”</li>
   </ol>
-  <p class="caveat">Uwaga o czasie: w trybie na żywo model czasem pomija wyraźną kartę 📋 Plan i idzie prosto do narzędzi — tak działa prawdziwe API. Do prezentacji na scenie używaj trybu demo (scripted) — jest powtarzalny; tryb na żywo pokaż osobno, jako „tu widzicie prawdziwe zachowanie, nieuczesane”.</p>
 </aside>
 
 <script>
-// ============================================================
-// edulab · demo agenta — warstwa danych (bez DOM!)
-// ------------------------------------------------------------
-// Ten skrypt NIE dotyka strony (żadnego document.getElementById itd.).
-// To jedynie: (1) narzędzia, które agent może "wywołać", (2) opisy
-// trzech scenariuszy (dni100, bilety, awaria) jako gotowe listy zdarzeń
-// (StepEvent), (3) mały generator, który te zdarzenia oddaje po kolei.
-// Renderowanie na ekranie (Zadanie 3) i prawdziwe wywołania Gemini
-// (Zadanie 7, liveRun) dobudowały się na tym samym kontrakcie StepEvent,
-// nie zmieniając go — jeden renderer obsługuje oba tryby.
-// ============================================================
+"use strict";
 
-// ---- Tryb demo vs tryb "na żywo" ---------------------------------
-// W trybie demo (MOCK_MODE_DATE=true) narzędzie "data_i_czas" zawsze
-// zwraca tę samą, stałą datę (2026-07-04, sobota). Dzięki temu liczby
-// w scenariuszu 1 (np. "za 100 dni będzie poniedziałek") są zawsze
-// prawdziwe i powtarzalne — demo nie "psuje się" w kolejnych dniach.
-let MOCK_MODE_DATE = true;
+// ═══════════════════════════════════════════════════════════════
+// Constants: tools, scenarios, snippets
+// ═══════════════════════════════════════════════════════════════
 
-// ---- Narzędzia (tools) --------------------------------------------
-// Narzędzia są ZWYKŁYMI funkcJAMI w naszej aplikacji. Model ich nie widzi
-// i nie uruchamia — dostaje tylko ich OPISY, a my wykonujemy je za niego.
-const TOOL_FNS = {
-  kalkulator: ({wyrazenie}) => {
-    if(!/^[0-9+\-*/(). %]+$/.test(wyrazenie||"")) return {blad:"Niepoprawne wyrażenie: "+wyrazenie};
-    try { return {wynik: Function('"use strict";return ('+wyrazenie+')')()}; }
-    catch(e){ return {blad:"Błąd obliczeń: "+e.message}; }
-  },
-  data_i_czas: () => MOCK_MODE_DATE          // w trybie demo: stała data (powtarzalność!)
-    ? {data:"2026-07-04", dzien_tygodnia:"sobota", numer_dnia:6}
-    : (d=>({data:d.toISOString().slice(0,10), dzien_tygodnia:d.toLocaleDateString('pl-PL',{weekday:'long'}), numer_dnia:(d.getDay()||7)}))(new Date()),
-  szukaj: ({zapytanie}) => MOCK_INDEX.find(r=>zapytanie.toLowerCase().includes(r.klucz))?.wynik
-    ?? {blad:"Brak wyników dla: "+zapytanie},
-  notatnik: ({akcja, klucz, wartosc}) => akcja==="zapisz"
-    ? (NOTES[klucz]=wartosc, {zapisano:klucz})
-    : {odczyt: NOTES[klucz] ?? null},
+const MAX_ITER = 8;
+
+// Rejestr narzędzi. act:true = narzędzie zmienia coś w świecie (zapis,
+// zamówienie, restart), act:false = tylko czyta. schema to opis, jaki
+// dostaje model; wszystkie wyniki są symulowane na potrzeby demo.
+const TOOLS = {
+  czytaj_dokument:   { icon:'📄', act:false, desc:'Czyta dokument z systemu (faktura, umowa).',
+    schema:{ type:'object', properties:{ id:{ type:'string', description:'Numer dokumentu' } }, required:['id'] } },
+  szukaj_zamowienie: { icon:'🗂', act:false, desc:'Znajduje zamówienie powiązane z dostawcą lub fakturą.',
+    schema:{ type:'object', properties:{ dostawca:{ type:'string' }, faktura:{ type:'string' } } } },
+  kalkulator:        { icon:'🧮', act:false, desc:'Liczy wyrażenie arytmetyczne.',
+    schema:{ type:'object', properties:{ wyrazenie:{ type:'string' } }, required:['wyrazenie'] } },
+  ksieguj:           { icon:'🧾', act:true,  desc:'Księguje fakturę w systemie finansowym.',
+    schema:{ type:'object', properties:{ id:{ type:'string' } }, required:['id'] } },
+  kalendarz_odczyt:  { icon:'📅', act:false, desc:'Zwraca spotkania osoby w danym dniu.',
+    schema:{ type:'object', properties:{ osoby:{ type:'array', items:{ type:'string' } }, data:{ type:'string' } }, required:['osoby','data'] } },
+  kalendarz_zapis:   { icon:'✍️', act:true,  desc:'Dodaje lub przenosi spotkanie w kalendarzu.',
+    schema:{ type:'object', properties:{ osoba:{ type:'string' }, spotkania:{ type:'array', items:{ type:'string' } } }, required:['osoba','spotkania'] } },
+  szukaj_pracownika: { icon:'👥', act:false, desc:'Szuka osób o podanych kompetencjach w katalogu firmy.',
+    schema:{ type:'object', properties:{ kompetencje:{ type:'array', items:{ type:'string' } } }, required:['kompetencje'] } },
+  sprawdz_cene:      { icon:'🏷', act:false, desc:'Pobiera aktualną cenę produktu u dostawcy.',
+    schema:{ type:'object', properties:{ produkt:{ type:'string' } }, required:['produkt'] } },
+  zamow:             { icon:'🛒', act:true,  desc:'Składa zamówienie u dostawcy.',
+    schema:{ type:'object', properties:{ produkt:{ type:'string' }, ilosc:{ type:'integer' }, cena_max:{ type:'number' } }, required:['produkt','ilosc'] } },
+  notatnik:          { icon:'📝', act:true,  desc:'Zapisuje i odczytuje notatki agenta między krokami i dniami.',
+    schema:{ type:'object', properties:{ akcja:{ type:'string', enum:['zapisz','odczytaj'] }, klucz:{ type:'string' }, wartosc:{ type:'string' } }, required:['akcja','klucz'] } },
+  zadaj_pytanie:     { icon:'🙋', act:true,  desc:'Wyświetla uczniowi pytanie i zwraca jego odpowiedź.',
+    schema:{ type:'object', properties:{ tresc:{ type:'string' }, podpowiedz:{ type:'string' } }, required:['tresc'] } },
+  sprawdz_status:    { icon:'📡', act:false, desc:'Sprawdza stan usług (www, cache, baza).',
+    schema:{ type:'object', properties:{ system:{ type:'string' } }, required:['system'] } },
+  czytaj_logi:       { icon:'🪵', act:false, desc:'Zwraca ostatnie wpisy z logów usługi.',
+    schema:{ type:'object', properties:{ usluga:{ type:'string' }, linie:{ type:'integer' } }, required:['usluga'] } },
+  restartuj_usluge:  { icon:'🔁', act:true,  desc:'Restartuje wskazaną usługę.',
+    schema:{ type:'object', properties:{ usluga:{ type:'string' } }, required:['usluga'] } },
+  powiadom:          { icon:'📣', act:true,  desc:'Wysyła wiadomość do osoby lub kanału.',
+    schema:{ type:'object', properties:{ do:{ type:'string' }, tresc:{ type:'string' } }, required:['do','tresc'] } },
 };
 
-// Pamięć notatnika — zwykły obiekt w JS, "żyje" tylko na czas demo.
-const NOTES = {};
-
-// Bardzo mała, ręcznie spreparowana "baza wiedzy", którą przeszukuje
-// narzędzie "szukaj". W prawdziwej aplikacji byłoby to np. wyszukiwanie
-// w internecie albo w bazie danych firmy.
-const MOCK_INDEX = [
-  {klucz:"bilet", wynik:{zrodlo:"teatr-apollo.pl", cena_biletu_pln:85}},
-  {klucz:"ludność", wynik:{zrodlo:"gus.gov.pl", ludnosc_polski:37600000}},
+// Scenariusze. Każdy krok to zwięzły wpis, który buildSteps() rozwija do
+// pełnej karty (tytuł, treść, JSON protokołu, rozmiar kontekstu).
+//   {goal}                       zadanie od użytkownika
+//   {plan}                       plan agenta (tekst)
+//   {say, call, args, why}       tura modelu: opcjonalna refleksja + prośba o narzędzie
+//   {result, error, why}         wynik narzędzia odesłany do modelu
+//   {decision, why}              świadoma decyzja (np. NIE używam narzędzia)
+//   {replan, why}                zmiana planu po wyniku
+//   {wait, why}                  aplikacja usypia agenta do następnego dnia
+//   {answer, why}                wynik dla użytkownika
+const SCENARIOS = [
+  {
+    id:'faktura', icon:'🧾', domain:'finanse', title:'Faktura, która się nie zgadza',
+    lesson:'Agent z prawem do księgowania sprawdza, zanim zaksięguje. I potrafi odmówić.',
+    goal:'Sprawdź fakturę FV/2026/0712 od firmy Nowak i jeśli wszystko się zgadza, zaksięguj ją.',
+    tools:['czytaj_dokument','szukaj_zamowienie','kalkulator','ksieguj'],
+    steps:[
+      { goal:true },
+      { plan:'1. Odczytam fakturę FV/2026/0712.\n2. Znajdę zamówienie, którego dotyczy.\n3. Porównam pozycje i kwoty.\n4. Zaksięguję tylko, jeśli wszystko się zgadza.',
+        why:'Plan ma warunek na końcu. Agent od początku zakłada, że księgowanie zależy od wyniku porównania, a nie jest celem samym w sobie.' },
+      { say:'Zacznę od treści faktury.', call:'czytaj_dokument', args:{ id:'FV/2026/0712' },
+        why:'Agent nie zna treści faktury. Zamiast zakładać, co w niej jest, prosi aplikację o odczyt.' },
+      { result:{ dostawca:'Nowak Sp. z o.o.', pozycje:12, cena_jedn_netto:240, suma_netto:2880, zamowienie:'ZAM/2026/0455' },
+        why:'Faktura wskazuje numer zamówienia. To trop na kolejny krok.' },
+      { say:'Faktura powołuje się na zamówienie ZAM/2026/0455. Sprawdzę, co zamówiliśmy.', call:'szukaj_zamowienie', args:{ faktura:'FV/2026/0712' },
+        why:'Drugie źródło. Faktura mówi, ile chcą; zamówienie mówi, ile ustaliliśmy.' },
+      { result:{ numer:'ZAM/2026/0455', pozycje:11, cena_jedn_netto:240, suma_netto:2640 },
+        why:'Jedenaście pozycji w zamówieniu, dwanaście na fakturze. Agent widzi rozbieżność w danych, nie w domysłach.' },
+      { say:'Liczba pozycji się różni. Policzę dokładną różnicę kwot.', call:'kalkulator', args:{ wyrazenie:'2880 - 2640' },
+        why:'Prosty rachunek, ale agent i tak używa kalkulatora. Liczba w odpowiedzi ma być policzona, nie oszacowana.' },
+      { result:{ wynik:240 }, why:'Dokładnie jedna pozycja za dużo: 240 zł netto.' },
+      { decision:'Nie księguję. Faktura ma o jedną pozycję więcej niż zamówienie (2880 zł zamiast 2640 zł). Warunek z zadania nie jest spełniony.',
+        why:'Najważniejsza karta scenariusza. Agent miał narzędzie „ksieguj” i świadomie go nie użył, bo dane nie spełniły warunku postawionego przez użytkownika.' },
+      { answer:'Faktury FV/2026/0712 nie zaksięgowałem. Zawiera 12 pozycji po 240 zł (2880 zł netto), a zamówienie ZAM/2026/0455 obejmuje 11 pozycji (2640 zł netto). Różnica: 240 zł.\n\nProjekt wiadomości do dostawcy:\n„Dzień dobry, faktura FV/2026/0712 zawiera 12 pozycji, podczas gdy zamówienie ZAM/2026/0455 obejmowało 11. Prosimy o korektę na 2640 zł netto lub wyjaśnienie dodatkowej pozycji.”',
+        why:'Wynik to nie tylko „nie”. Agent podaje liczby, źródło rozbieżności i gotowy następny krok, który człowiek może wysłać jednym kliknięciem.' },
+    ],
+    chat:{
+      reply:'Oto podsumowanie faktury FV/2026/0712:\n• Dostawca: Nowak Sp. z o.o.\n• 12 pozycji po 240 zł netto\n• Razem: 2880 zł netto\n\nFaktura wygląda na poprawnie wystawioną. Aby ją zaksięgować, otwórz system finansowy, wybierz „Nowa faktura zakupu” i wprowadź powyższe dane. Jeśli chcesz, mogę przygotować listę kroków.',
+      gaps:['Nie porównał faktury z zamówieniem, bo nie ma dostępu do systemu zamówień.','Nie zauważył dodatkowej pozycji za 240 zł. „Wygląda poprawnie” to ocena wyglądu, nie danych.','Księgowanie zostaje Tobie: klikanie, przepisywanie kwot, ryzyko pomyłki.'],
+      wins:['Sprawdził dwa źródła i policzył różnicę.','Odmówił księgowania, bo warunek nie był spełniony.','Zostawił gotową wiadomość do dostawcy.'],
+    },
+  },
+  {
+    id:'zastepstwo', icon:'📅', domain:'HR i organizacja', title:'Kto zastąpi Annę',
+    lesson:'Trzy źródła danych, jedna decyzja i wpis w kalendarzu. Czat zatrzymałby się na liście nazwisk.',
+    goal:'Anna jest chora we wtorek 7 lipca. Znajdź zastępstwo na jej spotkania i zaktualizuj kalendarz.',
+    tools:['kalendarz_odczyt','szukaj_pracownika','kalendarz_zapis'],
+    steps:[
+      { goal:true },
+      { plan:'1. Sprawdzę, jakie spotkania ma Anna 7 lipca.\n2. Znajdę osoby o kompetencjach pasujących do tych spotkań.\n3. Sprawdzę, kto z nich jest wtedy wolny.\n4. Przepiszę spotkania na wybraną osobę.',
+        why:'Cztery kroki, trzy narzędzia. Plan pokazuje, że „znajdź zastępstwo” to w praktyce łańcuch sprawdzeń.' },
+      { say:'Najpierw muszę wiedzieć, co dokładnie trzeba obsadzić.', call:'kalendarz_odczyt', args:{ osoby:['Anna Kowal'], data:'2026-07-07' },
+        why:'Bez tej informacji każdy kolejny krok byłby zgadywaniem.' },
+      { result:{ 'Anna Kowal':[ { godz:'10:00', temat:'Przegląd projektu Delta', kompetencja:'projekty' }, { godz:'14:00', temat:'Rozmowa z klientem Orlik', kompetencja:'klienci' } ] },
+        why:'Dwa spotkania, dwie różne kompetencje. Zastępca musi mieć obie.' },
+      { say:'Szukam osób, które znają projekt Delta i obsługę klientów.', call:'szukaj_pracownika', args:{ kompetencje:['projekty','klienci'] },
+        why:'Agent nie wybiera „kogoś z zespołu”. Filtruje po tym, czego wymagają spotkania.' },
+      { result:{ osoby:['Marek Lis','Kasia Nowak'] }, why:'Dwóch kandydatów. Który jest wolny, wie tylko kalendarz.' },
+      { say:'Sprawdzę kalendarze obu osób na wtorek.', call:'kalendarz_odczyt', args:{ osoby:['Marek Lis','Kasia Nowak'], data:'2026-07-07' },
+        why:'Jedno wywołanie dla dwóch osób. Agent oszczędza okrążenie, bo narzędzie przyjmuje listę.' },
+      { result:{ 'Marek Lis':[ { godz:'10:00', temat:'Warsztat z zarządem', do:'11:30' } ], 'Kasia Nowak':[] },
+        why:'Marek ma kolizję o 10:00. Kasia ma wolny dzień.' },
+      { decision:'Wybieram Kasię Nowak. Marek jest zajęty o 10:00, a dzielenie spotkań między dwie osoby dołożyłoby przekazywanie kontekstu.',
+        why:'Agent nie tylko odrzuca zajętego kandydata. Uzasadnia, dlaczego nie dzieli spotkań, choć mógłby.' },
+      { say:'Przepisuję oba spotkania na Kasię.', call:'kalendarz_zapis', args:{ osoba:'Kasia Nowak', spotkania:['2026-07-07 10:00 Przegląd projektu Delta','2026-07-07 14:00 Rozmowa z klientem Orlik'] },
+        why:'Narzędzie oznaczone jako działanie. To moment, w którym agent zmienia coś w firmie, nie tylko czyta.' },
+      { result:{ zapisano:2, id:['EV-8812','EV-8813'], powiadomiono:'Kasia Nowak' },
+        why:'Aplikacja potwierdza zapis identyfikatorami. Agent może się na nie powołać w odpowiedzi.' },
+      { answer:'Zastępstwo za Annę 7 lipca: Kasia Nowak.\n• 10:00 Przegląd projektu Delta\n• 14:00 Rozmowa z klientem Orlik\nOba spotkania są już w jej kalendarzu (EV-8812, EV-8813), Kasia dostała powiadomienie. Marek Lis odpadł przez warsztat z zarządem o 10:00.',
+        why:'Zadanie jest skończone, nie „opisane”. Użytkownik dostaje stan po zmianie i powód decyzji.' },
+    ],
+    chat:{
+      reply:'Oto, jak możesz znaleźć zastępstwo za Annę:\n1. Sprawdź w kalendarzu, jakie spotkania ma 7 lipca.\n2. Zastanów się, kto w zespole zna te tematy. Naturalnymi kandydatami są osoby pracujące przy tych samych projektach.\n3. Zapytaj ich o dostępność.\n4. Przenieś spotkania w kalendarzu i poinformuj uczestników.\n\nChcesz, żebym przygotował szablon wiadomości do zespołu?',
+      gaps:['Nie widzi kalendarza Anny ani nikogo innego.','Nie wie, kto ma jakie kompetencje. „Naturalni kandydaci” to ogólnik.','Cztery kroki instrukcji to cztery rzeczy, które robisz sam.'],
+      wins:['Odczytał trzy kalendarze i katalog kompetencji.','Odrzucił zajętego kandydata z uzasadnieniem.','Wpisał spotkania i powiadomił zastępcę.'],
+    },
+  },
+  {
+    id:'papier', icon:'🏷', domain:'zakupy', title:'Cena spadła, kup teraz',
+    lesson:'Agent potrafi czekać i sprawdzać codziennie. Czat żyje tylko w tej jednej rozmowie.',
+    goal:'Zamów 50 ryz papieru A4, gdy cena spadnie poniżej 18 zł za ryzę. Sprawdzaj raz dziennie.',
+    tools:['sprawdz_cene','notatnik','zamow'],
+    steps:[
+      { goal:true },
+      { plan:'1. Zapiszę regułę: próg 18 zł, ilość 50 ryz.\n2. Codziennie sprawdzę cenę.\n3. Gdy cena spadnie poniżej progu, złożę zamówienie i zakończę.',
+        why:'Plan zawiera pętlę bez znanej liczby powtórzeń. To zadanie, którego nie da się zrobić w jednej odpowiedzi.' },
+      { say:'Zapisuję regułę, żeby pamiętać ją jutro.', call:'notatnik', args:{ akcja:'zapisz', klucz:'papier_A4', wartosc:'prog=18; ilosc=50; status=czekam' },
+        why:'Między dniami agent jest usypiany. Notatka to jego pamięć długoterminowa, niezależna od rozmowy.' },
+      { result:{ zapisano:'papier_A4' }, why:'Reguła jest w notatniku. Jutro agent zacznie od jej odczytu.' },
+      { say:'Dzień 1, poniedziałek 6 lipca. Sprawdzam cenę.', call:'sprawdz_cene', args:{ produkt:'papier A4 80g ryza' },
+        why:'Pierwsze sprawdzenie.' },
+      { result:{ dostawca:'BiuroMax', cena_netto:21.40, data:'2026-07-06' }, why:'21,40 zł. Powyżej progu.' },
+      { wait:'Cena 21,40 zł jest powyżej 18 zł. Czekam do jutra.', why:'Aplikacja na pulpicie usypia agenta i obudzi go następnego dnia. Model nie „czeka” sam, robi to harmonogram aplikacji.' },
+      { say:'Dzień 2, wtorek 7 lipca. Sprawdzam cenę.', call:'sprawdz_cene', args:{ produkt:'papier A4 80g ryza' }, why:'Drugie sprawdzenie. Zwróć uwagę na licznik pamięci: poprzedni dzień wciąż jest w kontekście.' },
+      { result:{ dostawca:'BiuroMax', cena_netto:20.90, data:'2026-07-07' }, why:'Spada, ale wciąż za drogo.' },
+      { wait:'20,90 zł. Wciąż powyżej progu. Czekam do jutra.', why:'Każdy dzień to koszt: pełny kontekst leci do modelu przy każdym obudzeniu.' },
+      { say:'Dzień 3, środa 8 lipca. Sprawdzam cenę.', call:'sprawdz_cene', args:{ produkt:'papier A4 80g ryza' }, why:'Trzecie sprawdzenie.' },
+      { result:{ dostawca:'BiuroMax', cena_netto:19.20, data:'2026-07-08' }, why:'Blisko, ale nie poniżej 18 zł.' },
+      { wait:'19,20 zł. Czekam do jutra.', why:'Agent trzyma się reguły. Nie „zaokrągla” 19,20 do „prawie 18”.' },
+      { say:'Dzień 4, czwartek 9 lipca. Sprawdzam cenę.', call:'sprawdz_cene', args:{ produkt:'papier A4 80g ryza' }, why:'Czwarte sprawdzenie.' },
+      { result:{ dostawca:'BiuroMax', cena_netto:17.50, data:'2026-07-09' }, why:'17,50 zł. Warunek spełniony.' },
+      { say:'17,50 zł jest poniżej progu 18 zł. Składam zamówienie z limitem ceny, żeby nie kupić drożej, gdyby cena skoczyła w trakcie.', call:'zamow', args:{ produkt:'papier A4 80g ryza', ilosc:50, cena_max:18 },
+        why:'Działanie z zabezpieczeniem. Parametr cena_max chroni przed zmianą ceny między sprawdzeniem a zamówieniem.' },
+      { result:{ zamowienie:'ZK-3391', ilosc:50, cena_netto:17.50, suma_netto:875, dostawa:'2026-07-11' },
+        why:'50 × 17,50 zł = 875 zł netto. Zamówienie ma numer, więc da się je sprawdzić.' },
+      { say:'Aktualizuję notatkę, żeby jutro nie sprawdzać ponownie.', call:'notatnik', args:{ akcja:'zapisz', klucz:'papier_A4', wartosc:'status=zamowiono ZK-3391' },
+        why:'Sprzątanie po sobie. Bez tego agent obudziłby się jutro i mógłby zamówić drugi raz.' },
+      { result:{ zapisano:'papier_A4' }, why:'Pętla zamknięta.' },
+      { answer:'Zamówiłem 50 ryz papieru A4 po 17,50 zł netto (875 zł netto), zamówienie ZK-3391, dostawa 11 lipca. Cena spadła poniżej 18 zł czwartego dnia obserwacji (21,40 → 20,90 → 19,20 → 17,50).',
+        why:'Cztery dni pracy w jednej odpowiedzi. Użytkownik nie musiał pamiętać o sprawdzaniu.' },
+    ],
+    chat:{
+      reply:'Aktualna cena ryzy papieru A4 80g u popularnych dostawców to około 19–22 zł netto. Żeby kupić poniżej 18 zł, polecam:\n• ustawić alert cenowy w sklepie dostawcy,\n• sprawdzać cenę rano, bo promocje często startują o północy,\n• rozważyć zakup większej ilości, bo przy 100+ ryzach ceny bywają niższe.\n\nDaj znać, gdy cena spadnie, a pomogę Ci przygotować zamówienie.',
+      gaps:['Nie zna dokładnej ceny u Twojego dostawcy, podaje widełki.','Nie może poczekać do jutra. Rozmowa się kończy i nic się nie dzieje.','„Daj znać, gdy cena spadnie” oznacza, że to Ty codziennie sprawdzasz.'],
+      wins:['Sprawdzał cenę cztery dni z rzędu bez udziału człowieka.','Złożył zamówienie z limitem ceny.','Zapisał stan, żeby nie zamówić dwa razy.'],
+    },
+  },
+  {
+    id:'ulamki', icon:'🙋', domain:'edukacja', title:'Uczeń, który utknął',
+    lesson:'Pętla może dotyczyć człowieka. Agent zmienia zadanie po błędzie ucznia i zostawia notatkę nauczycielowi.',
+    goal:'Pomóż Kubie z dodawaniem ułamków. Zacznij od sprawdzenia, co już umie, i zapisz wnioski dla nauczyciela.',
+    tools:['zadaj_pytanie','notatnik'],
+    steps:[
+      { goal:true },
+      { plan:'1. Zadam dwa proste pytania, żeby sprawdzić poziom.\n2. Jeśli pójdzie dobrze, zwiększę trudność.\n3. Przy błędzie ustalę, co Kuba źle rozumie, i dam łatwiejszy wariant tego samego typu.\n4. Na końcu zapiszę wnioski dla nauczyciela.',
+        why:'Plan z rozgałęzieniem. Agent nie wie, ile pytań zada, bo to zależy od odpowiedzi ucznia.' },
+      { say:'Zaczynam od ułamków o tym samym mianowniku.', call:'zadaj_pytanie', args:{ tresc:'Ile to 1/4 + 2/4?' },
+        why:'Najprostszy przypadek. Jeśli tu jest błąd, problem leży wcześniej niż w dodawaniu.' },
+      { result:{ odpowiedz_ucznia:'3/4', czas_s:9 }, why:'Poprawnie i szybko. Wspólny mianownik nie jest problemem.' },
+      { say:'Dobrze. Teraz różne mianowniki, ale jeden jest wielokrotnością drugiego.', call:'zadaj_pytanie', args:{ tresc:'Ile to 1/2 + 1/4?' },
+        why:'Stopniowanie trudności. Agent podnosi poprzeczkę o jeden krok, nie o trzy.' },
+      { result:{ odpowiedz_ucznia:'3/4', czas_s:14 }, why:'Też dobrze. Kuba umie rozszerzyć 1/2 do 2/4.' },
+      { say:'Sprawdzam mianowniki, które nie dzielą się przez siebie.', call:'zadaj_pytanie', args:{ tresc:'Ile to 1/3 + 1/4?' },
+        why:'Tu zwykle pojawia się prawdziwy problem: trzeba znaleźć wspólny mianownik 12.' },
+      { result:{ odpowiedz_ucznia:'2/7', czas_s:6 }, error:true,
+        why:'Błąd, i to charakterystyczny: 1+1 w liczniku, 3+4 w mianowniku. Kuba dodał ułamki jak zwykłe liczby. Szybki czas odpowiedzi sugeruje, że jest pewny swojej metody.' },
+      { say:'Rozpoznaję typowy błąd: dodawanie liczników i mianowników osobno. Zapisuję to, zanim pójdę dalej.', call:'notatnik', args:{ akcja:'zapisz', klucz:'Kuba/ulamki', wartosc:'Umie: wspólny mianownik, rozszerzanie 1/2→2/4. Błąd: 1/3+1/4=2/7 (dodaje liczniki i mianowniki). Szybka, pewna odpowiedź.' },
+        why:'Diagnoza zapisana od razu. Gdyby sesja się urwała, nauczyciel i tak dostanie wniosek.' },
+      { result:{ zapisano:'Kuba/ulamki' }, why:'Notatka istnieje niezależnie od tej rozmowy.' },
+      { replan:'Zmieniam plan: zamiast kolejnego trudniejszego zadania daję ten sam typ z podpowiedzią o wspólnym mianowniku. Dopiero po sukcesie wrócę do 1/3 + 1/4.',
+        why:'Plan z kroku 2 przewidywał podnoszenie trudności. Wynik go zmienił. To jest sedno pętli: obserwacja poprawia plan.' },
+      { say:'Daję łatwiejszy wariant z podpowiedzią.', call:'zadaj_pytanie', args:{ tresc:'Ile to 1/2 + 1/3? Najpierw znajdź liczbę, którą dzielą 2 i 3.', podpowiedz:'Wspólny mianownik to 6. 1/2 = 3/6, 1/3 = 2/6.' },
+        why:'Ten sam problem, mniejsze liczby, jawna podpowiedź. Agent rozbija barierę na mniejszy krok.' },
+      { result:{ odpowiedz_ucznia:'5/6', czas_s:31 }, why:'Poprawnie, wolniej. Kuba liczył, nie zgadywał. To dobry znak.' },
+      { say:'Wracam do zadania, które nie wyszło, tym razem bez podpowiedzi.', call:'zadaj_pytanie', args:{ tresc:'A teraz jeszcze raz: ile to 1/3 + 1/4?' },
+        why:'Sprawdzenie, czy nowa metoda się utrzymała. Bez tej weryfikacji nie wiadomo, czy podpowiedź czegoś nauczyła.' },
+      { result:{ odpowiedz_ucznia:'7/12', czas_s:44 }, why:'Poprawnie. Ten sam uczeń, to samo zadanie, inny wynik niż pięć minut temu.' },
+      { answer:'Kuba dodaje ułamki o wspólnym mianowniku i rozszerza proste ułamki. Przy 1/3 + 1/4 dodał liczniki i mianowniki osobno (2/7). Po jednym zadaniu z podpowiedzią o wspólnym mianowniku poprawnie rozwiązał 1/2 + 1/3 = 5/6 i samodzielnie 1/3 + 1/4 = 7/12.\n\nDla nauczyciela: warto utrwalić szukanie wspólnego mianownika na 2–3 przykładach z liczbami 3, 4, 5. Notatka zapisana pod „Kuba/ulamki”.',
+        why:'Wynik opisuje drogę, nie tylko końcowy stan. Nauczyciel wie, co Kuba umiał, gdzie się potknął i co zadziałało.' },
+    ],
+    chat:{
+      reply:'Jasne! Dodawanie ułamków krok po kroku:\n1. Jeśli mianowniki są takie same, dodaj liczniki: 1/4 + 2/4 = 3/4.\n2. Jeśli są różne, znajdź wspólny mianownik. Np. 1/3 + 1/4: wspólny mianownik to 12, więc 4/12 + 3/12 = 7/12.\n3. Skróć wynik, jeśli się da.\n\nPrzykłady do ćwiczenia: 1/2 + 1/6, 2/5 + 1/3, 3/8 + 1/4. Powodzenia, Kuba!',
+      gaps:['Wyjaśnił wszystko od razu, nie sprawdzając, co Kuba już umie.','Nie zobaczy odpowiedzi 2/7, więc nie wie, gdzie jest błąd.','Nauczyciel nie dostanie żadnej notatki.'],
+      wins:['Zaczął od diagnozy, nie od wykładu.','Po błędzie zmienił plan i dał łatwiejszy wariant.','Sprawdził, czy poprawka się utrzymała, i zapisał wnioski.'],
+    },
+  },
+  {
+    id:'serwer', icon:'📡', domain:'IT', title:'Serwer nie odpowiada',
+    lesson:'Obserwuj, działaj, zweryfikuj, zgłoś. Czat dałby listę kontrolną; agent przechodzi ją sam.',
+    goal:'Strona sklepu nie działa. Ustal przyczynę, napraw, jeśli to bezpieczne, i powiadom dyżurnego.',
+    tools:['sprawdz_status','czytaj_logi','restartuj_usluge','powiadom'],
+    steps:[
+      { goal:true },
+      { plan:'1. Sprawdzę stan usług sklepu.\n2. Przeczytam logi tej, która nie działa.\n3. Jeśli naprawa jest bezpieczna (usługa bez danych), zrestartuję ją.\n4. Sprawdzę ponownie, czy sklep działa.\n5. Powiadomię dyżurnego z podsumowaniem.',
+        why:'Krok 4 jest w planie od początku. Agent zakłada, że naprawa wymaga sprawdzenia, nie wiary.' },
+      { say:'Zaczynam od ogólnego stanu.', call:'sprawdz_status', args:{ system:'sklep' },
+        why:'Zanim cokolwiek zmieni, agent chce wiedzieć, co dokładnie jest zepsute.' },
+      { result:{ www:'502 Bad Gateway', cache:'down', baza:'ok', ostatni_deploy:'2026-07-03 17:10' },
+        why:'Strona zwraca 502, cache leży, baza działa. Podejrzany jest cache, nie baza.' },
+      { say:'Cache nie odpowiada. Sprawdzam, dlaczego padł.', call:'czytaj_logi', args:{ usluga:'cache', linie:20 },
+        why:'Restart „w ciemno” mógłby zadziałać, ale agent najpierw szuka przyczyny. Bez niej problem wróci.' },
+      { result:{ wpisy:[ '09:41:02 WARN memory 94%', '09:41:07 ERROR OutOfMemoryError: cannot allocate', '09:41:07 FATAL process exited' ] },
+        why:'Przyczyna: brak pamięci. Usługa się wyłączyła, nie została zaatakowana ani źle skonfigurowana.' },
+      { decision:'Restart cache jest bezpieczny: usługa nie przechowuje danych trwałych, po starcie odbuduje się z bazy. Nie dotykam bazy danych.',
+        why:'Granica, którą agent sam sobie wyznacza. Cache można restartować, bazy nie. Ta decyzja jest jawna, więc człowiek może ją zakwestionować.' },
+      { say:'Restartuję cache.', call:'restartuj_usluge', args:{ usluga:'cache' },
+        why:'Pierwsze i jedyne działanie zmieniające stan systemu.' },
+      { result:{ usluga:'cache', status:'started', pid:41822, czas_s:4 }, why:'Proces wstał. Ale to nie znaczy jeszcze, że sklep działa.' },
+      { say:'Sprawdzam, czy naprawa faktycznie pomogła.', call:'sprawdz_status', args:{ system:'sklep' },
+        why:'Weryfikacja własnej pracy. Bez tego kroku agent zgłosiłby „naprawione” na podstawie tego, że kliknął restart.' },
+      { result:{ www:'200 OK', cache:'ok', baza:'ok' }, why:'Strona odpowiada. Dopiero teraz można mówić o naprawie.' },
+      { say:'Sklep działa. Powiadamiam dyżurnego, z przyczyną i zaleceniem.', call:'powiadom', args:{ do:'dyzurny-it', tresc:'Sklep nie działał ok. 09:41–09:52 (502). Przyczyna: cache padł na OutOfMemory (94% pamięci przed awarią). Zrestartowałem cache, strona odpowiada 200. Zalecenie: zwiększyć limit pamięci cache lub sprawdzić wyciek po deployu z 3 lipca.' },
+        why:'Powiadomienie zawiera czas, przyczynę, co zrobiono i co zostaje do zrobienia przez człowieka.' },
+      { result:{ dostarczono:true, kanal:'dyzurny-it', czas:'09:52' }, why:'Człowiek wie. Pętla zamknięta.' },
+      { answer:'Sklep działa od 09:52. Przyczyna: usługa cache padła z braku pamięci (OutOfMemoryError o 09:41). Zrestartowałem cache i potwierdziłem, że strona zwraca 200. Bazy danych nie dotykałem. Dyżurny IT dostał podsumowanie z zaleceniem sprawdzenia limitu pamięci po deployu z 3 lipca.',
+        why:'Naprawa, dowód naprawy i przekazanie sprawy dalej. Trzy rzeczy, których lista kontrolna nie zrobi za nikogo.' },
+    ],
+    chat:{
+      reply:'Gdy strona sklepu nie działa, sprawdź po kolei:\n1. Czy serwer WWW odpowiada (np. status 502 wskazuje na problem z usługą za serwerem).\n2. Logi aplikacji i usług pomocniczych, np. cache: szukaj błędów pamięci lub połączeń.\n3. Zrestartuj usługę, która zgłasza błędy.\n4. Sprawdź, czy strona wróciła.\n5. Poinformuj zespół.\n\nJeśli wkleisz logi, pomogę je zinterpretować.',
+      gaps:['Nie widzi statusu ani logów, dopóki ich nie wkleisz.','Nie może nic zrestartować. Krok 3 wykonujesz Ty, o 9:41, w stresie.','Nie sprawdzi, czy naprawa zadziałała, i nikogo nie powiadomi.'],
+      wins:['Odczytał status i logi, ustalił przyczynę.','Zrestartował tylko bezpieczną usługę i uzasadnił granicę.','Zweryfikował naprawę i powiadomił dyżurnego z zaleceniem.'],
+    },
+  },
 ];
 
-// ---- Opisy narzędzi na potrzeby interfejsu (Zadanie 3) ------------
-// Model dostaje osobny, techniczny opis (w "wire" JSON-ach niżej).
-// TOOLS_UI to wersja dla CZŁOWIEKA — ikonka i jedno zdanie po polsku,
-// żeby na ekranie było widać, co dane narzędzie właściwie robi.
-const TOOLS_UI = {
-  kalkulator:   {icon:'🧮', opis:'Wykonuje działania matematyczne (dodawanie, mnożenie, itd.).'},
-  data_i_czas:  {icon:'📅', opis:'Sprawdza dzisiejszą datę i dzień tygodnia.'},
-  szukaj:       {icon:'🔍', opis:'Szuka informacji w małej bazie wiedzy.'},
-  notatnik:     {icon:'📝', opis:'Zapisuje i odczytuje notatki agenta między krokami.'},
-};
-
-// runTool — jedno wejście dla wszystkich wywołań narzędzi. Task 7
-// (tryb "na żywo") będzie wywoływał dokładnie tę funkcję, gdy model
-// Gemini poprosi o functionCall — więc musi być odporna na błędy:
-// nieznana nazwa narzędzia albo wyjątek w środku nie mogą wywalić apki.
-function runTool(name, args){
-  const fn = TOOL_FNS[name];
-  if(!fn) return {blad:"Nieznane narzędzie: "+name};
-  try { return fn(args||{}); }
-  catch(e){ return {blad:"Błąd narzędzia „"+name+"”: "+e.message}; }
-}
-
-// ============================================================
-// Zadanie 7: tryb "na żywo" — prawdziwe wywołania Gemini
-// ------------------------------------------------------------
-// FUNCTION_DECLARATIONS — deklaracje narzędzi w kształcie, jakiego
-// oczekuje Gemini (uppercase typy, "required"), 1:1 z nazwami argumentów
-// w TOOL_FNS. To NIE to samo co ręcznie spreparowany wire JSON w
-// scenariuszach mock — te dane trafiają naprawdę do API.
-// ============================================================
-const FUNCTION_DECLARATIONS = [
-  { name: 'kalkulator', description: 'Wykonuje działanie matematyczne (np. dodawanie, mnożenie).',
-    parameters: { type: 'OBJECT', properties: {
-      wyrazenie: { type: 'STRING', description: 'Wyrażenie do obliczenia, np. 2 + 2.' },
-    }, required: ['wyrazenie'] } },
-  { name: 'szukaj', description: 'Szuka informacji w małej bazie wiedzy.',
-    parameters: { type: 'OBJECT', properties: {
-      zapytanie: { type: 'STRING', description: 'Fraza do wyszukania w bazie wiedzy.' },
-    }, required: ['zapytanie'] } },
-  { name: 'notatnik', description: 'Zapisuje i odczytuje notatki agenta między krokami.',
-    parameters: { type: 'OBJECT', properties: {
-      akcja: { type: 'STRING', description: 'Co zrobić: "zapisz" albo "odczytaj".' },
-      klucz: { type: 'STRING', description: 'Klucz notatki.' },
-      wartosc: { type: 'STRING', description: 'Wartość do zapisania (tylko dla akcji "zapisz").' },
-    }, required: ['akcja'] } },
-  { name: 'data_i_czas', description: 'Zwraca dzisiejszą datę i dzień tygodnia.' },
-];
-
-// SYSTEM — instrukcja systemowa: najpierw plan (sam tekst), potem
-// wywołania narzędzi z jednozdaniową refleksją przed każdym, na końcu
-// odpowiedź samym tekstem. To ten sam kontrakt, który mockRun udaje
-// ręcznie spreparowanymi zdarzeniami.
-const SYSTEM = "Jesteś agentem. Najpierw przedstaw krótki plan w punktach (sam tekst). " +
-  "Potem realizuj go krok po kroku, wywołując narzędzia. Przed każdym wywołaniem napisz " +
-  "jedno zdanie refleksji. Gdy znasz ostateczną odpowiedź, odpowiedz samym tekstem.";
-
-const GEMINI_MODEL = 'gemini-3.5-flash';
-const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
-
-// callGemini(req) — jedno wywołanie generateContent. Rzuca Error z
-// czytelnym polskim komunikatem na błąd HTTP (ten sam wzorzec odczytu
-// JSON błędu co w index.html) — liveRun łapie ten wyjątek i NIGDY go
-// nie przepuszcza dalej (patrz komentarz przy liveRun).
-async function callGemini(req){
-  const key = localStorage.getItem('gemini_api_key') || '';
-  const res = await fetch(GEMINI_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-    body: JSON.stringify(req),
-  });
-  if(!res.ok){
-    let detail;
-    try {
-      const j = await res.json();
-      detail = j.error ? `[${j.error.code} ${j.error.status}] ${j.error.message}` : JSON.stringify(j);
-    } catch(e){ detail = await res.text(); }
-    throw new Error(`Błąd API (HTTP ${res.status}): ${detail}`);
-  }
-  return res.json();
-}
-
-// liveRun(goal) — "prawdziwy" odpowiednik mockRun: async generator o
-// DOKŁADNIE tym samym kontrakcie StepEvent, ale zamiast odtwarzać
-// ręcznie spreparowane kroki, faktycznie rozmawia z Gemini i wykonuje
-// narzędzia lokalnie przez runTool. step() (Zadanie 3) nie ma try/catch
-// wokół gen.next() — więc ta funkcja NIE MOŻE rzucić. Każdy fetch/parse
-// jest owinięty w try/catch; błąd sieci, HTTP albo niepoprawny kształt
-// odpowiedzi kończy przebieg pojedynczą kartą odpowiedzi z isError:true,
-// zamiast wywalić generator.
-async function* liveRun(goal){
-  // Brak klucza API sprawdzamy PRZED jakimkolwiek yieldem — jeśli go nie ma,
-  // pierwsza (i jedyna) karta przebiegu to karta błędu, w stylu index.html
-  // ("Brak klucza API"), a nie karta celu udająca, że coś się zaczęło.
-  if(!localStorage.getItem('gemini_api_key')){
-    yield { kind: 'answer', isError: true,
-      body: '⛔ Brak klucza API. Wklej swój klucz Gemini w polu obok przełącznika trybu na żywo. Możesz go wygenerować na aistudio.google.com/apikey.',
-      why: 'Tryb na żywo wysyła prawdziwe zapytania do API Gemini — bez klucza nie da się ich uwierzytelnić.' };
-    return;
-  }
-
-  const contents = [ { role: 'user', parts: [ { text: goal } ] } ];
-  yield {
-    kind: 'goal', title: 'Cel', body: goal,
-    why: 'To jest cel, jaki agent dostał od użytkownika. Zanim zacznie działać, zapisuje sobie dokładnie, co ma ustalić.',
-    wire: {
-      label: 'Zapytanie wysłane do Gemini (z listą dostępnych narzędzi)',
-      json: { endpoint: `generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
-        request: { contents: contents.slice(), tools: [ { functionDeclarations: FUNCTION_DECLARATIONS } ] } },
-    },
-    ctx: { role: 'user', label: 'cel użytkownika', chars: JSON.stringify(contents[0]).length },
-  };
-
-  const CAP_HIT_EVENT = { kind: 'answer', isError: true, body: '⛔ Limit 5 okrążeń osiągnięty — bezpiecznik zadziałał.',
-    why: 'Bez limitu zapętlony agent kręciłby się (i płacił) w nieskończoność.' };
-
-  // planSeen: czy tura 1 była planem (samym tekstem, bez functionCall).
-  // W dokumentacji/brief-ie zakładaliśmy, że tura 1 ZAWSZE jest planem
-  // (stąd pętla "+1"), ale model bywa mniej grzeczny: czasem wywołuje
-  // narzędzie już w turze 1 (patrz raport Zadania 7 — "plan bywa pomijany").
-  // Gdy tak się dzieje, nie ma dodatkowej "darmowej" tury planu — więc
-  // numer okrążenia (iter) liczymy WZGLĘDEM tego, czy plan faktycznie
-  // wystąpił, a nie względem surowego numeru tury (i). Górna granica
-  // pętli (MAX_ITER+2) ma zapas na oba przypadki: gdy planSeen, potrzeba
-  // jednej dodatkowej tury (plan) plus do MAX_ITER+1 tur narzędziowych,
-  // żeby wykryć i zgłosić przekroczenie limitu.
-  let planSeen = false;
-
-  for(let i = 1; i <= MAX_ITER + 2; i++){
-    const req = { systemInstruction: { parts: [ { text: SYSTEM } ] }, contents: contents.slice(),
-      tools: [ { functionDeclarations: FUNCTION_DECLARATIONS } ] };
-
-    let res, content;
-    try {
-      res = await callGemini(req);
-      content = res.candidates[0].content;
-    } catch(err){
-      yield { kind: 'answer', isError: true, body: '⛔ Błąd API: ' + err.message,
-        why: 'Nie udało się uzyskać poprawnej odpowiedzi od Gemini (sieć, HTTP albo nieoczekiwany kształt odpowiedzi).' };
-      return;
-    }
-    // Kandydat BEZ treści to poprawny JSON, który NIE rzuca w try powyżej:
-    // API potrafi zwrócić {candidates:[{finishReason:'SAFETY'}]} (też
-    // RECITATION/OTHER/MAX_TOKENS) — content jest wtedy undefined i bez tej
-    // bramki pierwszy dostęp do content.parts rzuciłby TypeError już POZA
-    // try/catch, łamiąc gwarancję "liveRun nigdy nie rzuca".
-    if(!content){
-      const reason = (res.candidates && res.candidates[0] && res.candidates[0].finishReason) || 'nieznany';
-      yield { kind: 'answer', isError: true,
-        body: '⛔ Model nie zwrócił treści (finishReason: ' + reason + ') — przebieg zakończony.',
-        why: 'Odpowiedź została zablokowana lub ucięta po stronie API (np. filtr bezpieczeństwa) — taka tura nie niesie treści, więc agent kończy przebieg.',
-        wire: { label: 'Odpowiedź Gemini: kandydat bez treści', json: res } };
-      return;
-    }
-    contents.push(content);
-    const text = (content.parts || []).filter(p => p.text).map(p => p.text).join('');
-    const fc = (content.parts || []).find(p => p.functionCall)?.functionCall;
-
-    // iter — numer okrążenia pokazywany w UI i porównywany z MAX_ITER.
-    // Gdy plan faktycznie wystąpił (planSeen), tura 1 była "darmowa"
-    // (plan), więc okrążenia liczą się od tury 2 → iter = i - 1.
-    // Gdy planu nie było (model strzelił narzędziem od razu w turze 1),
-    // ta sama tura 1 to już pierwsze okrążenie → iter = i.
-    const iter = planSeen ? i - 1 : i;
-
-    if(!fc){                                                    // brak prośby o narzędzie = koniec (plan lub odpowiedź)
-      if(i === 1){
-        planSeen = true;
-        yield { kind: 'plan', title: 'Plan działania', body: text,
-          why: 'Zamiast zgadywać, agent najpierw układa plan działania — tak jak dobry pracownik, który rozpisuje kroki, zanim zacznie pracę.',
-          wire: { label: 'Odpowiedź Gemini: plan w postaci tekstu (jeszcze bez wywołania narzędzia)', json: res },
-          ctx: { role: 'model', label: 'Plan agenta', chars: JSON.stringify(content).length } };
-        const followUp = { role: 'user', parts: [ { text: 'Realizuj plan.' } ] };
-        contents.push(followUp);
-        continue;
-      }
-      // loop przycięty do MAX_ITER: tekstowa odpowiedź tuż PO 5. okrążeniu
-      // narzędzi jest mile widziana, ale licznik nie może pokazać „6 / 5”.
-      yield { kind: 'answer', body: text, loop: Math.min(iter, MAX_ITER),
-        wire: { label: 'Odpowiedź Gemini: końcowa odpowiedź tekstowa', json: res },
-        ctx: { role: 'model', label: 'Odpowiedź agenta', chars: JSON.stringify(content).length } };
-      return;
-    }
-
-    // Bezpiecznik: model poprosił o narzędzie, ale to okrążenie
-    // przekroczyłoby limit MAX_ITER — kończymy kartą "limit osiągnięty"
-    // zamiast faktycznie wykonywać narzędzie. Sprawdzane PRZED runTool,
-    // dokładnie tak jak wymaga tego kontrakt (nie liczymy przekroczonego
-    // okrążenia jako wykonanego).
-    if(iter > MAX_ITER){
-      yield CAP_HIT_EVENT;
-      return;
-    }
-
-    // Uwaga: w prawdziwych odpowiedziach Gemini refleksja (tekst) i
-    // functionCall zwykle przychodzą w TEJ SAMEJ turze (jeden `content`,
-    // już wepchnięty do `contents` powyżej) — więc ctx (rozmiar tury)
-    // liczymy TYLKO RAZ, przy tool_call. Doliczenie go też przy reflection
-    // podwójnie zawyżałoby stos "Pamięć rozmowy" i licznik kosztu o ten
-    // sam fragment tekstu.
-    if(text){
-      yield { kind: 'reflection', body: text, loop: iter };
-    }
-    yield { kind: 'tool_call', tool: fc.name, args: fc.args, loop: iter,
-      title: 'Wywołanie narzędzia: ' + fc.name,
-      body: 'Agent prosi o wywołanie narzędzia „' + fc.name + '”.',
-      wire: { label: 'Odpowiedź Gemini: prośba o wywołanie funkcji (functionCall)', json: res },
-      ctx: { role: 'model', label: 'functionCall: ' + fc.name, chars: JSON.stringify(content).length } };
-
-    const result = runTool(fc.name, fc.args);
-    // Wg dokumentacji Gemini (generateContent, REST) functionResponse
-    // wraca do rozmowy jako część z role:"user" — patrz raport Zadania 7.
-    const funcResponseTurn = { role: 'user', parts: [ { functionResponse: { name: fc.name, response: result } } ] };
-    yield { kind: 'observation', tool: fc.name, title: 'Wynik: ' + fc.name,
-      body: JSON.stringify(result, null, 1), isError: !!result.blad, loop: iter,
-      wire: { label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)', json: { contents: [ funcResponseTurn ] } },
-      ctx: { role: 'tool', label: 'functionResponse: ' + fc.name, chars: JSON.stringify(funcResponseTurn).length } };
-    contents.push(funcResponseTurn);
-  }
-
-  // Bezpiecznik na wypadek nieosiągnięcia limitu wewnątrz pętli (nie
-  // powinno się zdarzyć — patrz komentarz przy MAX_ITER+2 powyżej —
-  // ale gdyby się zdarzyło, przebieg i tak kończy się tą samą kartą.
-  yield CAP_HIT_EVENT;
-}
-
-// ============================================================
-// Scenariusz 1: "Za 100 dni"
-// ------------------------------------------------------------
-// Pytanie ilustruje typowy problem chatbotów bez narzędzi: nie znają
-// bieżącej daty i muszą ją zgadywać. Agent z narzędziami sprawdza
-// datę naprawdę, a potem liczy dalej krok po kroku.
-//
-// Matematyka scenariusza (sprawdzona, żeby liczby się zgadzały):
-//   2026-07-04 to sobota (numer dnia tygodnia: 6, licząc pon=1..nie=7)
-//   100 dni = 14 pełnych tygodni (98 dni) + 2 dni
-//   sobota + 2 dni = poniedziałek  →  numer dnia: 1
-//   1 × 7 = 7
-// ============================================================
-
-const dni100 = {
-  id: 'dni100',
-  nazwa: 'Za 100 dni',
-  cel: 'Jaki dzień tygodnia będzie za 100 dni i ile wynosi numer tego dnia pomnożony przez 7?',
-
-  // "oneshot" to odpowiedź, jaką dałby zwykły chatbot BEZ narzędzi —
-  // od razu, jednym zdaniem, bez sprawdzania czegokolwiek. Używamy jej
-  // w widoku "Porównaj ze zwykłym chatbotem" (przycisk #compareBtn),
-  // żeby pokazać różnicę: pewność siebie bez podstaw.
-  oneshot: {
-    body: "Za 100 dni będzie środa…",
-    why: "Chatbot bez narzędzi nie zna dzisiejszej daty — zgaduje. Brzmi pewnie, ale nie ma jak tego sprawdzić.",
-  },
-
-  steps: [
-    // 1) CEL — to, o co pyta użytkownik. Agent "zapisuje" je sobie,
-    // zanim zacznie działać.
-    {
-      kind: 'goal',
-      title: 'Cel',
-      body: 'Jaki dzień tygodnia będzie za 100 dni i ile wynosi numer tego dnia pomnożony przez 7?',
-      why: 'To jest cel, jaki agent dostał od użytkownika. Zanim zacznie działać, zapisuje sobie dokładnie, co ma ustalić.',
-      wire: {
-        label: 'Zapytanie wysłane do Gemini (z listą dostępnych narzędzi)',
-        json: {
-          endpoint: 'generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent',
-          request: {
-            contents: [
-              { role: 'user', parts: [ { text: 'Jaki dzień tygodnia będzie za 100 dni i ile wynosi numer tego dnia pomnożony przez 7?' } ] }
-            ],
-            tools: [ { functionDeclarations: [
-              { name: 'data_i_czas', description: 'Zwraca dzisiejszą datę i dzień tygodnia.' },
-              // Deklaracja kalkulatora 1:1 ze snippetem (a) w sekcji #snippets —
-              // widz porównujący "API call" ze snippetem widzi
-              // dokładnie ten sam kształt (OBJECT/STRING + required).
-              { name: 'kalkulator', description: 'Wykonuje działanie matematyczne (np. dodawanie, mnożenie).', parameters: { type: 'OBJECT', properties: { wyrazenie: { type: 'STRING', description: 'Wyrażenie do obliczenia, np. 2 + 2.' } }, required: ['wyrazenie'] } },
-              { name: 'szukaj', description: 'Szuka informacji w bazie wiedzy.', parameters: { type: 'OBJECT', properties: { zapytanie: { type: 'STRING' } } } },
-              { name: 'notatnik', description: 'Zapisuje i odczytuje notatki.', parameters: { type: 'OBJECT', properties: { akcja: { type: 'STRING' }, klucz: { type: 'STRING' }, wartosc: { type: 'STRING' } } } },
-            ] } ],
-          },
-        },
-      },
-      ctx: { role: 'user', label: 'Pytanie użytkownika', chars: 122 },
-    },
-
-    // 2) PLAN — agent najpierw układa plan, zamiast strzelać odpowiedzią.
-    {
-      kind: 'plan',
-      title: 'Plan działania',
-      body: '1. Sprawdzę dzisiejszą datę…\n2. Policzę dzień tygodnia za 100 dni…\n3. Pomnożę numer dnia przez 7',
-      why: 'Zamiast zgadywać, agent najpierw układa plan działania — tak jak dobry pracownik, który rozpisuje kroki, zanim zacznie pracę.',
-      wire: {
-        label: 'Odpowiedź Gemini: plan w postaci tekstu (jeszcze bez wywołania narzędzia)',
-        json: {
-          candidates: [ { content: { role: 'model', parts: [
-            { text: '1. Sprawdzę dzisiejszą datę…\n2. Policzę dzień tygodnia za 100 dni…\n3. Pomnożę numer dnia przez 7' }
-          ] } } ],
-        },
-      },
-      ctx: { role: 'model', label: 'Plan agenta', chars: 136 },
-    },
-
-    // 3) TOOL_CALL #1 — agent nie zna dzisiejszej daty "z pamięci",
-    // więc prosi o wywołanie narzędzia data_i_czas.
-    {
-      kind: 'tool_call',
-      loop: 1,
-      tool: 'data_i_czas',
-      args: {},
-      title: 'Wywołanie narzędzia: data i czas',
-      body: 'Agent prosi o sprawdzenie dzisiejszej daty za pomocą narzędzia „data_i_czas” (bez dodatkowych parametrów).',
-      why: 'Agent nie zna dzisiejszej daty z pamięci — zamiast zgadywać, prosi o sprawdzenie jej w prawdziwym źródle.',
-      wire: {
-        label: 'Odpowiedź Gemini: prośba o wywołanie funkcji (functionCall)',
-        json: {
-          candidates: [ { content: { role: 'model', parts: [
-            { functionCall: { name: 'data_i_czas', args: {} } }
-          ] } } ],
-        },
-      },
-      ctx: { role: 'model', label: 'functionCall: data_i_czas', chars: 76 },
-    },
-
-    // 4) OBSERVATION #1 — wynik działania narzędzia (fakt, nie zgadywanka).
-    {
-      kind: 'observation',
-      loop: 1,
-      tool: 'data_i_czas',
-      title: 'Wynik: data i czas',
-      body: JSON.stringify({ data: '2026-07-04', dzien_tygodnia: 'sobota', numer_dnia: 6 }),
-      isError: false,
-      why: 'Narzędzie zwróciło konkretną, sprawdzalną datę — to fakt, a nie coś, co model sobie wymyślił.',
-      wire: {
-        label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)',
-        json: {
-          request: { contents: [
-            { role: 'user', parts: [ { functionResponse: {
-              name: 'data_i_czas',
-              response: { data: '2026-07-04', dzien_tygodnia: 'sobota', numer_dnia: 6 },
-            } } ] },
-          ] },
-        },
-      },
-      ctx: { role: 'tool', label: 'functionResponse: data_i_czas', chars: 143 },
-    },
-
-    // 5) REFLECTION #1 — agent samodzielnie łączy fakt (data) z prostą matematyką.
-    {
-      kind: 'reflection',
-      loop: 1,
-      title: 'Refleksja',
-      body: 'Dziś sobota. 100 = 14 tygodni + 2 dni, więc za 100 dni będzie poniedziałek, numer dnia 1.',
-      why: 'Agent samodzielnie liczy dalej — łączy sprawdzony fakt (dzisiejsza data) z prostą matematyką kalendarza.',
-      wire: {
-        label: 'Odpowiedź Gemini: wniosek w postaci tekstu',
-        json: {
-          candidates: [ { content: { role: 'model', parts: [
-            { text: 'Dziś sobota. 100 = 14 tygodni + 2 dni, więc za 100 dni będzie poniedziałek, numer dnia 1.' }
-          ] } } ],
-        },
-      },
-      ctx: { role: 'model', label: 'Wniosek: dzień tygodnia', chars: 127 },
-    },
-
-    // 6) TOOL_CALL #2 — mnożenie lepiej policzyć kalkulatorem niż "w głowie".
-    {
-      kind: 'tool_call',
-      loop: 2,
-      tool: 'kalkulator',
-      args: { wyrazenie: '1 * 7' },
-      title: 'Wywołanie narzędzia: kalkulator',
-      body: 'Agent prosi o obliczenie wyrażenia „1 * 7” za pomocą narzędzia „kalkulator”.',
-      why: 'Teraz agent potrzebuje wykonać mnożenie — zamiast liczyć „w głowie” (co bywa zawodne u modeli językowych), używa kalkulatora.',
-      wire: {
-        label: 'Odpowiedź Gemini: prośba o wywołanie funkcji (functionCall)',
-        json: {
-          candidates: [ { content: { role: 'model', parts: [
-            { functionCall: { name: 'kalkulator', args: { wyrazenie: '1 * 7' } } }
-          ] } } ],
-        },
-      },
-      ctx: { role: 'model', label: 'functionCall: kalkulator', chars: 94 },
-    },
-
-    // 7) OBSERVATION #2 — wynik mnożenia, policzony naprawdę.
-    {
-      kind: 'observation',
-      loop: 2,
-      tool: 'kalkulator',
-      title: 'Wynik: kalkulator',
-      body: JSON.stringify({ wynik: 7 }),
-      isError: false,
-      why: '1 razy 7 to dokładnie 7 — to wynik obliczenia, a nie liczba zgadnięta przez model.',
-      wire: {
-        label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)',
-        json: {
-          request: { contents: [
-            { role: 'user', parts: [ { functionResponse: {
-              name: 'kalkulator',
-              response: { wynik: 7 },
-            } } ] },
-          ] },
-        },
-      },
-      ctx: { role: 'tool', label: 'functionResponse: kalkulator', chars: 91 },
-    },
-
-    // 8) REFLECTION #2 — agent sprawdza, czy ma już wszystko, czego potrzebuje.
-    {
-      kind: 'reflection',
-      loop: 2,
-      title: 'Refleksja',
-      body: 'Mam już wszystko: dzień tygodnia za 100 dni to poniedziałek, a numer dnia razy 7 daje 7. Mogę teraz odpowiedzieć.',
-      why: 'Agent sprawdza, czy zebrał już wszystkie elementy odpowiedzi, zanim ją sformułuje — to ostatni krok przed odpowiedzią.',
-      wire: {
-        label: 'Odpowiedź Gemini: podsumowanie przed odpowiedzią końcową',
-        json: {
-          candidates: [ { content: { role: 'model', parts: [
-            { text: 'Mam już wszystko: dzień tygodnia za 100 dni to poniedziałek, a numer dnia razy 7 daje 7. Mogę teraz odpowiedzieć.' }
-          ] } } ],
-        },
-      },
-      ctx: { role: 'model', label: 'Wniosek: podsumowanie', chars: 151 },
-    },
-
-    // 9) ANSWER — odpowiedź końcowa, zbudowana z dwóch sprawdzonych faktów.
-    {
-      kind: 'answer',
-      title: 'Odpowiedź',
-      body: 'Za 100 dni będzie poniedziałek; 1 × 7 = 7.',
-      why: 'To jest ostateczna odpowiedź — zbudowana z dwóch sprawdzonych faktów (daty i obliczenia), a nie z jednego zgadywanego zdania.',
-      wire: {
-        label: 'Odpowiedź Gemini: tekst finalny pokazywany użytkownikowi',
-        json: {
-          candidates: [ { content: { role: 'model', parts: [
-            { text: 'Za 100 dni będzie poniedziałek; 1 × 7 = 7.' }
-          ] } } ],
-        },
-      },
-      ctx: { role: 'model', label: 'Odpowiedź końcowa', chars: 80 },
-    },
-  ],
-};
-
-// ============================================================
-// Scenariusz 2: "Bilety do teatru"
-// ------------------------------------------------------------
-// Pytanie łączy trzy narzędzia w jednej pętli: wyszukiwanie (cena
-// biletu), notatnik (zapamiętanie ceny "na później") i kalkulator
-// (mnożenie razy liczba studentów). Pokazuje, że agent potrafi
-// układać wyniki jednego narzędzia w dane wejściowe kolejnego.
-//
-// Matematyka scenariusza (sprawdzona, żeby liczby się zgadzały):
-//   cena biletu (z MOCK_INDEX, klucz "bilet") = 85 zł
-//   28 studentów × 85 zł = 2380 zł
-// ============================================================
-
-const bilety = {
-  id: 'bilety',
-  nazwa: 'Bilety do teatru',
-  cel: 'Ile zapłaci grupa 28 studentów za bilety do teatru? Zapisz cenę w notatniku na później.',
-
-  oneshot: {
-    body: "Bilet do teatru kosztuje zwykle około 60 zł, więc 28 studentów zapłaci łącznie około 1680 zł.",
-    why: "Chatbot bez narzędzi nie zna prawdziwej ceny biletu w tym konkretnym teatrze — zgaduje typową cenę i mnoży dalej. Brzmi konkretnie (liczby!), ale żadna z nich nie została sprawdzona.",
-  },
-
-  steps: [
-    {
-      kind: 'goal',
-      title: 'Cel',
-      body: 'Ile zapłaci grupa 28 studentów za bilety do teatru? Zapisz cenę w notatniku na później.',
-      why: 'To jest cel, jaki agent dostał od użytkownika. Zanim zacznie działać, zapisuje sobie dokładnie, co ma ustalić.',
-      wire: {
-        label: 'Zapytanie wysłane do Gemini (z listą dostępnych narzędzi)',
-        json: {
-          endpoint: 'generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent',
-          request: {
-            contents: [
-              { role: 'user', parts: [ { text: 'Ile zapłaci grupa 28 studentów za bilety do teatru? Zapisz cenę w notatniku na później.' } ] }
-            ],
-            tools: [ { functionDeclarations: [
-              { name: 'data_i_czas', description: 'Zwraca dzisiejszą datę i dzień tygodnia.' },
-              { name: 'kalkulator', description: 'Wykonuje działanie matematyczne (np. dodawanie, mnożenie).', parameters: { type: 'OBJECT', properties: { wyrazenie: { type: 'STRING', description: 'Wyrażenie do obliczenia, np. 2 + 2.' } }, required: ['wyrazenie'] } },
-              { name: 'szukaj', description: 'Szuka informacji w bazie wiedzy.', parameters: { type: 'OBJECT', properties: { zapytanie: { type: 'STRING' } } } },
-              { name: 'notatnik', description: 'Zapisuje i odczytuje notatki.', parameters: { type: 'OBJECT', properties: { akcja: { type: 'STRING' }, klucz: { type: 'STRING' }, wartosc: { type: 'STRING' } } } },
-            ] } ],
-          },
-        },
-      },
-      ctx: { role: 'user', label: 'Pytanie użytkownika', chars: 124 },
-    },
-
-    {
-      kind: 'plan',
-      title: 'Plan działania',
-      body: '1. Poszukam ceny biletu do teatru…\n2. Zapiszę cenę w notatniku…\n3. Pomnożę cenę przez liczbę studentów',
-      why: 'Zamiast zgadywać cenę, agent najpierw układa plan: najpierw sprawdzić fakt, potem go zapamiętać, dopiero na końcu policzyć.',
-      wire: {
-        label: 'Odpowiedź Gemini: plan w postaci tekstu (jeszcze bez wywołania narzędzia)',
-        json: {
-          candidates: [ { content: { role: 'model', parts: [
-            { text: '1. Poszukam ceny biletu do teatru…\n2. Zapiszę cenę w notatniku…\n3. Pomnożę cenę przez liczbę studentów' }
-          ] } } ],
-        },
-      },
-      ctx: { role: 'model', label: 'Plan agenta', chars: 142 },
-    },
-
-    {
-      kind: 'tool_call',
-      loop: 1,
-      tool: 'szukaj',
-      args: { zapytanie: 'cena biletu teatr' },
-      title: 'Wywołanie narzędzia: szukaj',
-      body: 'Agent prosi o sprawdzenie ceny biletu do teatru za pomocą narzędzia „szukaj”.',
-      why: 'Agent nie zna prawdziwej ceny biletu z pamięci — zamiast zgadywać typową cenę, szuka jej w źródle.',
-      wire: {
-        label: 'Odpowiedź Gemini: prośba o wywołanie funkcji (functionCall)',
-        json: {
-          candidates: [ { content: { role: 'model', parts: [
-            { functionCall: { name: 'szukaj', args: { zapytanie: 'cena biletu teatr' } } }
-          ] } } ],
-        },
-      },
-      ctx: { role: 'model', label: 'functionCall: szukaj', chars: 102 },
-    },
-
-    {
-      kind: 'observation',
-      loop: 1,
-      tool: 'szukaj',
-      title: 'Wynik: szukaj',
-      body: JSON.stringify({ zrodlo: 'teatr-apollo.pl', cena_biletu_pln: 85 }),
-      isError: false,
-      why: 'Narzędzie zwróciło konkretne źródło i konkretną cenę — to fakt, a nie liczba wymyślona przez model.',
-      wire: {
-        label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)',
-        json: {
-          request: { contents: [
-            { role: 'user', parts: [ { functionResponse: {
-              name: 'szukaj',
-              response: { zrodlo: 'teatr-apollo.pl', cena_biletu_pln: 85 },
-            } } ] },
-          ] },
-        },
-      },
-      ctx: { role: 'tool', label: 'functionResponse: szukaj', chars: 125 },
-    },
-
-    {
-      kind: 'reflection',
-      loop: 1,
-      title: 'Refleksja',
-      body: 'Znalazłem cenę: 85 zł za bilet. Zapiszę ją w notatniku, żeby nie liczyć jej ponownie później.',
-      why: 'Agent pamięta cel użytkownika ("zapisz cenę na później") i wybiera kolejny krok, który go realizuje.',
-      wire: {
-        label: 'Odpowiedź Gemini: wniosek w postaci tekstu',
-        json: {
-          candidates: [ { content: { role: 'model', parts: [
-            { text: 'Znalazłem cenę: 85 zł za bilet. Zapiszę ją w notatniku, żeby nie liczyć jej ponownie później.' }
-          ] } } ],
-        },
-      },
-      ctx: { role: 'model', label: 'Wniosek: znaleziona cena', chars: 131 },
-    },
-
-    {
-      kind: 'tool_call',
-      loop: 2,
-      tool: 'notatnik',
-      args: { akcja: 'zapisz', klucz: 'cena_biletu', wartosc: '85' },
-      title: 'Wywołanie narzędzia: notatnik',
-      body: 'Agent prosi o zapisanie ceny biletu (85) pod kluczem „cena_biletu” za pomocą narzędzia „notatnik”.',
-      why: 'Użytkownik poprosił wprost o zapamiętanie ceny "na później" — agent traktuje to jako osobne zadanie do wykonania, nie tylko liczenie.',
-      wire: {
-        label: 'Odpowiedź Gemini: prośba o wywołanie funkcji (functionCall)',
-        json: {
-          candidates: [ { content: { role: 'model', parts: [
-            { functionCall: { name: 'notatnik', args: { akcja: 'zapisz', klucz: 'cena_biletu', wartosc: '85' } } }
-          ] } } ],
-        },
-      },
-      ctx: { role: 'model', label: 'functionCall: notatnik', chars: 126 },
-    },
-
-    {
-      kind: 'observation',
-      loop: 2,
-      tool: 'notatnik',
-      title: 'Wynik: notatnik',
-      body: JSON.stringify({ zapisano: 'cena_biletu' }),
-      isError: false,
-      why: 'Notatnik potwierdza zapis — cena będzie dostępna w kolejnych krokach (i kolejnych pytaniach), bez ponownego szukania.',
-      wire: {
-        label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)',
-        json: {
-          request: { contents: [
-            { role: 'user', parts: [ { functionResponse: {
-              name: 'notatnik',
-              response: { zapisano: 'cena_biletu' },
-            } } ] },
-          ] },
-        },
-      },
-      ctx: { role: 'tool', label: 'functionResponse: notatnik', chars: 104 },
-    },
-
-    {
-      kind: 'reflection',
-      loop: 2,
-      title: 'Refleksja',
-      body: 'Cena zapisana. Teraz policzę koszt dla całej grupy: 28 studentów razy 85 zł.',
-      why: 'Agent sprawdza, co jeszcze zostało do zrobienia — zapis gotowy, więc czas na mnożenie.',
-      wire: {
-        label: 'Odpowiedź Gemini: wniosek w postaci tekstu',
-        json: {
-          candidates: [ { content: { role: 'model', parts: [
-            { text: 'Cena zapisana. Teraz policzę koszt dla całej grupy: 28 studentów razy 85 zł.' }
-          ] } } ],
-        },
-      },
-      ctx: { role: 'model', label: 'Wniosek: zapis gotowy', chars: 114 },
-    },
-
-    {
-      kind: 'tool_call',
-      loop: 3,
-      tool: 'kalkulator',
-      args: { wyrazenie: '28 * 85' },
-      title: 'Wywołanie narzędzia: kalkulator',
-      body: 'Agent prosi o obliczenie wyrażenia „28 * 85” za pomocą narzędzia „kalkulator”.',
-      why: 'Mnożenie 28 razy 85 lepiej policzyć narzędziem niż "w głowie" — kalkulator nie pomyli się przy większych liczbach.',
-      wire: {
-        label: 'Odpowiedź Gemini: prośba o wywołanie funkcji (functionCall)',
-        json: {
-          candidates: [ { content: { role: 'model', parts: [
-            { functionCall: { name: 'kalkulator', args: { wyrazenie: '28 * 85' } } }
-          ] } } ],
-        },
-      },
-      ctx: { role: 'model', label: 'functionCall: kalkulator', chars: 96 },
-    },
-
-    {
-      kind: 'observation',
-      loop: 3,
-      tool: 'kalkulator',
-      title: 'Wynik: kalkulator',
-      body: JSON.stringify({ wynik: 2380 }),
-      isError: false,
-      why: '28 razy 85 to dokładnie 2380 — to wynik obliczenia, a nie liczba zgadnięta przez model.',
-      wire: {
-        label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)',
-        json: {
-          request: { contents: [
-            { role: 'user', parts: [ { functionResponse: {
-              name: 'kalkulator',
-              response: { wynik: 2380 },
-            } } ] },
-          ] },
-        },
-      },
-      ctx: { role: 'tool', label: 'functionResponse: kalkulator', chars: 94 },
-    },
-
-    {
-      kind: 'answer',
-      title: 'Odpowiedź',
-      body: 'Grupa 28 studentów zapłaci 2380 zł za bilety. Cena jednostkowa (85 zł) została zapisana w notatniku na później.',
-      why: 'To jest ostateczna odpowiedź — zbudowana ze sprawdzonej ceny i sprawdzonego obliczenia, a przy okazji zrealizowana druga część prośby (zapis w notatniku).',
-      wire: {
-        label: 'Odpowiedź Gemini: tekst finalny pokazywany użytkownikowi',
-        json: {
-          candidates: [ { content: { role: 'model', parts: [
-            { text: 'Grupa 28 studentów zapłaci 2380 zł za bilety. Cena jednostkowa (85 zł) została zapisana w notatniku na później.' }
-          ] } } ],
-        },
-      },
-      ctx: { role: 'model', label: 'Odpowiedź końcowa', chars: 149 },
-    },
-  ],
-};
-
-// ============================================================
-// Scenariusz 3: "Awaria" (celowa, uczące niepowodzenie)
-// ------------------------------------------------------------
-// Ten scenariusz POKAZUJE BŁĄD narzędzia i to, jak agent się z niego
-// otrząsa. Drugie wywołanie kalkulatora jest CELOWO źle sformułowane
-// (kalkulator przyjmuje tylko liczby/działania, nie polskie zdania) —
-// narzędzie odpowiada błędem ({blad: …}), karta obserwacji renderuje
-// się na czerwono (data-error="true"), a agent w kolejnym kroku po
-// prostu próbuje inaczej. Cała ta scena istnieje po to, żeby pokazać:
-// błąd nie wywala agenta — wraca do pętli jak każda inna obserwacja.
-//
-// Matematyka scenariusza (sprawdzona, żeby liczby się zgadzały):
-//   dziś (mock) = 2026-07-04 (sobota)
-//   premiera = 2026-06-21
-//   czerwiec ma 30 dni → od 21 do 30 czerwca = 9 dni
-//   + 4 dni lipca (1..4) = 13 dni
-//   9 + 4 = 13
-// ============================================================
-
-const awaria = {
-  id: 'awaria',
-  nazwa: 'Awaria (uczący błąd)',
-  cel: 'Ile dni minęło od premiery tej strony (21 czerwca 2026)?',
-
-  oneshot: {
-    body: "Od 21 czerwca 2026 minęło już około dwóch tygodni, czyli mniej więcej 14 dni.",
-    why: "Chatbot bez narzędzi nie zna dzisiejszej daty — zgaduje odstęp „na oko”. Liczba brzmi wiarygodnie, ale nie została policzona.",
-  },
-
-  steps: [
-    {
-      kind: 'goal',
-      title: 'Cel',
-      body: 'Ile dni minęło od premiery tej strony (21 czerwca 2026)?',
-      why: 'To jest cel, jaki agent dostał od użytkownika. Zanim zacznie działać, zapisuje sobie dokładnie, co ma ustalić.',
-      wire: {
-        label: 'Zapytanie wysłane do Gemini (z listą dostępnych narzędzi)',
-        json: {
-          endpoint: 'generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent',
-          request: {
-            contents: [
-              { role: 'user', parts: [ { text: 'Ile dni minęło od premiery tej strony (21 czerwca 2026)?' } ] }
-            ],
-            tools: [ { functionDeclarations: [
-              { name: 'data_i_czas', description: 'Zwraca dzisiejszą datę i dzień tygodnia.' },
-              { name: 'kalkulator', description: 'Wykonuje działanie matematyczne (np. dodawanie, mnożenie).', parameters: { type: 'OBJECT', properties: { wyrazenie: { type: 'STRING', description: 'Wyrażenie do obliczenia, np. 2 + 2.' } }, required: ['wyrazenie'] } },
-              { name: 'szukaj', description: 'Szuka informacji w bazie wiedzy.', parameters: { type: 'OBJECT', properties: { zapytanie: { type: 'STRING' } } } },
-              { name: 'notatnik', description: 'Zapisuje i odczytuje notatki.', parameters: { type: 'OBJECT', properties: { akcja: { type: 'STRING' }, klucz: { type: 'STRING' }, wartosc: { type: 'STRING' } } } },
-            ] } ],
-          },
-        },
-      },
-      ctx: { role: 'user', label: 'Pytanie użytkownika', chars: 93 },
-    },
-
-    {
-      kind: 'plan',
-      title: 'Plan działania',
-      body: '1. Sprawdzę dzisiejszą datę…\n2. Policzę różnicę dni od 21 czerwca 2026…\n3. Podam wynik',
-      why: 'Zamiast zgadywać odstęp czasu, agent najpierw układa plan: najpierw fakt (dzisiejsza data), potem obliczenie.',
-      wire: {
-        label: 'Odpowiedź Gemini: plan w postaci tekstu (jeszcze bez wywołania narzędzia)',
-        json: {
-          candidates: [ { content: { role: 'model', parts: [
-            { text: '1. Sprawdzę dzisiejszą datę…\n2. Policzę różnicę dni od 21 czerwca 2026…\n3. Podam wynik' }
-          ] } } ],
-        },
-      },
-      ctx: { role: 'model', label: 'Plan agenta', chars: 126 },
-    },
-
-    {
-      kind: 'tool_call',
-      loop: 1,
-      tool: 'data_i_czas',
-      args: {},
-      title: 'Wywołanie narzędzia: data i czas',
-      body: 'Agent prosi o sprawdzenie dzisiejszej daty za pomocą narzędzia „data_i_czas” (bez dodatkowych parametrów).',
-      why: 'Agent nie zna dzisiejszej daty z pamięci — zamiast zgadywać, prosi o sprawdzenie jej w prawdziwym źródle.',
-      wire: {
-        label: 'Odpowiedź Gemini: prośba o wywołanie funkcji (functionCall)',
-        json: {
-          candidates: [ { content: { role: 'model', parts: [
-            { functionCall: { name: 'data_i_czas', args: {} } }
-          ] } } ],
-        },
-      },
-      ctx: { role: 'model', label: 'functionCall: data_i_czas', chars: 76 },
-    },
-
-    {
-      kind: 'observation',
-      loop: 1,
-      tool: 'data_i_czas',
-      title: 'Wynik: data i czas',
-      body: JSON.stringify({ data: '2026-07-04', dzien_tygodnia: 'sobota', numer_dnia: 6 }),
-      isError: false,
-      why: 'Narzędzie zwróciło konkretną, sprawdzalną datę — to fakt, a nie coś, co model sobie wymyślił.',
-      wire: {
-        label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)',
-        json: {
-          request: { contents: [
-            { role: 'user', parts: [ { functionResponse: {
-              name: 'data_i_czas',
-              response: { data: '2026-07-04', dzien_tygodnia: 'sobota', numer_dnia: 6 },
-            } } ] },
-          ] },
-        },
-      },
-      ctx: { role: 'tool', label: 'functionResponse: data_i_czas', chars: 143 },
-    },
-
-    {
-      kind: 'reflection',
-      loop: 1,
-      title: 'Refleksja',
-      body: 'Dziś 4 lipca 2026. Spróbuję policzyć różnicę dni od 21 czerwca za pomocą kalkulatora.',
-      why: 'Agent ma już datę bieżącą — teraz próbuje policzyć różnicę dni, wpisując ją do kalkulatora tak, jak sformułowałby ją człowiek.',
-      wire: {
-        label: 'Odpowiedź Gemini: wniosek w postaci tekstu',
-        json: {
-          candidates: [ { content: { role: 'model', parts: [
-            { text: 'Dziś 4 lipca 2026. Spróbuję policzyć różnicę dni od 21 czerwca za pomocą kalkulatora.' }
-          ] } } ],
-        },
-      },
-      ctx: { role: 'model', label: 'Wniosek: dzisiejsza data', chars: 123 },
-    },
-
-    // TOOL_CALL #2 — CELOWO ŹLE SFORMUŁOWANY. Kalkulator akceptuje tylko
-    // cyfry, operatory i nawiasy (patrz TOOL_FNS.kalkulator w Zadaniu 2:
-    // regex /^[0-9+\-*/(). %]+$/) — polskie zdanie w wyrażeniu ten test
-    // nie przejdzie, więc narzędzie zwróci błąd, nie wynik.
-    {
-      kind: 'tool_call',
-      loop: 2,
-      tool: 'kalkulator',
-      args: { wyrazenie: 'od 21 czerwca do dziś' },
-      title: 'Wywołanie narzędzia: kalkulator',
-      body: 'Agent prosi o obliczenie wyrażenia „od 21 czerwca do dziś” za pomocą narzędzia „kalkulator”.',
-      why: 'Agent próbuje wpisać do kalkulatora zdanie, a nie działanie matematyczne — to błąd sformułowania, który narzędzie zaraz odrzuci.',
-      wire: {
-        label: 'Odpowiedź Gemini: prośba o wywołanie funkcji (functionCall)',
-        json: {
-          candidates: [ { content: { role: 'model', parts: [
-            { functionCall: { name: 'kalkulator', args: { wyrazenie: 'od 21 czerwca do dziś' } } }
-          ] } } ],
-        },
-      },
-      ctx: { role: 'model', label: 'functionCall: kalkulator', chars: 110 },
-    },
-
-    // OBSERVATION #2 — czerwona karta błędu (isError:true → renderer
-    // ustawia data-error="true", CSS .step-card[data-kind="observation"]
-    // [data-error="true"] maluje ją na czerwono). Treść błędu to
-    // DOKŁADNIE to, co zwraca prawdziwy TOOL_FNS.kalkulator dla tego
-        // wejścia — zweryfikowane osobnym uruchomieniem funkcji.
-    {
-      kind: 'observation',
-      loop: 2,
-      tool: 'kalkulator',
-      title: 'Wynik: kalkulator',
-      body: JSON.stringify({ blad: 'Niepoprawne wyrażenie: od 21 czerwca do dziś' }),
-      isError: true,
-      why: 'Błąd nie zatrzymuje agenta — wraca do niego jak każda inna obserwacja, a agent próbuje inaczej. Dokładnie po to jest pętla.',
-      wire: {
-        label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)',
-        json: {
-          request: { contents: [
-            { role: 'user', parts: [ { functionResponse: {
-              name: 'kalkulator',
-              response: { blad: 'Niepoprawne wyrażenie: od 21 czerwca do dziś' },
-            } } ] },
-          ] },
-        },
-      },
-      ctx: { role: 'tool', label: 'functionResponse: kalkulator (błąd)', chars: 135 },
-    },
-
-    // REFLECTION #2 — dokładna kopia z brief: agent nazywa błąd i
-    // wybiera naprawę (liczby zamiast słów), zamiast się poddać.
-    {
-      kind: 'reflection',
-      loop: 2,
-      title: 'Refleksja',
-      body: 'Narzędzie odrzuciło moje wyrażenie — kalkulator przyjmuje tylko liczby i działania. Poprawiam: policzę dni jako liczbę.',
-      why: 'Agent czyta treść błędu i na jej podstawie poprawia swoje argumenty — zamiast uparcie powtarzać ten sam błędny pomysł.',
-      wire: {
-        label: 'Odpowiedź Gemini: wniosek w postaci tekstu (po błędzie narzędzia)',
-        json: {
-          candidates: [ { content: { role: 'model', parts: [
-            { text: 'Narzędzie odrzuciło moje wyrażenie — kalkulator przyjmuje tylko liczby i działania. Poprawiam: policzę dni jako liczbę.' }
-          ] } } ],
-        },
-      },
-      ctx: { role: 'model', label: 'Wniosek: poprawka po błędzie', chars: 157 },
-    },
-
-    // TOOL_CALL #3 — poprawione wyrażenie: 9 dni pozostałych w czerwcu
-    // (22..30) + 4 dni lipca (1..4) = 13.
-    {
-      kind: 'tool_call',
-      loop: 3,
-      tool: 'kalkulator',
-      args: { wyrazenie: '9 + 4' },
-      title: 'Wywołanie narzędzia: kalkulator',
-      body: 'Agent prosi o obliczenie wyrażenia „9 + 4” za pomocą narzędzia „kalkulator”: 9 pozostałych dni czerwca plus 4 dni lipca.',
-      why: 'Tym razem wyrażenie zawiera tylko liczby i działanie — dokładnie to, co kalkulator potrafi obsłużyć.',
-      wire: {
-        label: 'Odpowiedź Gemini: prośba o wywołanie funkcji (functionCall)',
-        json: {
-          candidates: [ { content: { role: 'model', parts: [
-            { functionCall: { name: 'kalkulator', args: { wyrazenie: '9 + 4' } } }
-          ] } } ],
-        },
-      },
-      ctx: { role: 'model', label: 'functionCall: kalkulator', chars: 94 },
-    },
-
-    {
-      kind: 'observation',
-      loop: 3,
-      tool: 'kalkulator',
-      title: 'Wynik: kalkulator',
-      body: JSON.stringify({ wynik: 13 }),
-      isError: false,
-      why: '9 plus 4 to dokładnie 13 — tym razem to wynik obliczenia, policzony poprawnie sformułowanym wyrażeniem.',
-      wire: {
-        label: 'Zapytanie do Gemini: wynik narzędzia odesłany z powrotem (functionResponse)',
-        json: {
-          request: { contents: [
-            { role: 'user', parts: [ { functionResponse: {
-              name: 'kalkulator',
-              response: { wynik: 13 },
-            } } ] },
-          ] },
-        },
-      },
-      ctx: { role: 'tool', label: 'functionResponse: kalkulator', chars: 92 },
-    },
-
-    {
-      kind: 'answer',
-      title: 'Odpowiedź',
-      body: 'Od premiery strony (21 czerwca 2026) minęło 13 dni.',
-      why: 'To jest ostateczna odpowiedź — zbudowana z faktu (dzisiejsza data) i poprawionego obliczenia, mimo że po drodze jedno wywołanie narzędzia zakończyło się błędem.',
-      wire: {
-        label: 'Odpowiedź Gemini: tekst finalny pokazywany użytkownikowi',
-        json: {
-          candidates: [ { content: { role: 'model', parts: [
-            { text: 'Od premiery strony (21 czerwca 2026) minęło 13 dni.' }
-          ] } } ],
-        },
-      },
-      ctx: { role: 'model', label: 'Odpowiedź końcowa', chars: 89 },
-    },
-  ],
-};
-
-// SCENARIOS — lista scenariuszy dostępnych w selektorze (#presetSel).
-const SCENARIOS = [ dni100, bilety, awaria ];
-
-// ---- SNIPPETS — trzy dozwolone fragmenty kodu dla sekcji "Jak zbudowany
-// jest agent?". To NIE jest pełny kod agenta (tego demo świadomie nie
-// pokazuje) — to trzy JSON-y, które tłumaczą całą ideę function calling:
-// (a) jak OPISUJEMY narzędzie modelowi, (b) jak model PROSI o jego użycie,
-// (c) jak wynik wraca do rozmowy jako zwykła wiadomość. Teksty poniżej są
-// ręcznie sformatowane (nie przez JSON.stringify), żeby zmieścić się w
-// limicie ≤10 linii — ale każdy z nich jest poprawnym JSON-em.
+// Trzy fragmenty protokołu narzędzi, tak jak wymieniają je aplikacja na
+// pulpicie i model. Kształt jest neutralny wobec dostawcy.
 const SNIPPETS = [
-  {
-    title: '1. Opis narzędzia (functionDeclaration)',
-    caption: 'Tak OPISUJEMY narzędzie modelowi — sam opis, zero kodu.',
-    text: `{
-  "name": "kalkulator",
-  "description": "Wykonuje działanie matematyczne (np. dodawanie, mnożenie).",
-  "parameters": {
-    "type": "OBJECT",
-    "properties": { "wyrazenie": { "type": "STRING", "description": "Wyrażenie do obliczenia, np. 2 + 2." } },
-    "required": ["wyrazenie"]
-  }
-}`,
-  },
-  {
-    title: '2. Model prosi o narzędzie (functionCall)',
-    caption: 'Tak model PROSI o narzędzie…',
-    text: JSON.stringify({ tool: 'kalkulator', args: { wyrazenie: '365 * 3 + 14' } }, null, 2),
-  },
-  {
-    title: '3. Wynik wraca do rozmowy (functionResponse)',
-    caption: '…a tak wraca wynik — zwykła wiadomość w rozmowie.',
-    text: JSON.stringify({ tool: 'kalkulator', result: { wynik: 1109 } }, null, 2),
-  },
+  { title:'1. Aplikacja opisuje narzędzie modelowi (definicja)', caption:'Sam opis: nazwa, do czego służy, jakich argumentów oczekuje. Zero kodu.',
+    json:{ name:'kalkulator', description:'Liczy wyrażenie arytmetyczne.', input_schema:TOOLS.kalkulator.schema } },
+  { title:'2. Model prosi o narzędzie (tool_use)', caption:'Model nie liczy sam. Zwraca prośbę: nazwę i argumenty.',
+    json:{ role:'assistant', content:[ { type:'text', text:'Policzę różnicę kwot.' }, { type:'tool_use', id:'call_3', name:'kalkulator', input:{ wyrazenie:'2880 - 2640' } } ] } },
+  { title:'3. Aplikacja odsyła wynik (tool_result)', caption:'Wynik wraca do rozmowy jako zwykła wiadomość. Model czyta go w następnej turze.',
+    json:{ role:'user', content:[ { type:'tool_result', tool_use_id:'call_3', content:'{"wynik":240}' } ] } },
 ];
 
-// ---- mockRun — "odtwarzacz" scenariusza ---------------------------
-// Async generator: po kolei oddaje gotowe zdarzenia (StepEvent) ze
-// scenariusza. Nic nie liczy w locie — cała "inteligencja" siedzi już
-// w danych powyżej. Dzięki temu Zadanie 3 (renderer) może traktować
-// mockRun identycznie jak przyszły "prawdziwy" strumień z Gemini.
-async function* mockRun(scenario){ for(const ev of scenario.steps) yield ev; }
+const KIND_META = {
+  goal:        { icon:'🎯', label:'Zadanie' },
+  plan:        { icon:'📋', label:'Plan' },
+  replan:      { icon:'🔀', label:'Zmiana planu' },
+  tool_call:   { icon:'🔧', label:'Prośba o narzędzie' },
+  observation: { icon:'👁', label:'Wynik narzędzia' },
+  decision:    { icon:'⚖️', label:'Decyzja' },
+  wait:        { icon:'⏸', label:'Czekam' },
+  answer:      { icon:'✅', label:'Wynik' },
+};
+const ROLE_LABEL = { user:'użytkownik', model:'model', tool:'narzędzie' };
 
-// ============================================================
-// Zadanie 3: renderer kart + stepper Krok/Auto
-// ------------------------------------------------------------
-// Ten fragment DOTYKA strony (DOM). Zamienia "surowe" zdarzenia
-// (StepEvent) ze scenariusza na karty w #timeline i obsługuje
-// przyciski „Krok ▸” / „Auto”. Nie zajmuje się jeszcze stosem
-// kontekstu ani licznikiem kosztów (#ctxStack / #costMeter — to
-// Zadanie 4) ani podglądem "surowego" JSON-a (.wire — Zadanie 5).
-// ============================================================
+// ═══════════════════════════════════════════════════════════════
+// State
+// ═══════════════════════════════════════════════════════════════
+let current = null;      // aktywny scenariusz
+let steps = [];          // rozwinięte kroki
+let cursor = 0;          // indeks następnego kroku
+let finished = false;
+let autoTimer = null;
+let ctxChars = 0;
+let lastLoop = 0;
+let lastAnswer = null;
+let flashTimer = null;
+let flashCaptionEl = null;
 
-// Mały helper w stylu elT() z index.html: buduje element, ustawia
-// atrybuty, a treść (jeśli podana) wstawia przez textContent — NIGDY
-// przez innerHTML. Dzięki temu tekst pochodzący od modelu/narzędzia
-// (ev.body, argumenty wywołań itd.) nie może "wstrzyknąć" znaczników
-// HTML do strony.
-function el(tag, attrs={}){
-  const e = document.createElement(tag);
-  for(const k in attrs) e.setAttribute(k, attrs[k]);
-  return e;
-}
-function elT(tag, attrs={}, text){
-  const e = el(tag, attrs);
-  if(text!=null) e.textContent = text;
-  return e;
-}
+// ═══════════════════════════════════════════════════════════════
+// DOM refs
+// ═══════════════════════════════════════════════════════════════
+const scenGrid = document.getElementById('scenGrid');
+const runEl = document.getElementById('run');
+const emptyHint = document.getElementById('emptyHint');
+const goalText = document.getElementById('goalText');
+const lessonText = document.getElementById('lessonText');
+const timelineEl = document.getElementById('timeline');
+const toolListEl = document.getElementById('toolList');
+const stepBtn = document.getElementById('stepBtn');
+const autoBtn = document.getElementById('autoBtn');
+const speedEl = document.getElementById('speed');
+const speedOut = document.getElementById('speedOut');
+const loopCounterEl = document.getElementById('loopCounter');
+const chatBtn = document.getElementById('chatBtn');
+const chatPanel = document.getElementById('chatPanel');
+const chatLeft = document.getElementById('chatLeft');
+const chatRight = document.getElementById('chatRight');
+const ctxStackEl = document.getElementById('ctxStack');
+const costMeterEl = document.getElementById('costMeter');
+const phasesEl = document.getElementById('phases');
+const snippetsEl = document.getElementById('snippets');
+const presenterPanelEl = document.getElementById('presenterPanel');
 
-// ---- syntaxHighlight — skopiowane WERBATIM z index.html (linie 566-576):
-// koloruje JSON (klucze/stringi/liczby/booleany) do wyświetlenia w .wire pre
-// i #snippets pre. Najpierw ucieka &, <, > (żeby dowolny tekst w JSON-ie —
-// nawet zawierający np. "<img>" — trafił na ekran jako tekst, a nie znacznik),
-// dopiero potem owija fragmenty w <span class="req-*">. Dzięki tej kolejności
-// wynik jest bezpieczny do wstawienia przez innerHTML — tak samo jak w index.html.
+// ═══════════════════════════════════════════════════════════════
+// Helpers
+// ═══════════════════════════════════════════════════════════════
+function el(tag, attrs={}){ const e=document.createElement(tag); for(const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+function elT(tag, attrs={}, text){ const e=el(tag, attrs); if(text!=null) e.textContent=text; return e; }
+
 function syntaxHighlight(json){
   return json
     .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
     .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
       let cls="req-num";
       if(/^"/.test(m)) cls = /:$/.test(m) ? "req-key" : "req-str";
-      else if(/true|false/.test(m)) cls="req-bool";
-      else if(/null/.test(m)) cls="req-bool";
+      else if(/true|false|null/.test(m)) cls="req-bool";
       return `<span class="${cls}">${m}</span>`;
     });
 }
 
-// KIND_META — ikonka i polska etykieta dla każdego rodzaju zdarzenia.
-// Statyczne, kontrolowane przez nas napisy — nie pochodzą od modelu.
-const KIND_META = {
-  goal:        { icon:'🎯', label:'Cel' },
-  plan:        { icon:'📋', label:'Plan' },
-  tool_call:   { icon:'🔧', label:'Wywołanie narzędzia' },
-  observation: { icon:'👁', label:'Obserwacja' },
-  reflection:  { icon:'💭', label:'Refleksja' },
-  answer:      { icon:'✅', label:'Odpowiedź' },
-};
+function okrazenieForma(n){
+  if(n === 1) return 'okrążenie';
+  const m10 = n % 10, m100 = n % 100;
+  if(m10 >= 2 && m10 <= 4 && !(m100 >= 12 && m100 <= 14)) return 'okrążenia';
+  return 'okrążeń';
+}
+function wiadomoscForma(n){ return n === 1 ? 'wiadomość' : 'wiadomości'; }
 
-const timelineEl = document.getElementById('timeline');
-const stepBtn    = document.getElementById('stepBtn');
-const autoBtn    = document.getElementById('autoBtn');
-const presetSel  = document.getElementById('presetSel');
-const modeToggle = document.getElementById('modeToggle');
-const speedEl    = document.getElementById('speed');
-const loopCounterEl = document.getElementById('loopCounter');
-const ctxStackEl = document.getElementById('ctxStack');
-const costMeterEl = document.getElementById('costMeter');
-const snippetsEl = document.getElementById('snippets');
-const compareBtn = document.getElementById('compareBtn');
-const comparePanelEl = document.getElementById('comparePanel');
+function toolDefs(names){ return names.map(n => ({ name:n, description:TOOLS[n].desc, input_schema:TOOLS[n].schema })); }
 
-// ============================================================
-// Zadanie 4: stos kontekstu rozmowy (#ctxStack) + licznik kosztu
-// (#costMeter). Model językowy nie "pamięta" rozmowy między turami —
-// przy KAŻDYM zapytaniu trzeba mu ponownie wysłać cały dotychczasowy
-// kontekst (pytanie, plany, wywołania narzędzi, ich wyniki). To właśnie
-// jest źródło rosnących kosztów długich pętli agenta: stos rośnie, a
-// z nim liczba tokenów wysyłanych od nowa przy każdym okrążeniu.
-// ============================================================
+// buildSteps: rozwija zwięzłe wpisy scenariusza do pełnych kart.
+// Numer okrążenia rośnie przy każdej prośbie o narzędzie. Rozmiar
+// kontekstu liczymy z JSON-u protokołu, więc licznik jest uczciwy.
+function buildSteps(sc){
+  const out = [];
+  let loop = 0, callId = 0;
+  const wireLabelReq = 'Aplikacja → model';
+  const wireLabelRes = 'Model → aplikacja';
+  const chars = j => JSON.stringify(j).length;
+  for(const s of sc.steps){
+    if(s.goal){
+      const json = { tools:toolDefs(sc.tools), messages:[ { role:'user', content:sc.goal } ] };
+      out.push({ kind:'goal', title:'Zadanie od użytkownika', body:sc.goal,
+        why:'Tak brzmi polecenie. Agent zapisuje je sobie dosłownie, razem z warunkami, które zawiera.',
+        wire:{ label:wireLabelReq + ': zadanie i lista narzędzi', json }, ctx:{ role:'user', label:'zadanie', chars:chars(json) } });
+    } else if(s.plan){
+      const json = { role:'assistant', content:[ { type:'text', text:s.plan } ] };
+      out.push({ kind:'plan', title:'Plan działania', body:s.plan, why:s.why,
+        wire:{ label:wireLabelRes + ': plan jako tekst, bez prośby o narzędzie', json }, ctx:{ role:'model', label:'plan', chars:chars(json) } });
+    } else if(s.replan){
+      const json = { role:'assistant', content:[ { type:'text', text:s.replan } ] };
+      out.push({ kind:'replan', title:'Zmiana planu', body:s.replan, why:s.why, loop,
+        wire:{ label:wireLabelRes + ': nowy plan po wyniku', json }, ctx:{ role:'model', label:'zmiana planu', chars:chars(json) } });
+    } else if(s.decision){
+      const json = { role:'assistant', content:[ { type:'text', text:s.decision } ] };
+      out.push({ kind:'decision', title:'Decyzja', body:s.decision, why:s.why, loop,
+        wire:{ label:wireLabelRes + ': decyzja jako tekst', json }, ctx:{ role:'model', label:'decyzja', chars:chars(json) } });
+    } else if(s.wait){
+      out.push({ kind:'wait', title:'Aplikacja usypia agenta do jutra', body:s.wait, why:s.why, loop });
+    } else if(s.call){
+      loop += 1; callId += 1;
+      const content = [];
+      if(s.say) content.push({ type:'text', text:s.say });
+      content.push({ type:'tool_use', id:'call_'+callId, name:s.call, input:s.args || {} });
+      const json = { role:'assistant', content };
+      out.push({ kind:'tool_call', tool:s.call, args:s.args || {}, callId, loop, title:'Prośba o narzędzie: '+s.call,
+        body:s.say || ('Agent prosi aplikację o wywołanie „'+s.call+'”.'), why:s.why,
+        wire:{ label:wireLabelRes + ': tekst i prośba o narzędzie w jednej turze', json }, ctx:{ role:'model', label:'tool_use: '+s.call, chars:chars(json) } });
+    } else if(s.result !== undefined){
+      const prev = [...out].reverse().find(x => x.kind === 'tool_call');
+      const json = { role:'user', content:[ { type:'tool_result', tool_use_id:'call_'+(prev ? prev.callId : 0), content:JSON.stringify(s.result) } ] };
+      out.push({ kind:'observation', tool:prev ? prev.tool : '', title:'Wynik: '+(prev ? prev.tool : ''), body:JSON.stringify(s.result, null, 1),
+        isError:!!s.error, why:s.why, loop,
+        wire:{ label:wireLabelReq + ': wynik narzędzia wraca jako wiadomość', json }, ctx:{ role:'tool', label:'tool_result: '+(prev ? prev.tool : ''), chars:chars(json) } });
+    } else if(s.answer){
+      const json = { role:'assistant', content:[ { type:'text', text:s.answer } ] };
+      out.push({ kind:'answer', title:'Wynik dla użytkownika', body:s.answer, why:s.why, loop,
+        wire:{ label:wireLabelRes + ': odpowiedź końcowa, bez prośby o narzędzie', json }, ctx:{ role:'model', label:'wynik', chars:chars(json) } });
+    }
+  }
+  return out;
+}
 
-let ctxChars = 0; // suma znaków wszystkich bloków kontekstu w bieżącym przebiegu
+// ═══════════════════════════════════════════════════════════════
+// Render
+// ═══════════════════════════════════════════════════════════════
+function renderPicker(){
+  SCENARIOS.forEach(sc => {
+    const b = el('button', { type:'button', class:'scen', 'data-id':sc.id, 'aria-pressed':'false' });
+    b.appendChild(elT('span', { class:'s-icon' }, sc.icon));
+    b.appendChild(elT('span', { class:'s-domain' }, sc.domain));
+    b.appendChild(elT('span', { class:'s-title' }, sc.title));
+    b.appendChild(elT('span', { class:'s-lesson' }, sc.lesson));
+    b.addEventListener('click', () => selectScenario(sc.id));
+    scenGrid.appendChild(b);
+  });
+}
 
-// Polskie etykiety ról kontekstu — statyczne, nasze teksty.
-const ROLE_LABEL = { user: 'użytkownik', model: 'model', tool: 'narzędzie' };
+function renderTools(sc){
+  toolListEl.innerHTML = '';
+  sc.tools.forEach(name => {
+    const t = TOOLS[name];
+    const li = el('li', { class:'tool', 'data-tool':name, 'data-act':t.act, 'data-active':'false', 'data-used':'false' });
+    li.appendChild(elT('span', { class:'t-icon' }, t.icon));
+    const mid = el('div');
+    mid.appendChild(elT('div', { class:'t-name' }, name));
+    mid.appendChild(elT('div', { class:'t-desc' }, t.desc));
+    li.appendChild(mid);
+    li.appendChild(elT('span', { class:'t-kind' }, t.act ? 'działanie' : 'odczyt'));
+    toolListEl.appendChild(li);
+  });
+}
 
-// pushCtx(ctx) — dokłada jeden blok do stosu kontekstu ("Pamięć rozmowy")
-// i aktualizuje sumę znaków oraz licznik kosztu. ctx = { role, label, chars }
-// pochodzi z ev.ctx (dane scenariusza) — label to NASZ opis kroku, ale
-// wstawiamy go przez textContent na wszelki wypadek (Zadanie 7 podłączy
-// tu docelowo prawdziwe odpowiedzi modelu).
+function setPhase(kind){
+  const order = ['goal','plan','loop','answer'];
+  const phase = (kind === 'goal') ? 'goal' : (kind === 'plan') ? 'plan' : (kind === 'answer') ? 'answer' : 'loop';
+  const idx = order.indexOf(phase);
+  phasesEl.querySelectorAll('.phase').forEach(p => {
+    const i = order.indexOf(p.dataset.phase);
+    p.dataset.state = i < idx ? 'done' : (i === idx ? 'active' : '');
+  });
+  if(kind === 'answer') phasesEl.querySelector('[data-phase="answer"]').dataset.state = 'done';
+}
+
 function pushCtx(ctx){
-  const roleLabel = ROLE_LABEL[ctx.role] || ctx.role;
-  const block = elT('div', { class:'ctx-block', 'data-role':ctx.role },
-    roleLabel + ' → ' + ctx.label + ' · ' + ctx.chars + ' zn.');
+  const block = elT('div', { class:'ctx-block', 'data-role':ctx.role }, (ROLE_LABEL[ctx.role] || ctx.role) + ' → ' + ctx.label + ' · ' + ctx.chars + ' zn.');
   ctxStackEl.appendChild(block);
   ctxChars += ctx.chars;
   updateCost();
 }
-
-// wiadomoscForma(n) — polska odmiana rzeczownika "wiadomość" dla liczników
-// w UI: 1 → liczba pojedyncza ("wiadomość"), każda inna wartość (0, 2, 5,
-// 12, 21…) → "wiadomości". Dla TEGO konkretnego rzeczownika to poprawne —
-// nie trzeba pełnej reguły "kończy się na 2-4, ale nie na 12-14", bo forma
-// dla 2-4 i dla 5+ jest tu identyczna ("wiadomości").
-function wiadomoscForma(n){
-  return n === 1 ? 'wiadomość' : 'wiadomości';
-}
-
-// okrazenieForma(n) — polska odmiana rzeczownika "okrążenie" wg reguły
-// paucalnej: 1 → "okrążenie", 2-4 (ale NIE 12-14, bo to "nastki" mają
-// swoją formę) → "okrążenia", 0/5+ (i 12-14) → "okrążeń".
-function okrazenieForma(n){
-  if(n === 1) return 'okrążenie';
-  const mod10 = n % 10, mod100 = n % 100;
-  if(mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14)) return 'okrążenia';
-  return 'okrążeń';
-}
-
-// updateCost() — przerysowuje #costMeter na podstawie liczby bloków w
-// stosie (= liczby "wiadomości") i sumy znaków (przybliżenie: 1 token
-// ≈ 4 znaki — to standardowy szacunek, nie prawdziwy tokenizer).
-// INWARIANT: liczba wiadomości = childElementCount stosu, więc do
-// #ctxStack wolno dokładać WYŁĄCZNIE elementy .ctx-block — nic innego.
 function updateCost(){
   const n = ctxStackEl.childElementCount;
-  const tokens = Math.round(ctxChars / 4);
-  costMeterEl.textContent =
-    'Kontekst: ' + n + ' ' + wiadomoscForma(n) + ' · ~' + tokens + ' tokenów — i rośnie z każdym okrążeniem';
+  const tokens = Math.round(ctxChars / 3.2); // szacunek dla polskiego tekstu
+  costMeterEl.textContent = 'Kontekst: ' + n + ' ' + wiadomoscForma(n) + ' · ok. ' + tokens + ' tokenów (szacunek). Rośnie z każdym okrążeniem.';
 }
-
-// flashCtx() — na każdej "prawdziwej" turze modelu (wywołanie narzędzia
-// albo odpowiedź końcowa) CAŁY dotychczasowy stos trzeba wysłać od nowa.
-// Podświetlamy go na chwilę (.flash — animacja zdefiniowana w CSS) i
-// pokazujemy podpis obok stosu. Podpis to jeden, wielokrotnie używany
-// element (nie dokładamy nowego węzła przy każdym błysku).
-let flashCaptionEl = null;
-let flashTimer = null;
 function flashCtx(){
-  if(!flashCaptionEl){
-    flashCaptionEl = elT('div', { class:'ctx-flash-caption' }, '');
-    ctxStackEl.after(flashCaptionEl);
-  }
-  flashCaptionEl.textContent = '⤴ cała ta pamięć właśnie poleciała do modelu — ponownie';
-  // Gdy poprzedni błysk jeszcze trwa (Auto na szybkich obrotach: dwie tury
-  // modelu < 600 ms od siebie), samo classList.add('flash') byłoby no-opem
-  // i animacja CSS by się NIE zrestartowała — druga tura nie dałaby żadnego
-  // pulsu. Dlatego zdejmujemy klasę, wymuszamy przeliczenie stylów (odczyt
-  // offsetWidth — ta sama technika co przy wjeździe kart w renderStep) i
-  // dopiero wtedy dodajemy ją z powrotem: przeglądarka widzi animację "od zera".
-  ctxStackEl.classList.remove('flash');
-  void ctxStackEl.offsetWidth;
-  ctxStackEl.classList.add('flash');
+  if(!flashCaptionEl){ flashCaptionEl = elT('div', { class:'ctx-flash-caption' }, ''); ctxStackEl.after(flashCaptionEl); }
+  flashCaptionEl.textContent = '⤴ cała ta pamięć właśnie poleciała do modelu, ponownie';
+  ctxStackEl.classList.remove('flash'); void ctxStackEl.offsetWidth; ctxStackEl.classList.add('flash');
   if(flashTimer) clearTimeout(flashTimer);
-  flashTimer = setTimeout(function(){
-    ctxStackEl.classList.remove('flash');
-    if(flashCaptionEl) flashCaptionEl.textContent = '';
-    flashTimer = null;
-  }, 600);
+  flashTimer = setTimeout(() => { ctxStackEl.classList.remove('flash'); if(flashCaptionEl) flashCaptionEl.textContent = ''; flashTimer = null; }, 600);
 }
 
-// ---- renderStep(ev) — buduje jedną kartę kroku i wstawia ją do #timeline.
-// Zwraca nic; efekt uboczny to jedna nowa karta na scenie.
 function renderStep(ev){
   const meta = KIND_META[ev.kind] || { icon:'❔', label:ev.kind };
 
+  if(ev.loop && ev.loop !== lastLoop && ev.kind === 'tool_call'){
+    timelineEl.appendChild(elT('div', { class:'loop-divider' }, 'Okrążenie ' + ev.loop + ' z maks. ' + MAX_ITER));
+    lastLoop = ev.loop;
+  }
+
   const card = el('div', { class:'step-card', 'data-kind':ev.kind });
   if(ev.isError) card.setAttribute('data-error', 'true');
+  if(ev.kind === 'tool_call' && TOOLS[ev.tool]?.act) card.setAttribute('data-act', 'true');
 
-  // Nagłówek: ikonka (statyczna, nasza) + tytuł. Tytuł preferujemy z
-  // ev.title (opis kroku po polsku, przygotowany przez nas), a jeśli
-  // go brak — spadamy na etykietę z KIND_META. To dalej NASZ tekst,
-  // nie tekst modelu, więc textContent wystarcza (i tak go używamy).
   const head = el('div', { class:'k-head' });
-  const iconSpan = elT('span', { class:'k-icon' }, meta.icon);
-  const titleSpan = elT('span', { class:'k-title' }, ev.title || meta.label);
-  head.appendChild(iconSpan);
-  head.appendChild(titleSpan);
+  head.appendChild(elT('span', { class:'k-icon' }, meta.icon));
+  head.appendChild(elT('span', { class:'k-title' }, ev.title || meta.label));
+  if(ev.kind === 'tool_call' && TOOLS[ev.tool]?.act) head.appendChild(elT('span', { class:'k-act' }, 'działanie · symulowane'));
+  head.appendChild(elT('span', { class:'k-kind' }, meta.label));
   card.appendChild(head);
 
-  // Treść kroku (ev.body) — to tekst wygenerowany przez model albo
-  // pochodzący z wyniku narzędzia. Zawsze textContent, nigdy innerHTML.
   card.appendChild(elT('p', { class:'k-body' }, ev.body || ''));
 
-  // Dla wywołań narzędzia pokazujemy dodatkowo linię z "wywołaniem"
-  // w stylu kodu: nazwa_narzedzia(klucz: "wartość", ...). Nazwa
-  // narzędzia i wartości argumentów pochodzą z danych scenariusza /
-  // (w przyszłości) z modelu — więc budujemy ją z osobnych węzłów
-  // tekstowych (textContent), a nie przez sklejanie stringów do innerHTML.
-  if(ev.kind === 'tool_call' && ev.tool){
-    const argsLine = el('p', { class:'k-args' });
-    // TOOLS_UI daje ikonkę narzędzia po polsku dla człowieka (statyczne,
-    // nasze dane) — dokładamy ją przed nazwą narzędzia, tak samo bezpiecznie
-    // (textContent-owy węzeł) jak resztę tej linii.
-    const uiInfo = TOOLS_UI[ev.tool];
-    if(uiInfo) argsLine.appendChild(document.createTextNode(uiInfo.icon + ' '));
-    argsLine.appendChild(document.createTextNode(ev.tool + '('));
+  if(ev.kind === 'tool_call'){
+    const t = TOOLS[ev.tool];
+    const line = el('p', { class:'k-args' });
+    line.appendChild(document.createTextNode((t ? t.icon + ' ' : '') + ev.tool + '('));
     const entries = Object.entries(ev.args || {});
-    entries.forEach(([key, val], i)=>{
-      argsLine.appendChild(document.createTextNode(key + ': '));
-      argsLine.appendChild(document.createTextNode(JSON.stringify(val)));
-      if(i < entries.length - 1) argsLine.appendChild(document.createTextNode(', '));
+    entries.forEach(([k, v], i) => {
+      line.appendChild(document.createTextNode(k + ': ' + JSON.stringify(v) + (i < entries.length - 1 ? ', ' : '')));
     });
-    argsLine.appendChild(document.createTextNode(')'));
-    card.appendChild(argsLine);
+    line.appendChild(document.createTextNode(')'));
+    card.appendChild(line);
+    toolListEl.querySelectorAll('.tool').forEach(li => { li.dataset.active = (li.dataset.tool === ev.tool); if(li.dataset.tool === ev.tool) li.dataset.used = 'true'; });
+  }
+  if(ev.kind === 'answer' || ev.kind === 'wait'){
+    toolListEl.querySelectorAll('.tool').forEach(li => { li.dataset.active = 'false'; });
   }
 
-  // Podpis "dlaczego" — krótkie wyjaśnienie kroku dla widza (prowadzący
-  // demo czyta go na głos). Też tekst z danych scenariusza → textContent.
-  if(ev.why){
-    card.appendChild(elT('div', { class:'k-why' }, ev.why));
-  }
+  if(ev.why) card.appendChild(elT('div', { class:'k-why' }, ev.why));
 
-  // Zadanie 5: "API call" — domyślnie zwinięty <details> z
-  // dokładnym fragmentem żądania/odpowiedzi Gemini (ev.wire.json),
-  // podświetlonym tak samo jak podgląd zapytania w index.html. To dla
-  // ciekawskich widzów, którzy chcą zobaczyć "surowy" JSON, a nie tylko
-  // nasze polskie streszczenie kroku.
   if(ev.wire){
     const details = el('details', { class:'wire' });
-    details.appendChild(elT('summary', {}, 'API call'));
-    // ev.wire.label to nasz krótki podpis, co dokładnie widać w tym JSON-ie
-    // (np. "Zapytanie wysłane do Gemini…") — pokazujemy go jako podpis nad
-    // <pre>, wewnątrz <details> (widoczny dopiero po rozwinięciu). Nasz
-    // tekst, ale i tak przez textContent, dla spójności z resztą karty.
-    if(ev.wire.label){
-      details.appendChild(elT('div', { class:'wire-label' }, ev.wire.label));
-    }
+    details.appendChild(elT('summary', {}, 'Protokół'));
+    if(ev.wire.label) details.appendChild(elT('div', { class:'wire-label' }, ev.wire.label));
     const pre = el('pre', {});
-    // syntaxHighlight ucieka &,<,> zanim owinie fragmenty w <span>,
-    // więc przypisanie przez innerHTML jest tu bezpieczne (patrz komentarz
-    // przy definicji funkcji) — ten sam wzorzec co w index.html.
     pre.innerHTML = syntaxHighlight(JSON.stringify(ev.wire.json, null, 2));
     details.appendChild(pre);
     card.appendChild(details);
   }
 
   timelineEl.appendChild(card);
-
-  // Zadanie 4: jeśli zdarzenie niesie fragment kontekstu (ev.ctx), dokładamy
-  // go do stosu „Pamięć rozmowy" i aktualizujemy licznik kosztu. Przy
-  // wywołaniu narzędzia i przy odpowiedzi końcowej — czyli przy każdej
-  // "prawdziwej" turze modelu — cały dotychczasowy stos leci do modelu
-  // od nowa, więc dodatkowo błyskamy całym stosem (flashCtx).
   if(ev.ctx) pushCtx(ev.ctx);
-  if(ev.kind === 'tool_call' || ev.kind === 'answer') flashCtx();
+  if(ev.kind === 'tool_call' || ev.kind === 'answer' || ev.kind === 'decision' || ev.kind === 'replan') flashCtx();
+  setPhase(ev.kind);
 
-  // Wjazd karty "od dołu": zanim dodamy klasę .shown, wymuszamy
-  // przeliczenie stylów (odczyt offsetWidth = synchroniczny reflow).
-  // Dzięki temu przeglądarka "zapamięta" stan początkowy (opacity:0,
-  // translateY) i przejście CSS faktycznie zagra. Robimy to synchronicznie,
-  // a NIE przez requestAnimationFrame — rAF nie odpala w kartach w tle
-  // (i bywa pomijany w środowiskach automatycznych), przez co karty
-  // zostawały niewidoczne (opacity:0 na zawsze).
   void card.offsetWidth;
   card.classList.add('shown');
-  card.scrollIntoView({ behavior:'smooth', block:'end' });
+  card.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
 
-// ---- Stan steppera -------------------------------------------------
-// MAX_ITER — twardy limit "okrążeń" pętli agenta w tym demie. Prawdziwe
-// agenty też mają taki bezpiecznik (żeby nie kręciły się w kółko bez
-// końca); u nas to stała, którą pokazujemy w liczniku „okrążenie N / 5”.
-const MAX_ITER = 5;
+function renderChat(){
+  if(!current) return;
+  chatLeft.innerHTML = ''; chatRight.innerHTML = '';
+  chatLeft.appendChild(elT('h3', {}, '💬 Zwykły czat'));
+  const u = elT('p', { class:'bubble user' }, current.goal); u.prepend(elT('span', { class:'who' }, 'Ty'));
+  chatLeft.appendChild(u);
+  const b = elT('p', { class:'bubble bot' }, current.chat.reply); b.prepend(elT('span', { class:'who' }, 'czat'));
+  chatLeft.appendChild(b);
+  const gaps = el('ul', { class:'gaps' });
+  current.chat.gaps.forEach(g => gaps.appendChild(elT('li', {}, g)));
+  chatLeft.appendChild(gaps);
 
-let gen = null;          // aktualny generator zdarzeń (mockRun/liveRun)
-let autoTimer = null;    // id setInterval, gdy tryb Auto jest włączony
-let finished = false;    // czy bieżący przebieg dobiegł końca (→ „Od nowa ↺”)
-
-// Zadanie 6: dane potrzebne przez #compareBtn / showCompare() — który
-// scenariusz aktualnie leci i ile "okrążeń" pętli faktycznie wykonał.
-// Aktualizowane tylko przez startRun()/step(), czytane tylko przy kliknięciu
-// #compareBtn (a przycisk jest zablokowany, dopóki przebieg się nie skończy).
-let currentScenario = null;
-let maxLoopSeen = 0;
-
-// lastAnswer — dokładnie ta karta 'answer', którą FAKTYCZNIE pokazał ten
-// przebieg (mock albo live), niezależnie od tego, czy to sukces czy karta
-// błędu. showCompare() czyta stąd, a NIE ze scenariusza — inaczej po
-// przebiegu na żywo w panelu porównania wciąż widniałaby stara, spreparowana
-// odpowiedź mock (błędna data, albo odpowiedź mimo że przebieg skończył się
-// błędem). Resetowane na null przy każdym startRun().
-let lastAnswer = null;
-
-function stopAuto(){
-  if(autoTimer){ clearInterval(autoTimer); autoTimer = null; }
-  autoBtn.textContent = '▶ Auto';
+  chatRight.appendChild(elT('h3', {}, '🛠 Agent na pulpicie'));
+  const u2 = elT('p', { class:'bubble user' }, current.goal); u2.prepend(elT('span', { class:'who' }, 'Ty'));
+  chatRight.appendChild(u2);
+  if(finished && lastAnswer){
+    const a = elT('p', { class:'bubble agent' }, lastAnswer); a.prepend(elT('span', { class:'who' }, 'agent · ' + lastLoop + ' ' + okrazenieForma(lastLoop) + ' · ok. ' + Math.round(ctxChars/3.2) + ' tokenów'));
+    chatRight.appendChild(a);
+  } else {
+    chatRight.appendChild(elT('p', { class:'pending' }, 'Wynik agenta pojawi się tutaj po przejściu scenariusza do końca. Kliknij „Krok ▸” lub „Auto”.'));
+  }
+  const wins = el('ul', { class:'wins' });
+  current.chat.wins.forEach(w => wins.appendChild(elT('li', {}, w)));
+  chatRight.appendChild(wins);
 }
 
-// startRun() — czyści scenę i tworzy nowy generator dla aktualnie
-// wybranego scenariusza + trybu, po czym od razu odsłania pierwszą
-// kartę (🎯 cel) — scena nigdy nie stoi pusta po wyborze scenariusza,
-// a pierwsze kliknięcie „Krok ▸” prezentera odsłania już plan.
-// Tryb "na żywo" (liveRun, Zadanie 7) jest w pełni podłączony: przełącznik
-// #modeToggle wybiera między mockRun(scenario) (odtwarzacz scenariusza) i
-// liveRun(scenario.cel) (prawdziwe wywołania Gemini) — obie gałęzie
-// faktycznie się wykonują, jeden i ten sam step()/renderStep() poniżej
-// obsługuje zdarzenia z obu.
-function startRun(){
+// ═══════════════════════════════════════════════════════════════
+// Run control
+// ═══════════════════════════════════════════════════════════════
+function stopAuto(){ if(autoTimer){ clearInterval(autoTimer); autoTimer = null; } autoBtn.textContent = '▶ Auto'; }
+function startAuto(){
+  if(finished) restart();
+  autoBtn.textContent = '⏸ Auto';
+  autoTimer = setInterval(step, Number(speedEl.value) * 1000);
+}
+
+function selectScenario(id){
+  current = SCENARIOS.find(s => s.id === id) || null;
+  scenGrid.querySelectorAll('.scen').forEach(b => b.setAttribute('aria-pressed', b.dataset.id === id));
+  if(!current) return;
+  runEl.hidden = false; emptyHint.hidden = true;
+  goalText.textContent = current.goal;
+  lessonText.textContent = current.lesson;
+  renderTools(current);
+  restart();
+  runEl.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function restart(){
   stopAuto();
-  timelineEl.innerHTML = '';
-
-  // Zadanie 4: nowy przebieg = pusta pamięć rozmowy i zerowy koszt.
-  ctxStackEl.innerHTML = '';
-  ctxStackEl.classList.remove('flash');
-  if(flashTimer){ clearTimeout(flashTimer); flashTimer = null; }
-  if(flashCaptionEl) flashCaptionEl.textContent = ''; // element jest poza #ctxStack, więc go nie usuwamy — czyścimy tekst
-  ctxChars = 0;
-  costMeterEl.textContent = '';
-
-  loopCounterEl.textContent = '';       // licznik pusty na starcie przebiegu
-  finished = false;
+  steps = buildSteps(current);
+  cursor = 0; finished = false; ctxChars = 0; lastLoop = 0; lastAnswer = null;
+  timelineEl.innerHTML = ''; ctxStackEl.innerHTML = ''; costMeterEl.textContent = '';
+  ctxStackEl.classList.remove('flash'); if(flashTimer){ clearTimeout(flashTimer); flashTimer = null; } if(flashCaptionEl) flashCaptionEl.textContent = '';
+  loopCounterEl.textContent = '';
   stepBtn.textContent = 'Krok ▸';
-  stepBtn.disabled = false;
-
-  // Zadanie 6: nowy przebieg = ukryty panel porównania i zablokowany
-  // przycisk #compareBtn (porównanie ma sens dopiero po dokończonym
-  // przebiegu — wcześniej nie znamy ani liczby okrążeń, ani kosztu).
-  comparePanelEl.hidden = true;
-  comparePanelEl.innerHTML = '';
-  compareBtn.disabled = true;
-  compareBtn.title = 'najpierw dokończ przebieg';
-  maxLoopSeen = 0;
-  lastAnswer = null;
-
-  const scenario = SCENARIOS.find(s => s.id === presetSel.value);
-  currentScenario = scenario || null;
-  if(!scenario){ gen = null; return; }
-
-  // Zadanie 7: w trybie na żywo data_i_czas ma zwracać PRAWDZIWĄ dzisiejszą
-  // datę (nie stałą z demo) — inaczej odpowiedzi Gemini o dniach tygodnia
-  // przestałyby się zgadzać z tym, co narzędzie faktycznie zwraca.
-  MOCK_MODE_DATE = !modeToggle.checked;
-
-  gen = modeToggle.checked
-    ? liveRun(scenario.cel)
-    : mockRun(scenario);
-
-  step();                               // od razu pokaż kartę celu (🎯)
+  toolListEl.querySelectorAll('.tool').forEach(li => { li.dataset.active = 'false'; li.dataset.used = 'false'; });
+  phasesEl.querySelectorAll('.phase').forEach(p => p.dataset.state = '');
+  if(!chatPanel.hidden) renderChat();
+  step(); // od razu karta zadania
 }
 
-// step() — pobiera jedno zdarzenie z generatora i renderuje je (albo
-// kończy przebieg, gdy generator jest wyczerpany).
-async function step(){
-  if(!gen || finished) return;
-  // myGen — migawka generatora sprzed await. Tryb na żywo robi prawdziwy
-  // fetch wewnątrz gen.next(), więc jeśli w międzyczasie ktoś kliknął nowy
-  // scenariusz/przełącznik (startRun() podmienia `gen` na nowy generator),
-  // ten "osierocony" `await` w końcu się rozwiąże z kartą ze STAREGO
-  // przebiegu — bez tej straży dorysowałaby się na scenie NOWEGO przebiegu.
-  const myGen = gen;
-  const { value, done } = await gen.next();
-  if(myGen !== gen) return;               // stary przebieg — nic nie rysujemy
-  if(done){
-    // Koniec przebiegu: nie blokujemy przycisku na stałe — zamieniamy
-    // go w „Od nowa ↺”, żeby prezenter mógł jednym kliknięciem
-    // powtórzyć scenariusz (ponowny wybór tej samej opcji w <select>
-    // nie wywołuje zdarzenia change, więc select nie wystarczy).
-    finished = true;
-    stepBtn.textContent = 'Od nowa ↺';
-    stopAuto();
-    // Zadanie 6: dopiero teraz porównanie ma sens — odblokuj #compareBtn,
-    // ale TYLKO gdy przebieg faktycznie skończył się dobrą odpowiedzią.
-    // Karta błędu (np. brak klucza API, błąd sieci, limit okrążeń) nie
-    // daje sensownej odpowiedzi agenta do porównania.
-    if(currentScenario){
-      if(lastAnswer && !lastAnswer.isError){
-        compareBtn.disabled = false;
-        compareBtn.title = '';
-      } else {
-        compareBtn.disabled = true;
-        compareBtn.title = 'przebieg zakończył się błędem — porównanie niedostępne';
-      }
-    }
-    return;
-  }
-  renderStep(value);
-  // Zapamiętujemy DOKŁADNIE tę kartę 'answer', którą ten przebieg pokazał —
-  // showCompare() użyje jej zamiast szukać odpowiedzi w danych scenariusza
-  // (patrz komentarz przy definicji lastAnswer).
-  if(value.kind === 'answer'){
-    lastAnswer = { body: value.body, isError: !!value.isError };
-  }
-  // Licznik okrążeń: aktualizujemy TYLKO gdy zdarzenie należy do
-  // okrążenia pętli (ma pole loop). Zdarzenia bez loop (cel, plan,
-  // odpowiedź) nie kasują poprzedniej wartości w trakcie przebiegu.
-  if(value.loop != null){
-    loopCounterEl.textContent = `okrążenie ${value.loop} / ${MAX_ITER}`;
-    maxLoopSeen = Math.max(maxLoopSeen, value.loop);
+function step(){
+  if(!current) return;
+  if(finished){ restart(); return; }
+  const ev = steps[cursor++];
+  renderStep(ev);
+  if(ev.loop) loopCounterEl.textContent = 'okrążenie ' + ev.loop + ' / ' + MAX_ITER;
+  if(ev.kind === 'answer') lastAnswer = ev.body;
+  if(cursor >= steps.length){
+    finished = true; stepBtn.textContent = 'Od nowa ↺'; stopAuto();
+    if(!chatPanel.hidden) renderChat();
   }
 }
 
-// ============================================================
-// Zadanie 6: showCompare() — panel „Porównaj ze zwykłym chatbotem”.
-// Pokazuje obok siebie: (lewo) odpowiedź, jaką dałby chatbot bez
-// narzędzi w JEDNYM strzale (scenario.oneshot), i (prawo) odpowiedź
-// agenta z tego właśnie, dokończonego przebiegu — razem z liczbą
-// okrążeń pętli i przybliżonym kosztem w tokenach. Wywoływane tylko
-// gdy #compareBtn jest aktywny, czyli po dokończonym przebiegu.
-// ============================================================
-function showCompare(){
-  if(!currentScenario) return;
-
-  comparePanelEl.innerHTML = '';
-  const grid = el('div', { class:'compare-grid' });
-
-  // Lewa karta: zwykły chatbot, jeden strzał — bez narzędzi, bez pętli.
-  const oneshotCard = el('div', { class:'compare-card oneshot' });
-  oneshotCard.appendChild(elT('h3', {}, '🤖 Zwykły chatbot — jeden strzał'));
-  // oneshot.body pochodzi z danych scenariusza (nasz tekst), ale i tak
-  // wstawiamy go przez textContent — ta sama zasada co wszędzie indziej.
-  oneshotCard.appendChild(elT('p', {}, currentScenario.oneshot.body));
-  oneshotCard.appendChild(elT('p', { class:'compare-meta' }, currentScenario.oneshot.why));
-  grid.appendChild(oneshotCard);
-
-  // Prawa karta: agent z pętlą narzędzi — DOKŁADNIE ta karta 'answer',
-  // którą pokazał ten właśnie, faktycznie zakończony przebieg (lastAnswer;
-  // patrz komentarz przy jej definicji) — NIE odpowiedź ze scenariusza mock,
-  // bo w trybie na żywo byłaby po prostu nieprawdziwa (inna data itd.).
-  // #compareBtn jest zablokowany, dopóki lastAnswer nie jest udaną
-  // odpowiedzią, więc tutaj lastAnswer zawsze istnieje i nie jest błędem.
-  const agentCard = el('div', { class:'compare-card agent' });
-  agentCard.appendChild(elT('h3', {}, '🛠 Agent — pętla z narzędziami'));
-  agentCard.appendChild(elT('p', {}, lastAnswer ? lastAnswer.body : ''));
-  const tokens = Math.round(ctxChars / 4);
-  agentCard.appendChild(elT('p', { class:'compare-meta' }, `${maxLoopSeen} ${okrazenieForma(maxLoopSeen)} · ~${tokens} tokenów`));
-  grid.appendChild(agentCard);
-
-  comparePanelEl.appendChild(grid);
-  comparePanelEl.hidden = false;
-  comparePanelEl.scrollIntoView({ behavior:'smooth', block:'nearest' });
+function toggleChat(){
+  const show = chatPanel.hidden;
+  chatPanel.hidden = !show;
+  chatBtn.setAttribute('aria-pressed', show);
+  if(show){ renderChat(); chatPanel.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
 }
 
-// ---- Podpięcie kontrolek toolbara ----------------------------------
-
-// Wypełnij #presetSel scenariuszami z SCENARIOS (nie na sztywno w HTML!).
-// Usuwamy placeholdery i budujemy opcje z danych.
-presetSel.innerHTML = '';
-presetSel.appendChild(elT('option', { value:'' }, '— wybierz zadanie —'));
-SCENARIOS.forEach(s => presetSel.appendChild(elT('option', { value:s.id }, s.nazwa)));
-
-// Zadanie 7: tryb "na żywo" jest teraz włączony. Pole klucza API pokazuje
-// się tylko gdy tryb jest włączony i w localStorage nie ma jeszcze klucza
-// (ten sam localStorage key co w index.html — "gemini_api_key"), więc
-// prezenter widzi je dokładnie raz, przy pierwszym włączeniu.
-const apiKeyInput = document.getElementById('apiKeyInput');
-apiKeyInput.value = localStorage.getItem('gemini_api_key') || '';
-function syncApiKeyInput(){
-  apiKeyInput.hidden = !modeToggle.checked || !!localStorage.getItem('gemini_api_key');
-}
-apiKeyInput.addEventListener('input', () => {
-  localStorage.setItem('gemini_api_key', apiKeyInput.value.trim());
+// ═══════════════════════════════════════════════════════════════
+// Listeners
+// ═══════════════════════════════════════════════════════════════
+stepBtn.addEventListener('click', step);
+autoBtn.addEventListener('click', () => { if(autoTimer) stopAuto(); else if(current) startAuto(); });
+speedEl.addEventListener('input', () => {
+  speedOut.textContent = String(Number(speedEl.value)).replace('.', ',') + ' s';
+  if(autoTimer){ clearInterval(autoTimer); autoTimer = setInterval(step, Number(speedEl.value) * 1000); }
 });
-syncApiKeyInput();
+chatBtn.addEventListener('click', toggleChat);
 
-presetSel.addEventListener('change', startRun);
-modeToggle.addEventListener('change', () => { syncApiKeyInput(); startRun(); });
+document.addEventListener('keydown', e => {
+  if(e.ctrlKey || e.metaKey || e.altKey) return;
+  const a = document.activeElement, tag = a && a.tagName;
+  if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (a && a.isContentEditable)) return;
+  if(e.key === 'n' || e.key === 'N'){ presenterPanelEl.hidden = !presenterPanelEl.hidden; return; }
+  if(!current) return;
+  if(e.key === ' ' || e.key === 'ArrowRight'){ e.preventDefault(); step(); }
+  else if(e.key === 'a' || e.key === 'A'){ if(autoTimer) stopAuto(); else startAuto(); }
+  else if(e.key === 'c' || e.key === 'C'){ toggleChat(); }
+});
 
-// Zadanie 6: #compareBtn startuje zablokowany (dopóki żaden przebieg
-// się nie skończył) — startRun() odtwarza ten sam stan przy każdym
-// nowym przebiegu, więc to tylko stan początkowy strony.
-compareBtn.disabled = true;
-compareBtn.title = 'najpierw dokończ przebieg';
-compareBtn.addEventListener('click', showCompare);
-
-// Wypełnij #snippets trzema kartami z SNIPPETS (kod trzymamy w danych,
-// nie na sztywno w HTML — ten sam wzorzec co przy #presetSel). Treść
-// snippetów to nasz własny, przygotowany JSON (nie dane użytkownika),
-// ale i tak przepuszczamy ją przez syntaxHighlight — ta sama funkcja
-// i te same klasy koloru co w .wire pre.
+// ═══════════════════════════════════════════════════════════════
+// Init
+// ═══════════════════════════════════════════════════════════════
+renderPicker();
 SNIPPETS.forEach(s => {
   const box = el('div', { class:'snippet' });
   box.appendChild(elT('h3', {}, s.title));
-  const pre = el('pre', {});
-  pre.innerHTML = syntaxHighlight(s.text);
+  const pre = el('pre', {}); pre.innerHTML = syntaxHighlight(JSON.stringify(s.json, null, 2));
   box.appendChild(pre);
   box.appendChild(elT('p', {}, s.caption));
   snippetsEl.appendChild(box);
 });
-
-stepBtn.addEventListener('click', () => {
-  // Po zakończonym przebiegu przycisk działa jako „Od nowa ↺”:
-  // restartuje ten sam scenariusz (startRun czyści scenę i od razu
-  // pokazuje kartę celu, a etykieta wraca do „Krok ▸”).
-  if(finished || !gen){ startRun(); return; }
-  step();
-});
-
-autoBtn.addEventListener('click', () => {
-  if(autoTimer){
-    stopAuto();
-    return;
-  }
-  if(finished || !gen) startRun();      // po końcu przebiegu Auto też restartuje
-  if(!gen) return;                      // nadal brak wybranego scenariusza
-  autoBtn.textContent = '⏸ Auto';
-  const speedMs = Number(speedEl.value) * 1000;
-  autoTimer = setInterval(step, speedMs);
-});
-
-// ---- Panel prowadzącego: przełącznik klawiszem "n" ------------------
-// Notatki prowadzącego (#presenterPanel) są ukryte domyślnie i widoczne
-// tylko dla osoby pokazującej demo. Klawisz "n" je pokazuje/ukrywa —
-// ALE tylko wtedy, gdy widz/prezenter NIE pisze akurat w polu tekstowym
-// (np. w #apiKeyInput albo w przyszłym polu formularza): inaczej litera
-// "n" wpisywana w klucz API sama otwierałaby panel przy każdym wpisaniu.
-// Sprawdzamy document.activeElement (a nie event.target), bo to on
-// decyduje, do którego pola faktycznie trafiają znaki klawiatury.
-const presenterPanelEl = document.getElementById('presenterPanel');
-document.addEventListener('keydown', (e) => {
-  if(e.key !== 'n' && e.key !== 'N') return;
-  // Kombinacje z modyfikatorami (Ctrl+N = nowe okno, Cmd+N na macOS,
-  // Alt+N — skróty przeglądarki/systemu) NIE są prośbą o notatki —
-  // ignorujemy je, żeby panel nie mrugał w trakcie demo.
-  if(e.ctrlKey || e.metaKey || e.altKey) return;
-  const active = document.activeElement;
-  const tag = active && active.tagName;
-  if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (active && active.isContentEditable)) return;
-  presenterPanelEl.hidden = !presenterPanelEl.hidden;
-});
-
 </script>
-
 </body>
 </html>
