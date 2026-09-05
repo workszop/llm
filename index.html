@@ -141,6 +141,8 @@ select{appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='h
 .group[data-open="true"] .group-body{display:block; animation:groupIn .18s ease-out;}
 @keyframes groupIn{from{opacity:0; transform:translateY(-4px);} to{opacity:1; transform:none;}}
 .group-body .param:first-child{border-top:none; padding-top:4px;}
+.group-note{font-size:var(--caption); color:var(--marigold-ink); background:var(--marigold-soft); border-radius:8px; padding:8px 12px; margin:0 0 10px; line-height:1.45;}
+.group-note + .param{border-top:none; padding-top:4px;}
 .pinned .param{border-top:none; padding-top:6px;}
 
 /* ---- Toggle switch --------------------------------------------- */
@@ -370,7 +372,7 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
    opis dydaktyczny, typ kontrolki, zakres i wartość domyślną.
    ============================================================ */
 const GROUPS = [
-  { title:"Próbkowanie", params:[
+  { title:"Próbkowanie", note:"Dla modeli Gemini 3.x Google nie zaleca zmiany temperature, topP ani topK. Modele są dostrojone do wartości domyślnych, a determinizm lepiej wymuszać instrukcją systemową.", params:[
     { key:"temperature", label:"temperature", desc:"Steruje losowością odpowiedzi. Niska wartość daje przewidywalny, powtarzalny tekst, wysoka bardziej zróżnicowany i zaskakujący. Zakres 0–2.",
       type:"range", min:0, max:2, step:0.05, def:1.0, accent:"accent-temp", on:true },
     { key:"topP", label:"topP", desc:"Próbkowanie jądrowe (nucleus). Model wybiera tylko spośród najbardziej prawdopodobnych tokenów, których łączne prawdopodobieństwo sięga P. Niższa wartość daje bardziej zachowawcze odpowiedzi.",
@@ -477,7 +479,9 @@ function buildControl(p, control, valEl){
     } else {
       const n = el("input",{type:"number", min:p.min, max:p.max, step:p.step, class:"mono-input"});
       n.value = state[p.key].value;
-      n.addEventListener("input", () => set(n.value===""?p.def:parseInt(n.value,10)));
+      const clamp = v => Math.min(p.max, Math.max(p.min, v));
+      n.addEventListener("input", () => { const v = parseInt(n.value,10); set(n.value==="" || isNaN(v) ? p.def : clamp(v)); });
+      n.addEventListener("change", () => { n.value = state[p.key].value; }); // po wyjściu z pola pokaż przyciętą wartość
       control.appendChild(n);
     }
   } else if(p.type==="select"){
@@ -520,11 +524,12 @@ try { folds = JSON.parse(localStorage.getItem(FOLDS_KEY) || "{}") || {}; } catch
 function buildGroup(title, enabledCount, fill){
   const open = !!folds[title];
   const g = el("div",{class:"group", "data-group":title}); g.dataset.open = open;
-  const btn = el("button",{type:"button", class:"group-title", "aria-expanded":open});
+  const bodyId = "group-" + title.replace(/[^\p{L}\p{N}]+/gu, "-").toLowerCase();
+  const btn = el("button",{type:"button", class:"group-title", "aria-expanded":open, "aria-controls":bodyId});
   btn.appendChild(el("span",{class:"chev"}));
   btn.appendChild(elT("span",{}, title));
   btn.appendChild(elT("span",{class:"count"}, enabledCount ? `${enabledCount} wł.` : ""));
-  const body = el("div",{class:"group-body"});
+  const body = el("div",{class:"group-body", id:bodyId});
   fill(body);
   btn.addEventListener("click", () => {
     const now = g.dataset.open !== "true";
@@ -544,7 +549,10 @@ function renderParams(){
     const visible = g.params.filter(p => p.key!==PINNED_PARAM && !(p.family && p.family!==currentFamily())); // tylko właściwa kontrolka myślenia
     if(!visible.length) return;
     const enabled = visible.filter(p => state[p.key].on).length;
-    paramsEl.appendChild(buildGroup(g.title, enabled, body => visible.forEach(p => body.appendChild(buildParamRow(p)))));
+    paramsEl.appendChild(buildGroup(g.title, enabled, body => {
+      if(g.note) body.appendChild(elT("p",{class:"group-note"}, g.note));
+      visible.forEach(p => body.appendChild(buildParamRow(p)));
+    }));
   });
   // Bezpieczeństwo
   const safetyEnabled = SAFETY_CATEGORIES.filter(c => safetyState[c.key]).length;
@@ -626,14 +634,18 @@ function updateGroupCounts(){
   });
 }
 
+/* Jeden punkt prawdy dla adresu wywołania: podgląd i realna wysyłka używają tej samej funkcji. */
+function endpointUrl(model, stream){
+  const method = stream ? "streamGenerateContent" : "generateContent";
+  const qs = stream ? "?alt=sse" : "";
+  return `https://generativelanguage.googleapis.com/v1beta/models/${model}:${method}${qs}`;
+}
+
 function refresh(){
   updateGroupCounts();
   const model = document.getElementById("model").value;
   const stream = document.getElementById("streamToggle").checked;
-  const method = stream ? "streamGenerateContent" : "generateContent";
-  const qs = stream ? "?alt=sse" : "";
-  document.getElementById("reqEndpoint").textContent =
-    `POST https://generativelanguage.googleapis.com/v1beta/models/${model}:${method}${qs}`;
+  document.getElementById("reqEndpoint").textContent = "POST " + endpointUrl(model, stream);
   const body = buildRequest();
   delete body.generationConfig?.__schemaError;
   document.getElementById("reqBody").innerHTML = syntaxHighlight(JSON.stringify(body, null, 2));
@@ -642,6 +654,7 @@ function refresh(){
 /* ============================================================
    Wysyłka zapytania
    ============================================================ */
+const REQUEST_TIMEOUT_MS = 60000;
 const out = document.getElementById("output");
 const usageEl = document.getElementById("usage");
 const latencyEl = document.getElementById("latency");
@@ -669,7 +682,7 @@ function showError(title, detail){
 function renderUsage(u){
   usageEl.innerHTML = "";
   if(!u) return;
-  const add = (label, n) => { if(n!=null) usageEl.appendChild(el("span",{class:"chip"}, `${label}: ${n}`)); };
+  const add = (label, n) => { if(n!=null) usageEl.appendChild(elT("span",{class:"chip"}, `${label}: ${n}`)); };
   add("prompt", u.promptTokenCount);
   add("myślenie", u.thoughtsTokenCount);
   add("odpowiedź", u.candidatesTokenCount);
@@ -709,6 +722,9 @@ async function send(){
   if(state.responseSchema.on){
     try { JSON.parse(state.responseSchema.value); }
     catch(e){ showError("Niepoprawny responseSchema", "Pole schematu JSON nie jest poprawnym JSON-em:\n"+e.message); return; }
+    if(!(state.responseMimeType.on && state.responseMimeType.value === "application/json")){
+      showError("responseSchema wymaga application/json", "Schemat działa tylko razem z responseMimeType ustawionym na application/json. Włącz ten parametr w sekcji „Format odpowiedzi” albo wyłącz responseSchema."); return;
+    }
   }
 
   const model = document.getElementById("model").value;
@@ -723,15 +739,18 @@ async function send(){
   label.innerHTML = '<span class="spinner"></span>';
 
   const t0 = performance.now();
-  const method = stream ? "streamGenerateContent" : "generateContent";
-  const qs = stream ? "?alt=sse" : "";
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:${method}${qs}`;
+  const url = endpointUrl(model, stream);
+
+  // Limit czasu: zawieszone połączenie nie może zostawić przycisku zablokowanego na zawsze.
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
 
   try {
     const res = await fetch(url, {
       method:"POST",
       headers:{ "Content-Type":"application/json", "x-goog-api-key":key },
       body: JSON.stringify(body),
+      signal: ctrl.signal,
     });
 
     if(!res.ok){
@@ -752,8 +771,13 @@ async function send(){
     }
     latencyEl.textContent = `${Math.round(performance.now()-t0)} ms`;
   } catch(err){
-    showError("Błąd sieci / CORS", `Nie udało się połączyć z API Gemini.\nNajczęstsze przyczyny: nieprawidłowy klucz, brak internetu lub blokada sieci.\n\nSzczegóły: ${err.message}`);
+    if(err.name === "AbortError"){
+      showError("Przekroczono limit czasu", `API nie odpowiedziało w ciągu ${Math.round(REQUEST_TIMEOUT_MS/1000)} s. Spróbuj ponownie albo skróć zapytanie.`);
+    } else {
+      showError("Błąd sieci / CORS", `Nie udało się połączyć z API Gemini.\nNajczęstsze przyczyny: nieprawidłowy klucz, brak internetu lub blokada sieci.\n\nSzczegóły: ${err.message}`);
+    }
   } finally {
+    clearTimeout(timer);
     btn.disabled = false; label.textContent = "Wyślij zapytanie";
   }
 }
@@ -889,9 +913,14 @@ function isFlashModel(m){
 
 /* Ranking „najnowsze”: wyższa wersja (3.8 > 3.7 > 3.5), przy remisie model bazowy
    przed -lite/-preview (krótsza nazwa), na końcu alfabetycznie. */
-function modelVersion(id){ const m = id.match(/^gemini-(\d+(?:\.\d+)?)/); return m ? parseFloat(m[1]) : 0; }
+function modelVersion(id){ const m = id.match(/^gemini-(\d+(?:\.\d+)*)/); return m ? m[1].split(".").map(Number) : [0]; }
+function compareVersions(a, b){ // segment po segmencie, więc 3.10 > 3.8
+  const va = modelVersion(a), vb = modelVersion(b);
+  for(let i=0; i<Math.max(va.length, vb.length); i++){ const d = (vb[i]||0) - (va[i]||0); if(d) return d; }
+  return 0;
+}
 function compareNewest(a, b){
-  return (modelVersion(b) - modelVersion(a)) || (a.length - b.length) || a.localeCompare(b);
+  return compareVersions(a, b) || (a.length - b.length) || a.localeCompare(b);
 }
 
 function setModelOptions(ids){

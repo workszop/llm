@@ -49,6 +49,13 @@ the second one throws and the probe reads stale state.
   `aria-expanded="false"`. Clicking the title toggles both and writes `localStorage.gemini_folds`
   (survives reload). The `.count` badge shows "N wł." for enabled params in that group and updates
   on switch toggles. Presets open the groups where they enabled something; "Domyślne" folds all.
+- **Guards on send**: `responseSchema` on without `responseMimeType=application/json` → error box
+  "responseSchema wymaga application/json", no fetch. Number inputs clamp to their min/max on
+  input (99999 → 65536 for maxOutputTokens, 0 → 1 for candidateCount). A fetch that never
+  resolves is aborted after `REQUEST_TIMEOUT_MS` (60 s) → "Przekroczono limit czasu" and the
+  send button re-enables; stub `fetch` to reject on `signal` abort to test it. Usage chips are
+  text-only (an HTML string in `usageMetadata` must not create elements).
+- **Endpoint helper**: `endpointUrl(model, stream)` feeds both `#reqEndpoint` and the real call.
 - **Stale saved model**: `localStorage.setItem('gemini_model','<removed-model>')` +
   reload → select must fall back to the default option, not go empty.
 
