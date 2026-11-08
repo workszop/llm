@@ -5,254 +5,447 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>edulab · Plac zabaw z parametrami Gemini</title>
 <meta name="description" content="Demo edulab: poznaj parametry wywołań API Gemini (temperatura, topP, topK, myślenie) i zobacz, jak wpływają na odpowiedź modelu." />
-<link rel="icon" href="assets/edulab-mark-teal.png" />
+<link rel="icon" type="image/svg+xml" href="favicon.svg?v=202611080909" />
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=202611080909" />
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png?v=202611080909" />
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=202611080909" />
+<meta name="theme-color" content="#FFD500" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/lucide@0.547.0/dist/umd/lucide.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" />
+<style>
+  @keyframes boot-reveal { to { visibility: visible; } }
+  html:not(.app-ready) body { visibility: hidden; animation: boot-reveal 0s 4s forwards; }
+  @media print { html:not(.app-ready) body { visibility: visible; animation: none; } }
+</style>
+<noscript><style>html:not(.app-ready) body { visibility: visible; animation: none; }</style></noscript>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.547.0/dist/umd/lucide.min.js" integrity="sha384-dcfEEUBhHJS2SsrEydHCzcp+3PX9RDRa0t/H57RjXK1pUC6AjUg+F0B1hrC6dxWB" crossorigin="anonymous"></script>
 <style>
 /* ============================================================
-   edulab — Editorial Color design tokens
-   (z design_handoff_demo_lab/tokens/colors_and_type.css)
+   edulab - Colors & Type foundation
+   Fonts (Outfit, IBM Plex Sans, Roboto Mono) load from Google Fonts
+   via the <link> tags in tokens/head.html - paste that into <head>.
+   No @import here: it chains requests and blocks rendering.
+   ============================================================ */
+
+:root {
+  /* ---- Brand fonts ---- */
+  --font-display: 'Outfit', 'IBM Plex Sans', system-ui, sans-serif;
+  --font-sans:    'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --font-mono:    'Roboto Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* ============================================================
+     RAW COLOR TOKENS
+     ============================================================ */
+
+  /* Paper - page background is white; the stone steps are bands / wells.
+     Warm neutral grey (no yellow cast) so yellow and the colour blocks stay the
+     loudest thing on the page. Stone v2 (2026-10-10) replaced the cream sand
+     (#FBF7E6 / #F5EDCB), which at 1.07:1 on white did not read as a surface. */
+  --paper:    #FFFFFF;   /* page background (white)                       */
+  --paper-2:  #F5F3F0;   /* stone band: alternating sections, card heads   */
+  --paper-3:  #EAE6E0;   /* deepest stone: wells, table heads, bar tracks  */
+  --surface:  #FFFFFF;   /* cards & sheets                                */
+
+  /* Ink - warm near-black text & lines */
+  --ink:      #1C1917;   /* primary text                                    */
+  --ink-2:    #44403C;   /* secondary text, 10.3:1 on white                 */
+  --ink-3:    #625B53;   /* muted / placeholder: >= 4.5:1 on every paper step */
+  --line:     #E0DBD3;   /* hairline: dividers, table rows, card heads      */
+  --line-2:   #C9C2B7;   /* stronger: card contours, section rules          */
+  --line-strong: #857C69;/* control boundaries (inputs, ghost buttons,
+                            answer options): >= 3:1 on paper steps (WCAG 1.4.11) */
+
+  /* ---- Brand: Yellow main · Blue + Green secondary · Red danger ----
+     Plain saturated colours. The base colour (--blue) is for large fills,
+     illustrations and large text (>= 24px, or 19px bold). "-soft" is the
+     solid fill for chips and panels that carry small text: it is the
+     AA shade (= "-600"), so its "-ink" (white; dark ink on yellow) reaches
+     4.5:1. A colour used AS text goes only on white and uses "-600".
+     Never colour-on-colour (no green text on green).
+     Gate: python3 scripts/check-contrast.py */
+
+  /* Yellow - primary (buttons, progress, values on dark panels) */
+  --yellow:      #FFD500;
+  --yellow-600:  #F0C800;  /* hover / press          */
+  --yellow-soft: #FFD500;  /* chip / panel fill      */
+  --yellow-ink:  #1C1917;  /* text on yellow         */
+
+  /* Blue - secondary (panels, chips, correct / selected state) */
+  --blue:      #1E8FC2;
+  --blue-600:  #177AA8;
+  --blue-soft: #177AA8;   /* = blue-600, white text 4.8:1 */
+  --blue-ink:  #FFFFFF;
+
+  /* Green - secondary support (chips, success) */
+  --green:      #00A651;
+  --green-600:  #078342;  /* hover / press, AA text shade */
+  --green-soft: #078342;  /* = green-600, white text 4.9:1 */
+  --green-ink:  #FFFFFF;
+
+  /* Red - danger / important / wrong (use sparingly) */
+  --red:      #E5322D;
+  --red-600:  #C92823;
+  --red-soft: #C92823;   /* = red-600, white text 5.5:1 */
+  --red-ink:  #FFFFFF;
+
+  /* Grape - 5th category tone (colour-coded groups), from the play palette */
+  --grape:      #7A5AC2;
+  --grape-soft: #7A5AC2;  /* white text 5.2:1 */
+  --grape-ink:  #FFFFFF;
+
+  /* Legacy role aliases - older edulab apps use these names */
+  --marigold: var(--yellow); --marigold-600: var(--yellow-600); --marigold-soft: var(--yellow-soft); --marigold-ink: var(--yellow-ink);
+  --teal:     var(--blue);   --teal-600:     var(--blue-600);   --teal-soft:     var(--blue-soft);   --teal-ink:     var(--blue-ink);
+  --sky:      var(--green);                                     --sky-soft:      var(--green-soft);  --sky-ink:      var(--green-ink);
+  --coral:    var(--red);    --coral-600:    var(--red-600);    --coral-soft:    var(--red-soft);    --coral-ink:    var(--red-ink);
+
+  /* Play palette - subject/category colours in the kids app */
+  --play-sun:    #FFD500;
+  --play-grass:  #00A651;
+  --play-berry:  #C6478B;
+  --play-grape:  #7A5AC2;
+  --play-sky:    #1E8FC2;
+  --play-coral:  #E5322D;
+
+  /* ---- Semantic ---- */
+  --success:      #00A651;  --success-soft: #078342;  --success-ink: #FFFFFF;
+  --warning:      #FFD500;  --warning-soft: #FFD500;  --warning-ink: #1C1917;
+  --danger:       #E5322D;  --danger-soft:  #C92823;  --danger-ink:  #FFFFFF;
+  --info:         #1E8FC2;  --info-soft:    #177AA8;  --info-ink:    #FFFFFF;
+
+  /* ---- Functional aliases ---- */
+  --bg:        var(--paper);
+  --fg:        var(--ink);
+  --fg-muted:  var(--ink-2);
+  --primary:   var(--yellow);
+  --on-primary:#1C1917;      /* dark text on yellow */
+  /* White gap + ink band: >= 3:1 on paper, sand, yellow and every chip fill.
+     Pair with `outline: 3px solid transparent` so forced-colours mode still shows focus. */
+  --focus-ring: 0 0 0 2px var(--paper), 0 0 0 5px var(--ink);
+  /* Range-slider track */
+  --track: color-mix(in srgb, var(--ink) 24%, transparent);
+
+  /* ============================================================
+     SPACING  (4pt base)
+     ============================================================ */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
+  --sp-12: 48px; --sp-16: 64px; --sp-20: 80px; --sp-24: 96px;
+
+  /* ---- Radii (friendly, generous) ---- */
+  /* Page gutter (user decision 2026-11-07): content ~70% of the viewport on wide screens
+     (15% margin each side from ~1280px), never squeezed below 900px, 16-72px on phones/tablets.
+     Every full-width band, header row, page head and footer pads its content with it. */
+  --gutter: max(clamp(16px, 4vw, 72px), min(15vw, calc((100vw - 900px) / 2)));
+  --r-xs: 6px; --r-sm: 10px; --r-md: 14px; --r-lg: 20px; --r-xl: 28px; --r-pill: 999px;
+
+  /* ---- Elevation - warm, low, soft ---- */
+  --shadow-sm: 0 1px 2px rgba(33,30,26,.10), 0 2px 6px rgba(33,30,26,.06);
+  --shadow-md: 0 6px 18px rgba(33,30,26,.12), 0 1px 3px rgba(33,30,26,.08);
+  --shadow-lg: 0 16px 40px rgba(33,30,26,.12), 0 3px 8px rgba(33,30,26,.06);
+  --shadow-primary:  0 8px 22px color-mix(in srgb, var(--yellow) 30%, transparent);
+  --shadow-marigold: var(--shadow-primary);   /* legacy alias */
+
+  /* ============================================================
+     TYPE SCALE (semantic sizes)
+     ============================================================ */
+  --display-font:  clamp(48px, 6vw, 72px);
+  --h1: 44px; --h2: 33px; --h3: 25px; --h4: 19px;
+  --body-lg: 18px; --body: 16px; --body-sm: 14px;
+  --caption: 13px; --overline: 12px;
+}
+
+/* ============================================================
+   SEMANTIC ELEMENT STYLES
+   Apply via element selectors or .edu-prose wrapper.
+   Element defaults are wrapped in :where(.edu) (zero specificity) so any
+   single class wins: <p class="edu-overline">, <p class="edu-small">,
+   <h1 class="app-title"> keep their own font/size instead of the element default.
+   ============================================================ */
+
+.edu-display, :where(.edu) h1.display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--display-font);
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+}
+:where(.edu) h1, .edu-h1 {
+  font-family: var(--font-display);
+  font-weight: 700; font-size: var(--h1);
+  line-height: 1.06; letter-spacing: -0.02em; color: var(--ink);
+}
+:where(.edu) h2, .edu-h2 {
+  font-family: var(--font-display);
+  font-weight: 700; font-size: var(--h2);
+  line-height: 1.12; letter-spacing: -0.015em; color: var(--ink);
+}
+:where(.edu) h3, .edu-h3 {
+  font-family: var(--font-display);
+  font-weight: 700; font-size: var(--h3);
+  line-height: 1.2; letter-spacing: -0.01em; color: var(--ink);
+}
+:where(.edu) h4, .edu-h4 {
+  font-family: var(--font-sans);
+  font-weight: 700; font-size: var(--h4);
+  line-height: 1.3; color: var(--ink);
+}
+:where(.edu) p, .edu-p, .edu-body {
+  font-family: var(--font-sans);
+  font-weight: 400; font-size: var(--body);
+  line-height: 1.6; color: var(--ink-2);
+}
+.edu-body-lg { font-family: var(--font-sans); font-size: var(--body-lg); line-height: 1.6; color: var(--ink-2); }
+.edu-small  { font-family: var(--font-sans); font-size: var(--body-sm); line-height: 1.5; color: var(--ink-2); }
+.edu-caption{ font-family: var(--font-sans); font-size: var(--caption); line-height: 1.45; color: var(--ink-3); }
+
+/* Overline - mono, tracked; functional labels only (never above page/section titles) */
+.edu-overline {
+  font-family: var(--font-mono);
+  font-weight: 500; font-size: var(--overline);
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink);
+}
+:where(.edu) code, .edu-mono {
+  font-family: var(--font-mono);
+  font-size: 0.92em; color: var(--ink);
+  background: var(--paper-3); padding: 0.12em 0.4em; border-radius: var(--r-xs);
+}
+
+/* Solid colour blocks (callouts, stat cards, chips): set background: var(--X-soft) and
+   color: var(--X-ink) on the block, add .edu-block, and every heading/paragraph inside
+   inherits that text colour instead of the default ink. */
+.edu-block, .edu-block h1, .edu-block h2, .edu-block h3, .edu-block h4, .edu-block p,
+.edu-block li, .edu-block small { color: inherit; }
+
+body.edu { background: var(--paper); color: var(--ink); font-family: var(--font-sans); }
+
+
+/* ============================================================
+   App layer – shared chrome (edustyl)
    ============================================================ */
 :root{
-  --font-display:'Bricolage Grotesque','Hanken Grotesk',system-ui,sans-serif;
-  --font-sans:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
-  --font-mono:'DM Mono',ui-monospace,'SF Mono',Menlo,monospace;
-
-  --paper:#FBF7F0; --paper-2:#F4EDDF; --paper-3:#ECE1CF; --surface:#FFFFFF;
-  --ink:#211E1A; --ink-2:#5B554D; --ink-3:#938A7C; --line:#E7DCCB; --line-2:#D6C8B2;
-
-  --marigold:#E8920C; --marigold-600:#CE800A; --marigold-soft:#FBE7C2; --marigold-ink:#8A4F00;
-  --teal:#0E8C7F; --teal-600:#0B7468; --teal-soft:#D2EBE6; --teal-ink:#0A5A52;
-  --coral:#EF5B3F; --coral-600:#D44A30; --coral-soft:#FBDDD4; --coral-ink:#9A2E1B;
-  --sky:#2E78C9; --sky-soft:#D9E7F6; --sky-ink:#1B4E88;
-  --play-grape:#7A5AC2;
-
-  --success:#2F8F5B; --success-soft:#D7EEDD; --success-ink:#1C6A3E;
-  --warning:#C9810A; --warning-soft:#FBEAC6; --warning-ink:#855207;
-  --danger:#D8412A; --danger-soft:#FAD9D2; --danger-ink:#97271A;
-
-  --focus-ring:0 0 0 3px rgba(232,146,12,.38);
-
-  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:24px;
-  --sp-8:32px; --sp-10:40px; --sp-12:48px;
-
-  --r-xs:6px; --r-sm:10px; --r-md:14px; --r-lg:20px; --r-xl:28px; --r-pill:999px;
-
-  --shadow-sm:0 1px 2px rgba(33,30,26,.06),0 1px 1px rgba(33,30,26,.04);
-  --shadow-md:0 4px 16px rgba(33,30,26,.08),0 1px 3px rgba(33,30,26,.05);
-  --shadow-lg:0 16px 40px rgba(33,30,26,.12),0 3px 8px rgba(33,30,26,.06);
-  --shadow-marigold:0 8px 22px rgba(232,146,12,.28);
-
-  --h1:44px; --h2:33px; --h3:25px; --h4:19px;
-  --body-lg:18px; --body:16px; --body-sm:14px; --caption:13px; --overline:12px;
+  --code-key:var(--yellow); --code-str:var(--green); --code-num:var(--blue); --code-bool:var(--paper-3);
 }
-
 *{box-sizing:border-box;}
 html{scroll-behavior:smooth;}
-body{
-  margin:0; background:var(--paper); color:var(--ink);
-  font-family:var(--font-sans); font-size:var(--body); line-height:1.6;
-  -webkit-font-smoothing:antialiased;
-}
-a{color:var(--teal-ink); text-decoration:none;}
-a:hover{text-decoration:underline;}
+body{margin:0; font-size:var(--body); line-height:1.6; -webkit-font-smoothing:antialiased;}
+a{color:var(--blue-600); text-decoration:underline; text-underline-offset:2px;}
+:focus-visible{outline:3px solid transparent; outline-offset:2px; box-shadow:var(--focus-ring);}
+@media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto;} *{animation-duration:.01ms !important; transition-duration:.01ms !important;} }
 
-/* ---- Header ---------------------------------------------------- */
-header.site{
-  position:sticky; top:0; z-index:50;
-  background:rgba(251,247,240,.85); backdrop-filter:blur(12px);
-  border-bottom:1px solid var(--line);
-}
-.header-inner{
-  max-width:1240px; margin:0 auto; padding:15px 30px;
-  display:flex; align-items:center; gap:16px;
-}
-.brand{display:flex; align-items:center; gap:10px;}
-.brand img{width:32px; height:32px;}
-.brand .word{font-family:var(--font-display); font-weight:700; font-size:22px; color:var(--ink); letter-spacing:-.01em;}
-.brand .tag{
-  font-family:var(--font-mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase;
-  color:var(--teal-ink); background:var(--teal-soft); padding:3px 8px; border-radius:var(--r-pill);
-}
+/* ─── Top menu ─── */
+.edu-header{position:static; width:100%; background:var(--paper); border-bottom:1px solid var(--line-2);}
+.edu-header-inner{padding:8px var(--gutter); display:flex; align-items:center; gap:12px;}
+.edu-logo{width:64px; height:64px; display:block; margin-right:-6px;}
+.edu-wordmark{font-family:var(--font-display); font-weight:700; font-size:22px; letter-spacing:-.02em; color:var(--ink);}
 .header-spacer{flex:1;}
-.header-link{
-  font-family:var(--font-mono); font-size:12px; letter-spacing:.04em;
-  color:var(--ink-2); display:inline-flex; align-items:center; gap:6px;
+.header-link{font-family:var(--font-sans); font-weight:600; font-size:var(--body-sm); color:var(--ink-2); text-decoration:none; display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:var(--r-pill); white-space:nowrap; transition:background-color .15s, color .15s;}
+.header-link:hover{background:var(--paper-2); color:var(--ink);}
+.header-link .ic{width:15px; height:15px;}
+
+/* ─── Page head ─── */
+.page-head{padding:44px var(--gutter) 36px; text-align:left; border-bottom:1px solid var(--line-2);}
+.app-title{font-family:var(--font-display); font-weight:800; font-size:clamp(2.3rem,5vw,3.3rem); letter-spacing:-.025em; line-height:1.05; color:var(--ink); margin:0 0 14px;}
+.page-head.page-head--bare{border-bottom:none; padding-bottom:0;}
+.page-head--bare .app-title{margin:0;}
+.edu-lead{font-size:1.15rem; line-height:1.6; color:var(--ink-2); margin:0;}
+main{padding:34px var(--gutter) 70px;}
+
+/* ─── Tones & badges ─── */
+.tone-grape{background:var(--grape-soft); color:var(--grape-ink);}
+.tone-blue{background:var(--blue-soft); color:var(--blue-ink);}
+.tone-yellow{background:var(--yellow-soft); color:var(--yellow-ink);}
+.tone-green{background:var(--green-soft); color:var(--green-ink);}
+.tone-red{background:var(--red-soft); color:var(--red-ink);}
+.tone-ink{background:var(--ink); color:var(--paper);}
+.tone-stone{background:var(--paper-3); color:var(--ink);}
+.ic{width:18px; height:18px; flex:none;}
+.badge{flex:none; width:34px; height:34px; border-radius:var(--r-sm); display:inline-grid; place-items:center;}
+.badge.tone-ink{color:var(--yellow);}
+.tile-h{display:flex; align-items:center; gap:12px; min-width:0;}
+
+/* ─── Cards ─── */
+.card{background:var(--surface); border:1px solid var(--line-2); border-radius:var(--r-lg); box-shadow:var(--shadow-sm); overflow:hidden;}
+.card + .card{margin-top:18px;}
+.card-head{padding:12px 20px; background:var(--paper-2); border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+.card-head h2{font-family:var(--font-display); font-weight:700; font-size:20px; line-height:1.25; margin:0; letter-spacing:-.01em;}
+.card-head .sub{font-family:var(--font-mono); font-size:11px; font-weight:500; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-2);}
+.card-head-right{display:flex; align-items:center; gap:10px; flex:none;}
+.card-body{padding:20px;}
+.notice, .card-foot{font-size:var(--caption); color:var(--ink-2); line-height:1.5;}
+.card-foot{margin:18px -20px -20px; padding:12px 20px; border-top:1px dashed var(--line-2);}
+:where(.edu) code{font-family:var(--font-mono); font-size:.92em; color:var(--ink); background:var(--paper-3); padding:.12em .4em; border-radius:var(--r-xs);}
+
+/* ─── Buttons ─── */
+.btn{font-family:var(--font-display); font-weight:600; font-size:var(--body-sm); border:none; border-radius:var(--r-pill); padding:12px 22px; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:transform .12s cubic-bezier(.32,.72,.32,1), background-color .15s;}
+.btn svg{width:16px; height:16px;}
+.btn:active{transform:scale(.96);}
+.btn-primary{background:var(--yellow); color:var(--on-primary); box-shadow:var(--shadow-primary);}
+.btn-primary:hover{background:var(--yellow-600);}
+.btn-primary:disabled{background:var(--paper-3); color:var(--ink-3); box-shadow:none; cursor:not-allowed; transform:none;}
+.btn-ghost{background:var(--surface); color:var(--ink); border:1px solid var(--line-strong);}
+.btn-ghost:hover{background:var(--paper-2);}
+.btn-ghost:disabled{opacity:.5; cursor:not-allowed;}
+.btn-sm{font-size:var(--caption); padding:7px 14px;}
+.chip{font-family:var(--font-mono); font-size:11px; letter-spacing:.04em; background:var(--blue-soft); color:var(--blue-ink); border-radius:var(--r-pill); padding:5px 11px;}
+
+/* ─── Range slider ─── */
+input[type=range]{-webkit-appearance:none; appearance:none; width:100%; height:8px; border-radius:var(--r-pill); background:var(--track); outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:20px; height:20px; border-radius:50%; background:var(--surface); border:2px solid var(--ink); box-shadow:var(--shadow-sm); cursor:pointer;}
+input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; background:var(--surface); border:2px solid var(--ink); box-shadow:var(--shadow-sm); cursor:pointer;}
+
+/* ─── Code on ink ─── */
+.req-key{color:var(--code-key);} .req-str{color:var(--code-str);} .req-num{color:var(--code-num);} .req-bool{color:var(--code-bool);}
+
+@media (max-width:768px){
+  .page-head{padding:28px var(--gutter) 32px;}
+  .edu-logo{width:48px; height:48px;}
+  .header-link .lbl-long{display:none;}
+  .edu-header-inner{gap:4px;}
+  .header-link{padding:8px 8px;}
+  .header-link .ic:first-child{display:none;}
 }
 
-/* ---- Layout ---------------------------------------------------- */
-main{max-width:1240px; margin:0 auto; padding:34px 30px 80px;}
-.intro{max-width:none; margin-bottom:28px;}
-h1.display{font-family:var(--font-display); font-weight:700; font-size:var(--h1); line-height:1.06; letter-spacing:-.02em; margin:0 0 14px;}
-.intro p{font-size:var(--body-lg); color:var(--ink-2); margin:0;}
 
+/* ============================================================
+   App layer – Gemini playground
+   ============================================================ */
 .grid{display:grid; grid-template-columns:.78fr 1.22fr; gap:22px; align-items:start;}
-.left-col, .right-col{min-width:0;} /* pozwól kolumnom kurczyć się — długi tekst ma się zawijać, nie rozpychać layout */
+.left-col, .right-col{min-width:0;} /* pozwól kolumnom kurczyć się – długi tekst ma się zawijać, nie rozpychać layout */
 
-/* ---- Cards ----------------------------------------------------- */
-.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r-xl); box-shadow:var(--shadow-md);}
-.card + .card{margin-top:18px;}
-.card-head{padding:20px 24px 0; display:flex; align-items:baseline; justify-content:space-between; gap:12px;}
-.card-head h2{font-family:var(--font-display); font-weight:600; font-size:var(--h4); margin:0; letter-spacing:-.01em;}
-.card-head .sub{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3);}
-.card-head-right{display:flex; align-items:center; gap:10px; flex:none;}
-.card-body{padding:18px 24px 24px;}
-
-/* ---- Form fields ----------------------------------------------- */
-label.field{display:block; margin-bottom:16px;}
+/* ─── Form fields ─── */
+label.field{display:block; margin-bottom:18px;}
 label.field:last-child{margin-bottom:0;}
-.flabel{display:block; font-weight:600; font-size:var(--body-sm); margin-bottom:6px; color:var(--ink);}
-.fhelp{display:block; font-size:var(--caption); color:var(--ink-3); margin-bottom:8px; line-height:1.45;}
+.flabel{display:block; font-family:var(--font-mono); font-weight:500; font-size:12px; letter-spacing:.1em; text-transform:uppercase; margin-bottom:8px; color:var(--ink);}
+.fhelp{display:block; font-size:var(--caption); color:var(--ink-2); margin-bottom:8px; line-height:1.45;}
 input[type=text], input[type=password], input[type=number], textarea, select{
   width:100%; font-family:var(--font-sans); font-size:var(--body-sm); color:var(--ink);
-  background:var(--paper); border:1px solid var(--line-2); border-radius:var(--r-md);
-  padding:10px 12px; transition:border-color .15s, box-shadow .15s;
+  background:var(--surface); border:1px solid var(--line-strong); border-radius:var(--r-sm);
+  padding:10px 12px; transition:border-color .15s;
 }
 textarea{resize:vertical; line-height:1.5;}
 .mono-input{font-family:var(--font-mono);}
-input:focus, textarea:focus, select:focus{outline:none; border-color:var(--marigold); box-shadow:var(--focus-ring);}
-select{appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235B554D' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:34px;}
+input:focus-visible, textarea:focus-visible, select:focus-visible{border-color:var(--ink);}
+::placeholder{color:var(--ink-3);}
+select{appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2344403C' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:34px;}
 
-/* ---- Parameter rows -------------------------------------------- */
+/* ─── Parameter rows ─── */
 .param{padding:16px 0; border-top:1px solid var(--line);}
 .param:first-child{border-top:none; padding-top:4px;}
 .param-head{display:flex; align-items:center; gap:10px;}
 .param-head .switch{flex:0 0 auto;}
 .param-name{font-family:var(--font-mono); font-size:13px; font-weight:500; color:var(--ink); letter-spacing:.01em;}
-.param-pill{font-family:var(--font-mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); background:var(--paper-3); padding:2px 7px; border-radius:var(--r-pill);}
+.param-pill{font-family:var(--font-mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink); background:var(--paper-3); padding:2px 7px; border-radius:var(--r-pill);}
 .param-spacer{flex:1;}
-.param-value{font-family:var(--font-mono); font-size:14px; font-weight:500; color:var(--marigold-ink); min-width:42px; text-align:right;}
+.param-value{font-family:var(--font-mono); font-size:13px; font-weight:500; color:var(--yellow-ink); background:var(--yellow); border-radius:var(--r-pill); padding:2px 10px; min-width:42px; text-align:center;}
 .param-desc{font-size:var(--caption); color:var(--ink-2); margin:7px 0 0; line-height:1.5;}
 .param-control{margin-top:12px;}
 .param[data-on="false"]{opacity:.5;}
 .param[data-on="false"] .param-control{pointer-events:none;}
-.param[data-on="false"] .param-value{color:var(--ink-3);}
+.param[data-on="false"] .param-value{background:var(--paper-3); color:var(--ink);}
 
 /* groups */
-.group{border-top:1px solid var(--line); margin-top:6px;}
-.group-title{display:flex; align-items:center; gap:10px; width:100%; background:none; border:none; cursor:pointer; text-align:left; padding:14px 0 12px; font-family:var(--font-mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--teal-ink);}
-.group-title:hover{color:var(--teal-600);}
+.group{border-top:1px solid var(--line-2); margin-top:6px;}
+.group-title{display:flex; align-items:center; gap:10px; width:100%; background:none; border:none; cursor:pointer; text-align:left; padding:14px 0 12px; font-family:var(--font-mono); font-size:12px; font-weight:500; letter-spacing:.12em; text-transform:uppercase; color:var(--ink); border-radius:var(--r-xs);}
+.group-title:hover{color:var(--blue-600);}
 .group-title .chev{display:inline-block; width:8px; height:8px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(-45deg); transition:transform .18s; flex:0 0 auto;}
 .group[data-open="true"] .group-title .chev{transform:rotate(45deg);}
-.group-title .count{margin-left:auto; font-size:10px; letter-spacing:.06em; color:var(--marigold-ink); background:var(--marigold-soft); padding:2px 8px; border-radius:var(--r-pill);}
+.group-title .count{margin-left:auto; font-size:10px; letter-spacing:.06em; color:var(--blue-ink); background:var(--blue-soft); padding:2px 8px; border-radius:var(--r-pill);}
 .group-title .count:empty{display:none;}
 .group-body{display:none; padding-bottom:6px;}
 .group[data-open="true"] .group-body{display:block; animation:groupIn .18s ease-out;}
 @keyframes groupIn{from{opacity:0; transform:translateY(-4px);} to{opacity:1; transform:none;}}
 .group-body .param:first-child{border-top:none; padding-top:4px;}
-.group-note{font-size:var(--caption); color:var(--marigold-ink); background:var(--marigold-soft); border-radius:8px; padding:8px 12px; margin:0 0 10px; line-height:1.45;}
+.group-note{font-size:var(--caption); color:var(--yellow-ink); background:var(--yellow-soft); border-radius:var(--r-sm); padding:8px 12px; margin:0 0 10px; line-height:1.45;}
 .group-note + .param{border-top:none; padding-top:4px;}
 .pinned .param{border-top:none; padding-top:6px;}
 
-/* ---- Toggle switch --------------------------------------------- */
+/* ─── Toggle switch ─── */
 .switch{position:relative; display:inline-block; width:38px; height:22px; flex:none;}
 .switch input{opacity:0; width:0; height:0;}
-.switch .slider{position:absolute; inset:0; cursor:pointer; background:var(--line-2); border-radius:var(--r-pill); transition:background .18s;}
-.switch .slider::before{content:""; position:absolute; height:16px; width:16px; left:3px; top:3px; background:#fff; border-radius:50%; box-shadow:var(--shadow-sm); transition:transform .18s;}
-.switch input:checked + .slider{background:var(--teal);}
+.switch .slider{position:absolute; inset:0; cursor:pointer; background:var(--line-strong); border-radius:var(--r-pill); transition:background-color .18s;}
+.switch .slider::before{content:""; position:absolute; height:16px; width:16px; left:3px; top:3px; background:var(--surface); border-radius:50%; box-shadow:var(--shadow-sm); transition:transform .18s;}
+.switch input:checked + .slider{background:var(--blue-soft);}
 .switch input:checked + .slider::before{transform:translateX(16px);}
 .switch input:focus-visible + .slider{box-shadow:var(--focus-ring);}
 
-/* ---- Range sliders --------------------------------------------- */
-input[type=range]{-webkit-appearance:none; appearance:none; width:100%; height:8px; border-radius:var(--r-pill); background:rgba(33,30,26,.12); outline:none;}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:20px; height:20px; border-radius:50%; background:#fff; border:2px solid var(--ink); box-shadow:var(--shadow-sm); cursor:pointer; margin-top:0;}
-input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; background:#fff; border:2px solid var(--ink); box-shadow:var(--shadow-sm); cursor:pointer;}
-input[type=range].accent-temp::-webkit-slider-thumb{border-color:var(--coral);}
-input[type=range].accent-topp::-webkit-slider-thumb{border-color:var(--teal);}
-input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
-
-/* ---- Buttons --------------------------------------------------- */
-.btn{font-family:var(--font-sans); font-weight:700; font-size:var(--body-sm); border:none; border-radius:var(--r-pill); padding:12px 22px; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:transform .12s cubic-bezier(.32,.72,.32,1), background .15s, box-shadow .15s;}
-.btn:active{transform:scale(.96);}
-.btn-primary{background:var(--marigold); color:#fff; box-shadow:var(--shadow-marigold);}
-.btn-primary:hover{background:var(--marigold-600);}
-.btn-primary:disabled{background:var(--line-2); color:var(--ink-3); box-shadow:none; cursor:not-allowed; transform:none;}
-.btn-ghost{background:var(--paper-2); color:var(--ink); border:1px solid var(--line);}
-.btn-ghost:hover{background:var(--paper-3);}
-.btn-sm{font-size:var(--caption); padding:7px 14px;}
+/* channel accents on the slider thumb (full contour) */
+input[type=range].accent-temp::-webkit-slider-thumb{border-color:var(--red);}
+input[type=range].accent-topp::-webkit-slider-thumb{border-color:var(--blue);}
+input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--green);}
+input[type=range].accent-temp::-moz-range-thumb{border-color:var(--red);}
+input[type=range].accent-topp::-moz-range-thumb{border-color:var(--blue);}
+input[type=range].accent-sky::-moz-range-thumb{border-color:var(--green);}
 
 .key-row{display:flex; gap:8px; align-items:center;}
 .key-row input, .key-row select{flex:1; min-width:0;}
 .model-status{margin:6px 0 0; min-height:1em;}
-.model-status[data-state="error"]{color:var(--coral-ink);}
-.model-status[data-state="ok"]{color:var(--teal-ink);}
+.model-status[data-state="error"]{color:var(--red-600);}
+.model-status[data-state="ok"]{color:var(--green-600);}
 
-.presets{display:flex; flex-wrap:wrap; gap:8px;}
+.presets{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:6px;}
 .preset svg{width:13px; height:13px; vertical-align:-2px; margin-right:6px;}
 .e-title svg{width:16px; height:16px; vertical-align:-3px; margin-right:6px;}
-.preset{font-family:var(--font-mono); font-size:12px; letter-spacing:.02em; background:var(--paper-2); border:1px solid var(--line); color:var(--ink); border-radius:var(--r-pill); padding:7px 14px; cursor:pointer; transition:background .15s, border-color .15s;}
-.preset:hover{background:var(--teal-soft); border-color:var(--teal);}
+.preset{font-family:var(--font-mono); font-size:12px; letter-spacing:.02em; background:var(--surface); border:1px solid var(--line-strong); color:var(--ink); border-radius:var(--r-pill); padding:7px 14px; cursor:pointer; transition:background-color .15s;}
+.preset:hover{background:var(--paper-2);}
 
-.send-row{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:4px;}
+.send-row{display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
 .send-row .stream-toggle{display:flex; align-items:center; gap:9px; font-size:var(--body-sm); color:var(--ink-2);}
 
-/* ---- Output ---------------------------------------------------- */
-.right-col{position:sticky; top:86px;}
+/* ─── Output ─── */
+.right-col{position:sticky; top:24px;}
 .output{white-space:pre-wrap; overflow-wrap:anywhere; word-break:break-word; font-family:var(--font-sans); font-size:15px; line-height:1.62; color:var(--ink); min-height:120px;}
 .candidate{min-width:0;}
-.output .placeholder{color:var(--ink-3); font-style:italic;}
+.placeholder{color:var(--ink-3); font-style:italic;}
+.req-preview .placeholder{color:var(--paper-3);}
 .candidate + .candidate{margin-top:18px; padding-top:18px; border-top:1px dashed var(--line-2);}
-.candidate-label{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); margin-bottom:6px;}
+.candidate-label{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-2); margin-bottom:6px;}
 
-.thoughts{background:var(--paper-2); border:1px dashed var(--line-2); border-radius:var(--r-lg); padding:14px 16px; margin-bottom:16px;}
-.thoughts .t-label{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--marigold-ink); margin-bottom:6px;}
+.thoughts{background:var(--paper-2); border:1px dashed var(--line-strong); border-radius:var(--r-md); padding:14px 16px; margin-bottom:16px;}
+.thoughts .t-label{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink); margin-bottom:6px;}
 .thoughts .t-body{font-size:var(--caption); color:var(--ink-2); white-space:pre-wrap; line-height:1.55;}
 
 .usage{display:flex; flex-wrap:wrap; gap:8px; margin-top:16px;}
-.chip{font-family:var(--font-mono); font-size:11px; letter-spacing:.02em; background:var(--sky-soft); color:var(--sky-ink); border-radius:var(--r-pill); padding:5px 11px;}
 
-.error-box{background:var(--danger-soft); border:1px solid var(--danger); border-radius:var(--r-lg); padding:16px 18px; color:var(--danger-ink);}
+.error-box{background:var(--red-soft); border-radius:var(--r-md); padding:16px 18px; color:var(--red-ink);}
 .error-box .e-title{font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:8px;}
 .error-box .e-body{font-family:var(--font-mono); font-size:12px; line-height:1.5; white-space:pre-wrap; word-break:break-word;}
 
-.req-preview{background:var(--ink); border-radius:var(--r-lg); padding:18px 20px; overflow:auto; max-height:420px;}
+.req-preview{background:var(--ink); border-radius:var(--r-md); padding:18px 20px; overflow:auto; max-height:420px;}
 .req-preview pre{margin:0; font-family:var(--font-mono); font-size:12.5px; line-height:1.55; color:var(--paper); white-space:pre;}
-.req-endpoint{font-family:var(--font-mono); font-size:11px; color:#86D69A; margin-bottom:10px; word-break:break-all;}
-.req-key{color:#F6997E;} .req-str{color:#86D69A;} .req-num{color:#8FB9EC;} .req-bool{color:#E0B0FF;}
+.req-endpoint{font-family:var(--font-mono); font-size:11px; color:var(--green-600); margin-bottom:10px; word-break:break-all;}
 
-.notice{font-size:var(--caption); color:var(--ink-3); margin-top:10px; line-height:1.5;}
-
-/* spinner */
-.spinner{width:15px; height:15px; border:2.5px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite;}
+/* spinner (inside the yellow button: ink) */
+.spinner{width:15px; height:15px; border:2.5px solid color-mix(in srgb, currentColor 30%, transparent); border-top-color:currentColor; border-radius:50%; animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 
-/* ---- Responsive ------------------------------------------------ */
 @media (max-width:920px){
   .grid{grid-template-columns:1fr;}
   .right-col{position:static;}
-  .header-inner, main{padding-left:20px; padding-right:20px;}
-  h1.display{font-size:34px;}
 }
+
 </style>
 </head>
-<body>
+<body class="edu">
 
-<header class="site">
-  <div class="header-inner">
-    <div class="brand">
-      <img src="assets/edulab-mark-teal.png" alt="edulab" />
-      <span class="word">edulab</span>
-      <span class="tag">gemini lab</span>
-    </div>
+<header class="edu-header">
+  <div class="edu-header-inner">
+    <img class="edu-logo" src="assets/edulab-mark-ink.png" alt="edulab" />
+    <span class="edu-wordmark">edulab</span>
     <div class="header-spacer"></div>
-    <a class="header-link" href="agent.html">
-      Demo agenta ↗
-    </a>
-    <a class="header-link" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">
-      Zdobądź klucz API ↗
-    </a>
+    <a class="header-link" href="agent.html"><i data-lucide="bot" class="ic" aria-hidden="true"></i>Demo agenta</a>
+    <a class="header-link" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener"><i data-lucide="key-round" class="ic" aria-hidden="true"></i><span><span class="lbl-long">Zdobądź </span>klucz API</span><i data-lucide="arrow-up-right" class="ic" aria-hidden="true"></i></a>
   </div>
 </header>
 
+<div class="page-head page-head--bare">
+    <h1 class="app-title">Plac zabaw z parametrami Gemini</h1>
+</div>
+
 <main>
-  <div class="intro">
-    <h1 class="display">Plac zabaw z parametrami Gemini</h1>
-    <p>Zmień parametry wywołania API i zobacz, jak zmienia się odpowiedź modelu. Włączaj
-       i wyłączaj pojedyncze parametry, podglądaj na żywo zapytanie i sprawdź,
-       co robią temperatura, topP, myślenie i pozostałe parametry.</p>
-  </div>
 
   <div class="grid">
     <!-- ================= LEWA KOLUMNA: STEROWANIE ================= -->
@@ -260,7 +453,7 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
 
       <!-- Klucz + model -->
       <div class="card">
-        <div class="card-head"><h2>Połączenie</h2><span class="sub">krok 1</span></div>
+        <div class="card-head"><span class="tile-h"><span class="badge tone-ink"><i data-lucide="plug" class="ic" aria-hidden="true"></i></span><h2>Połączenie</h2></span><span class="sub">krok 1</span></div>
         <div class="card-body">
           <label class="field">
             <span class="flabel">Klucz API Gemini</span>
@@ -286,7 +479,7 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
 
       <!-- Prompt -->
       <div class="card">
-        <div class="card-head"><h2>Prompt</h2><span class="sub">krok 2</span></div>
+        <div class="card-head"><span class="tile-h"><span class="badge tone-ink"><i data-lucide="message-square-text" class="ic" aria-hidden="true"></i></span><h2>Prompt</h2></span><span class="sub">krok 2</span></div>
         <div class="card-body">
           <label class="field">
             <span class="flabel">Instrukcja systemowa</span>
@@ -312,16 +505,16 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
               Strumieniowo (SSE)
             </label>
           </div>
-          <p class="notice">Wskazówka: kliknij tytuł sekcji, żeby rozwinąć kolejne parametry, a przełącznikiem po lewej włączaj i wyłączaj pojedyncze pola. Tylko <em>włączone</em> pola trafiają do zapytania. Podgląd po prawej pokazuje dokładnie, co wyślesz. Skrót: <strong>Ctrl+Enter</strong> (⌘+Enter) wysyła zapytanie.</p>
+          <p class="card-foot">Wskazówka: kliknij tytuł sekcji, żeby rozwinąć kolejne parametry, a przełącznikiem po lewej włączaj i wyłączaj pojedyncze pola. Tylko <em>włączone</em> pola trafiają do zapytania. Podgląd po prawej pokazuje dokładnie, co wyślesz. Skrót: <strong>Ctrl+Enter</strong> (⌘+Enter) wysyła zapytanie.</p>
         </div>
       </div>
 
       <!-- Parametry -->
       <div class="card">
-        <div class="card-head"><h2>Parametry generowania</h2><span class="sub">krok 3</span></div>
+        <div class="card-head"><span class="tile-h"><span class="badge tone-ink"><i data-lucide="sliders-horizontal" class="ic" aria-hidden="true"></i></span><h2>Parametry generowania</h2></span><span class="sub">krok 3</span></div>
         <div class="card-body">
 
-          <div class="presets" style="margin-bottom:6px;">
+          <div class="presets">
             <button class="preset" data-preset="deterministic"><i data-lucide="crosshair"></i>Deterministyczny</button>
             <button class="preset" data-preset="creative"><i data-lucide="sparkles"></i>Kreatywny</button>
             <button class="preset" data-preset="json"><i data-lucide="braces"></i>Ekstrakcja JSON</button>
@@ -338,7 +531,7 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
     <div class="right-col">
 
       <div class="card">
-        <div class="card-head"><h2>Odpowiedź</h2><span class="sub" id="latency"></span></div>
+        <div class="card-head"><span class="tile-h"><span class="badge tone-ink"><i data-lucide="message-square-reply" class="ic" aria-hidden="true"></i></span><h2>Odpowiedź</h2></span><span class="sub" id="latency"></span></div>
         <div class="card-body">
           <div id="output" class="output"><span class="placeholder">Odpowiedź modelu pojawi się tutaj…</span></div>
           <div id="usage" class="usage"></div>
@@ -346,19 +539,19 @@ input[type=range].accent-sky::-webkit-slider-thumb{border-color:var(--sky);}
       </div>
 
       <div class="card">
-        <div class="card-head"><h2>Podgląd zapytania</h2><span class="card-head-right"><span class="sub">na żywo</span><button type="button" class="btn btn-ghost btn-sm copy-btn" data-copy="reqBody">Kopiuj</button></span></div>
+        <div class="card-head"><span class="tile-h"><span class="badge tone-ink"><i data-lucide="send" class="ic" aria-hidden="true"></i></span><h2>Podgląd zapytania</h2></span><span class="card-head-right"><span class="sub">na żywo</span><button type="button" class="btn btn-ghost btn-sm copy-btn" data-copy="reqBody">Kopiuj</button></span></div>
         <div class="card-body">
           <div class="req-endpoint" id="reqEndpoint"></div>
           <div class="req-preview"><pre id="reqBody"></pre></div>
-          <p class="notice">To dokładny ładunek JSON wysyłany metodą POST. Nagłówek <code style="font-family:var(--font-mono)">x-goog-api-key</code> zawiera Twój klucz.</p>
+          <p class="card-foot">To dokładny ładunek JSON wysyłany metodą POST. Nagłówek <code>x-goog-api-key</code> zawiera Twój klucz.</p>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-head"><h2>Podgląd odpowiedzi</h2><span class="card-head-right"><span class="sub" id="resKind">surowy JSON</span><button type="button" class="btn btn-ghost btn-sm copy-btn" data-copy="resBody">Kopiuj</button></span></div>
+        <div class="card-head"><span class="tile-h"><span class="badge tone-ink"><i data-lucide="braces" class="ic" aria-hidden="true"></i></span><h2>Podgląd odpowiedzi</h2></span><span class="card-head-right"><span class="sub" id="resKind">surowy JSON</span><button type="button" class="btn btn-ghost btn-sm copy-btn" data-copy="resBody">Kopiuj</button></span></div>
         <div class="card-body">
           <div class="req-preview"><pre id="resBody"><span class="placeholder">Surowa odpowiedź API pojawi się tutaj po wysłaniu zapytania…</span></pre></div>
-          <p class="notice">Pełny, surowy JSON zwrócony przez API. Zobacz <code style="font-family:var(--font-mono)">candidates</code>, <code style="font-family:var(--font-mono)">finishReason</code>, <code style="font-family:var(--font-mono)">usageMetadata</code> i resztę pól. W trybie strumieniowym to lista kolejnych fragmentów (chunków) SSE.</p>
+          <p class="card-foot">Pełny, surowy JSON zwrócony przez API. Zobacz <code>candidates</code>, <code>finishReason</code>, <code>usageMetadata</code> i resztę pól. W trybie strumieniowym to lista kolejnych fragmentów (chunków) SSE.</p>
         </div>
       </div>
 
@@ -1041,6 +1234,14 @@ function init(){
   renderParams();
   refresh();
   if(window.lucide) lucide.createIcons({ icons: lucide.icons });
+
+  // ─── Reveal ───
+  const FONT_WAIT_MS = 1500;
+  const BRAND_FONTS = ['400 1em Outfit', '700 1em Outfit', '400 1em "IBM Plex Sans"', '600 1em "IBM Plex Sans"', '400 1em "Roboto Mono"'];
+  Promise.race([
+    Promise.all(BRAND_FONTS.map(f => document.fonts.load(f).catch(() => null))),
+    new Promise(r => setTimeout(r, FONT_WAIT_MS)),
+  ]).then(() => document.documentElement.classList.add('app-ready'));
 }
 init();
 </script>

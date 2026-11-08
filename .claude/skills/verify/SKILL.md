@@ -74,6 +74,10 @@ Same server; open `http://127.0.0.1:8642/agent.html`. Fully scripted, no API cal
   true and `#stepBtn` reads "Od nowa ↺". Expected card counts: faktura 10, zastepstwo 12,
   papier 20, ulamki 16 (one `[data-error=true]`), serwer 14. Loop counter must never
   exceed `MAX_ITER` (8).
+- Auto-collapse: each `.step-card` has `data-collapsed`; when a new card renders, all
+  earlier cards flip to `true` (only the newest stays open, so after a full run exactly one
+  `[data-collapsed=false]`). The `.k-head` is a button with `aria-expanded` mirroring it;
+  clicking it toggles the card. Collapsed heads are one line (~55px at 1440px).
 - Tools panel: `.tool[data-used=true]` for every tool the run called; in "faktura"
   `ksieguj` must stay `data-used=false` (that is the lesson). Active tool highlighted via
   `data-active`.

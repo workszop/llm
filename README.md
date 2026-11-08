@@ -71,5 +71,6 @@ zadanie → plan → prośba o narzędzie → wynik → (powtórz) → decyzja �
 
 ## Design
 
-UI zbudowane w systemie projektowym **edulab „Editorial Color”** (paper/ink, marigold/teal/coral,
-fonty Bricolage Grotesque / Hanken Grotesk / DM Mono).
+UI zbudowane w systemie projektowym **edulab „Editorial Color”** (białe tło, kamienne pasy,
+żółty główny, niebieski i zielony pomocnicze, czerwony do błędów; fonty Outfit / IBM Plex Sans /
+Roboto Mono). Tokeny skopiowane ze skilla `/edustyl`.
