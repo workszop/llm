@@ -353,6 +353,9 @@ kbd{font-family:var(--font-mono); font-size:11px; background:var(--paper-3); bor
 
 /* ─── Stage ─── */
 .stage{display:grid; grid-template-columns:1.3fr .7fr; gap:22px; align-items:start;}
+.stage-main{min-width:0;}
+.timeline-bar{display:flex; justify-content:flex-end; margin:0 0 10px;}
+.btn-sm svg{width:14px; height:14px;}
 .stage-side{position:sticky; top:24px; max-height:calc(100vh - 40px); overflow:auto; padding-right:2px;}
 .empty{border:1px dashed var(--line-strong); border-radius:var(--r-lg); padding:36px 20px; text-align:center; color:var(--ink-2); background:var(--paper-2);}
 .loop-divider{font-family:var(--font-mono); font-size:11px; font-weight:500; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-2); display:flex; align-items:center; gap:10px; margin:18px 0 10px;}
@@ -511,7 +514,12 @@ kbd{font-family:var(--font-mono); font-size:11px; background:var(--paper-3); bor
     </div>
 
     <div class="stage">
-      <div id="timeline"></div>
+      <div class="stage-main">
+        <div class="timeline-bar">
+          <button id="expandBtn" class="btn btn-ghost btn-sm" data-mode="expand" disabled><i data-lucide="chevrons-up-down"></i><span>Rozwiń wszystkie</span></button>
+        </div>
+        <div id="timeline"></div>
+      </div>
 
       <div class="stage-side">
         <div class="card">
@@ -858,6 +866,7 @@ const speedEl = document.getElementById('speed');
 const speedOut = document.getElementById('speedOut');
 const loopCounterEl = document.getElementById('loopCounter');
 const chatBtn = document.getElementById('chatBtn');
+const expandBtn = document.getElementById('expandBtn');
 const chatPanel = document.getElementById('chatPanel');
 const chatLeft = document.getElementById('chatLeft');
 const chatRight = document.getElementById('chatRight');
@@ -1015,6 +1024,22 @@ function flashCtx(){
 function setCollapsed(card, collapsed){
   card.dataset.collapsed = String(collapsed);
   card.querySelector('.k-head').setAttribute('aria-expanded', String(!collapsed));
+  updateExpandBtn();
+}
+
+// „Rozwiń wszystkie”, gdy choć jedna karta jest zwinięta; inaczej „Zwiń wszystkie” (najnowsza zostaje otwarta)
+function updateExpandBtn(){
+  const cards = timelineEl.querySelectorAll('.step-card');
+  expandBtn.disabled = cards.length < 2;
+  const mode = timelineEl.querySelector('.step-card[data-collapsed="true"]') || cards.length < 2 ? 'expand' : 'collapse';
+  if(expandBtn.dataset.mode === mode) return;
+  expandBtn.dataset.mode = mode;
+  setBtn(expandBtn, mode === 'expand' ? 'chevrons-up-down' : 'chevrons-down-up', mode === 'expand' ? 'Rozwiń wszystkie' : 'Zwiń wszystkie', true);
+}
+function toggleAllSteps(){
+  const cards = [...timelineEl.querySelectorAll('.step-card')];
+  const collapse = expandBtn.dataset.mode === 'collapse';
+  cards.forEach((c, i) => setCollapsed(c, collapse && i < cards.length - 1));
 }
 
 function renderStep(ev){
@@ -1075,6 +1100,7 @@ function renderStep(ev){
   // poprzednie kroki zwijają się do samego nagłówka, żeby więcej mieściło się na ekranie
   timelineEl.querySelectorAll('.step-card[data-collapsed="false"]').forEach(c => setCollapsed(c, true));
   timelineEl.appendChild(card);
+  updateExpandBtn();
   refreshIcons();
   if(ev.ctx) pushCtx(ev.ctx);
   if(ev.kind === 'tool_call' || ev.kind === 'answer' || ev.kind === 'decision' || ev.kind === 'replan') flashCtx();
@@ -1148,6 +1174,7 @@ function restart(){
   timelineEl.innerHTML = ''; ctxStackEl.innerHTML = ''; costMeterEl.textContent = '';
   ctxStackEl.classList.remove('flash'); if(flashTimer){ clearTimeout(flashTimer); flashTimer = null; } if(flashCaptionEl) flashCaptionEl.textContent = '';
   loopCounterEl.textContent = '';
+  updateExpandBtn();
   setBtn(stepBtn, 'chevron-right', 'Krok', false);
   toolListEl.querySelectorAll('.tool').forEach(li => { li.dataset.active = 'false'; li.dataset.used = 'false'; });
   phasesEl.querySelectorAll('.phase').forEach(p => p.dataset.state = '');
@@ -1185,6 +1212,7 @@ speedEl.addEventListener('input', () => {
   if(autoTimer){ clearInterval(autoTimer); autoTimer = setInterval(step, Number(speedEl.value) * 1000); }
 });
 chatBtn.addEventListener('click', toggleChat);
+expandBtn.addEventListener('click', toggleAllSteps);
 
 document.addEventListener('keydown', e => {
   if(e.ctrlKey || e.metaKey || e.altKey) return;

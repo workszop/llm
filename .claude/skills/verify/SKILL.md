@@ -78,6 +78,10 @@ Same server; open `http://127.0.0.1:8642/agent.html`. Fully scripted, no API cal
   earlier cards flip to `true` (only the newest stays open, so after a full run exactly one
   `[data-collapsed=false]`). The `.k-head` is a button with `aria-expanded` mirroring it;
   clicking it toggles the card. Collapsed heads are one line (~55px at 1440px).
+- `#expandBtn` (above `#timeline`): disabled with < 2 cards. `data-mode="expand"` while any
+  card is collapsed (label "Rozwiń wszystkie") opens all; then `data-mode="collapse"`
+  ("Zwiń wszystkie") closes all but the newest. The next step re-collapses the earlier
+  cards; restart resets it. `.toolbar` stays one line at 1440px (~44px).
 - Tools panel: `.tool[data-used=true]` for every tool the run called; in "faktura"
   `ksieguj` must stay `data-used=false` (that is the lesson). Active tool highlighted via
   `data-active`.
