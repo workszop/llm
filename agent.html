@@ -241,7 +241,8 @@ a{color:var(--blue-600); text-decoration:underline; text-underline-offset:2px;}
 .edu-header-inner{padding:8px var(--gutter); display:flex; align-items:center; gap:12px;}
 .edu-logo{width:64px; height:64px; display:block; margin-right:-6px;}
 .edu-wordmark{font-family:var(--font-display); font-weight:700; font-size:22px; letter-spacing:-.02em; color:var(--ink);}
-.edu-app-title{margin:0 0 0 14px; padding-left:14px; border-left:1px solid var(--line-2, #d9d3c7); font-family:var(--font-display); font-weight:600; font-size:19px; letter-spacing:-.01em; line-height:1.2; color:var(--ink-2, #4a4540); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; flex:0 1 auto;}
+.edu-app-title{margin:0 0 0 14px; padding-left:14px; border-left:1px solid var(--line-2, #d9d3c7); font-family:var(--font-display); font-weight:600; font-size:38px; letter-spacing:-.02em; line-height:1.1; color:var(--ink-2, #4a4540); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; flex:0 1 auto;}
+@media (max-width:650px){ .edu-app-title{font-size:30px;} } /* 38px truncates just above the phone breakpoint */
 @media (max-width:640px){ .edu-app-title{font-size:15px; margin-left:10px; padding-left:10px;} }
 .header-spacer{flex:1;}
 .header-link{font-family:var(--font-sans); font-weight:600; font-size:var(--body-sm); color:var(--ink-2); text-decoration:none; display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:var(--r-pill); white-space:nowrap; transition:background-color .15s, color .15s;}
